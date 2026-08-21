@@ -12,7 +12,7 @@ import (
 func NewCICmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ci",
-		Short: "Manage ci",
+		Short: "Manage CI workflow runs",
 	}
 	cmd.AddCommand(CIDispatchCmd())
 	cmd.AddCommand(CIListCmd())
