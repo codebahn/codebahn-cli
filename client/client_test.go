@@ -120,8 +120,8 @@ func TestBuildBody(t *testing.T) {
 }
 
 func TestNewClient(t *testing.T) {
-	c := New("https://codebahn.dev", "test-token")
-	if c.baseURL != "https://codebahn.dev" {
+	c := New("https://codebahn.net", "test-token")
+	if c.baseURL != "https://codebahn.net" {
 		t.Errorf("baseURL = %q", c.baseURL)
 	}
 }

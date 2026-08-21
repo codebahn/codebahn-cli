@@ -68,7 +68,7 @@ func main() {
 		SilenceErrors: true,
 	}
 
-	rootCmd.PersistentFlags().StringVar(&instance, "instance", "https://codebahn.dev", "Codebahn instance URL")
+	rootCmd.PersistentFlags().StringVar(&instance, "instance", "https://codebahn.net", "Codebahn instance URL")
 	rootCmd.PersistentFlags().StringVar(&token, "token", "", "Personal access token")
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "Disable color output")
 
@@ -135,7 +135,7 @@ func authLoginCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&loginURL, "url", "https://codebahn.dev", "Codebahn instance URL")
+	cmd.Flags().StringVar(&loginURL, "url", "https://codebahn.net", "Codebahn instance URL")
 	return cmd
 }
 
