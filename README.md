@@ -62,6 +62,10 @@ td := tools.ByName("create_issue")
 jsonSchema := schema.For(td)
 ```
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-MIT
+[MIT](LICENSE)
