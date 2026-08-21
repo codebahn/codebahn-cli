@@ -1,0 +1,295 @@
+// Command gen reads tools.All and generates typed cobra commands in internal/gen/.
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"text/template"
+
+	"github.com/codebahn/codebahn-cli/tools"
+)
+
+const outDir = "internal/gen"
+
+var funcMap = template.FuncMap{
+	"exportedGroup": exportedGroupName,
+	"defaultVal":    defaultVal,
+}
+
+func main() {
+	groups := groupedTools()
+
+	for groupName, defs := range groups {
+		if err := generateGroup(groupName, defs); err != nil {
+			fmt.Fprintf(os.Stderr, "error generating %s: %v\n", groupName, err)
+			os.Exit(1)
+		}
+	}
+
+	if err := generateRoot(groups); err != nil {
+		fmt.Fprintf(os.Stderr, "error generating root: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("generated %d groups (%d tools) in %s/\n", len(groups), len(tools.All), outDir)
+}
+
+type groupData struct {
+	GroupName string
+	GroupUse  string
+	GroupDesc string
+	Tools     []toolData
+}
+
+type toolData struct {
+	ToolName    string
+	CLIName     string
+	FuncName    string
+	Description string
+	ArgsType    string
+	Fields      []fieldData
+}
+
+type fieldData struct {
+	GoName   string
+	JSONName string
+	FlagType string
+	Desc     string
+	Required bool
+	Default  string
+}
+
+func groupedTools() map[string][]tools.ToolDef {
+	out := map[string][]tools.ToolDef{}
+	for _, td := range tools.All {
+		out[td.Group] = append(out[td.Group], td)
+	}
+	return out
+}
+
+func generateGroup(name string, defs []tools.ToolDef) error {
+	data := groupData{
+		GroupName: name,
+		GroupUse:  name,
+		GroupDesc: groupDescription(name),
+	}
+
+	for _, td := range defs {
+		rt := reflect.TypeOf(td.Args)
+		if rt.Kind() == reflect.Ptr {
+			rt = rt.Elem()
+		}
+
+		t := toolData{
+			ToolName:    td.Name,
+			CLIName:     td.CLIName,
+			FuncName:    toExportedName(name + "_" + td.CLIName),
+			Description: escapeBacktick(td.Description),
+			ArgsType:    "tools." + rt.Name(),
+		}
+
+		for i := range rt.NumField() {
+			f := rt.Field(i)
+			t.Fields = append(t.Fields, fieldData{
+				GoName:   f.Name,
+				JSONName: f.Tag.Get("json"),
+				FlagType: flagType(f.Type),
+				Desc:     f.Tag.Get("desc"),
+				Required: f.Tag.Get("required") == "true",
+				Default:  f.Tag.Get("default"),
+			})
+		}
+
+		data.Tools = append(data.Tools, t)
+	}
+
+	return writeTemplate(filepath.Join(outDir, name+".go"), groupTmplText, data)
+}
+
+func generateRoot(groups map[string][]tools.ToolDef) error {
+	type entry struct {
+		FuncName string
+	}
+
+	var entries []entry
+	for _, g := range tools.Groups() {
+		if _, ok := groups[g]; !ok {
+			continue
+		}
+		entries = append(entries, entry{
+			FuncName: "New" + exportedGroupName(g) + "Cmd",
+		})
+	}
+
+	return writeTemplate(filepath.Join(outDir, "root.go"), rootTmplText, struct{ Groups []entry }{entries})
+}
+
+func writeTemplate(path, tmplText string, data any) error {
+	t, err := template.New("").Funcs(funcMap).Parse(tmplText)
+	if err != nil {
+		return fmt.Errorf("parse template: %w", err)
+	}
+
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("create file: %w", err)
+	}
+	defer func() { _ = f.Close() }()
+
+	if err := t.Execute(f, data); err != nil {
+		return fmt.Errorf("execute template: %w", err)
+	}
+	return nil
+}
+
+func flagType(t reflect.Type) string {
+	switch t.Kind() {
+	case reflect.String:
+		return "String"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return "Int"
+	case reflect.Bool:
+		return "Bool"
+	default:
+		return "String"
+	}
+}
+
+func toExportedName(s string) string {
+	parts := strings.FieldsFunc(s, func(r rune) bool {
+		return r == '_' || r == '-'
+	})
+	var b strings.Builder
+	for _, p := range parts {
+		if len(p) == 0 {
+			continue
+		}
+		switch strings.ToLower(p) {
+		case "pr":
+			b.WriteString("PR")
+		case "ci":
+			b.WriteString("CI")
+		case "id":
+			b.WriteString("ID")
+		default:
+			b.WriteString(strings.ToUpper(p[:1]))
+			b.WriteString(p[1:])
+		}
+	}
+	return b.String()
+}
+
+func exportedGroupName(name string) string {
+	switch name {
+	case "pr":
+		return "PR"
+	case "ci":
+		return "CI"
+	default:
+		return strings.ToUpper(name[:1]) + name[1:]
+	}
+}
+
+func groupDescription(name string) string {
+	descs := map[string]string{
+		"user":    "User information",
+		"repo":    "Manage repositories",
+		"issue":   "Manage issues",
+		"pr":      "Manage pull requests",
+		"search":  "Search code, repos, and issues",
+		"actions": "Manage CI workflow runs",
+	}
+	if d, ok := descs[name]; ok {
+		return d
+	}
+	return "Manage " + name
+}
+
+func escapeBacktick(s string) string {
+	return strings.ReplaceAll(s, "`", "` + \"`\" + `")
+}
+
+func defaultVal(flagType, def string) string {
+	if def == "" {
+		switch flagType {
+		case "Int":
+			return "0"
+		case "Bool":
+			return "false"
+		default:
+			return `""`
+		}
+	}
+	switch flagType {
+	case "Int":
+		return def
+	case "Bool":
+		if def == "true" {
+			return "true"
+		}
+		return "false"
+	default:
+		return `"` + def + `"`
+	}
+}
+
+const rootTmplText = `// Code generated by cmd/gen; DO NOT EDIT.
+
+package gen
+
+import "github.com/spf13/cobra"
+
+// GroupCommands returns all generated group commands.
+func GroupCommands() []*cobra.Command {
+	return []*cobra.Command{
+{{- range .Groups}}
+		{{.FuncName}}(),
+{{- end}}
+	}
+}
+`
+
+const groupTmplText = `// Code generated by cmd/gen; DO NOT EDIT.
+
+package gen
+
+import (
+	"github.com/spf13/cobra"
+
+	"github.com/codebahn/codebahn-cli/tools"
+)
+
+// {{exportedGroup .GroupName}}Cmd returns the {{.GroupName}} parent command.
+func New{{exportedGroup .GroupName}}Cmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "{{.GroupUse}}",
+		Short: "{{.GroupDesc}}",
+	}
+{{- range .Tools}}
+	cmd.AddCommand({{.FuncName}}Cmd())
+{{- end}}
+	return cmd
+}
+{{range .Tools}}
+func {{.FuncName}}Cmd() *cobra.Command {
+	var args {{.ArgsType}}
+	cmd := &cobra.Command{
+		Use:   "{{.CLIName}}",
+		Short: ` + "`{{.Description}}`" + `,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("{{.ToolName}}")
+			return ExecuteAndPrint(cmd.Context(), td, args)
+		},
+	}
+{{- range .Fields}}
+	cmd.Flags().{{.FlagType}}Var(&args.{{.GoName}}, "{{.JSONName}}", {{defaultVal .FlagType .Default}}, ` + "`{{.Desc}}`" + `)
+{{- if .Required}}
+	_ = cmd.MarkFlagRequired("{{.JSONName}}")
+{{- end}}
+{{- end}}
+	return cmd
+}
+{{end}}`
