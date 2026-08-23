@@ -65,9 +65,7 @@ func RepoListCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
-	_ = cmd.MarkFlagRequired("page")
 	cmd.Flags().IntVar(&args.Limit, "limit", 100, `Page size`)
-	_ = cmd.MarkFlagRequired("limit")
 	return cmd
 }
 
@@ -216,9 +214,7 @@ func RepoBranchesCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
-	_ = cmd.MarkFlagRequired("page")
 	cmd.Flags().IntVar(&args.Limit, "limit", 100, `Page size`)
-	_ = cmd.MarkFlagRequired("limit")
 	return cmd
 }
 
@@ -237,9 +233,7 @@ func RepoLogCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Path, "path", "", `File/dir path`)
 	cmd.Flags().StringVar(&args.SHA, "sha", "", `SHA/branch to start from`)
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
-	_ = cmd.MarkFlagRequired("page")
 	cmd.Flags().IntVar(&args.Limit, "limit", 100, `Page size`)
-	_ = cmd.MarkFlagRequired("limit")
 	return cmd
 }
 
@@ -278,8 +272,6 @@ func RepoTreeCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("ref")
 	cmd.Flags().BoolVar(&args.Recursive, "recursive", false, `Return the complete file tree in one response (subject to server cap); default false returns top-level entries only`)
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
-	_ = cmd.MarkFlagRequired("page")
 	cmd.Flags().IntVar(&args.Limit, "limit", 1000, `Page size`)
-	_ = cmd.MarkFlagRequired("limit")
 	return cmd
 }

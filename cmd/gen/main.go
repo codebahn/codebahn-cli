@@ -60,6 +60,7 @@ type fieldData struct {
 	Desc         string
 	Required     bool
 	Default      string
+	HasDefault   bool
 	ContextInfer bool
 }
 
@@ -95,13 +96,15 @@ func generateGroup(name string, defs []tools.ToolDef) error {
 		for i := range rt.NumField() {
 			f := rt.Field(i)
 			jsonName := f.Tag.Get("json")
+			def := f.Tag.Get("default")
 			t.Fields = append(t.Fields, fieldData{
 				GoName:       f.Name,
 				JSONName:     jsonName,
 				FlagType:     flagType(f.Type),
 				Desc:         f.Tag.Get("desc"),
 				Required:     f.Tag.Get("required") == "true",
-				Default:      f.Tag.Get("default"),
+				Default:      def,
+				HasDefault:   def != "",
 				ContextInfer: jsonName == "owner" || jsonName == "repo",
 			})
 		}
@@ -290,7 +293,7 @@ func {{.FuncName}}Cmd() *cobra.Command {
 	}
 {{- range .Fields}}
 	cmd.Flags().{{.FlagType}}Var(&args.{{.GoName}}, "{{.JSONName}}", {{defaultVal .FlagType .Default}}, ` + "`{{.Desc}}`" + `)
-{{- if and .Required (not .ContextInfer)}}
+{{- if and .Required (not .ContextInfer) (not .HasDefault)}}
 	_ = cmd.MarkFlagRequired("{{.JSONName}}")
 {{- end}}
 {{- end}}
