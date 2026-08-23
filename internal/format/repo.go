@@ -198,32 +198,47 @@ func fmtCreateRepo(raw json.RawMessage, _ any, p *output.Printer) error {
 	return nil
 }
 
-func fmtCreateFile(raw json.RawMessage, args any, _ *output.Printer) error {
-	a := args.(*tools.CreateFileArgs)
+func fmtCreateFile(_ json.RawMessage, args any, _ *output.Printer) error {
+	a, ok := args.(*tools.CreateFileArgs)
+	if !ok {
+		return fmt.Errorf("unexpected args type for create_file")
+	}
 	successf("Created %s/%s:%s on %s", a.Owner, a.Repo, a.FilePath, a.BranchName)
 	return nil
 }
 
-func fmtUpdateFile(raw json.RawMessage, args any, _ *output.Printer) error {
-	a := args.(*tools.UpdateFileArgs)
+func fmtUpdateFile(_ json.RawMessage, args any, _ *output.Printer) error {
+	a, ok := args.(*tools.UpdateFileArgs)
+	if !ok {
+		return fmt.Errorf("unexpected args type for update_file")
+	}
 	successf("Updated %s/%s:%s on %s", a.Owner, a.Repo, a.FilePath, a.BranchName)
 	return nil
 }
 
-func fmtDeleteFile(raw json.RawMessage, args any, _ *output.Printer) error {
-	a := args.(*tools.DeleteFileArgs)
+func fmtDeleteFile(_ json.RawMessage, args any, _ *output.Printer) error {
+	a, ok := args.(*tools.DeleteFileArgs)
+	if !ok {
+		return fmt.Errorf("unexpected args type for delete_file")
+	}
 	successf("Deleted %s/%s:%s on %s", a.Owner, a.Repo, a.FilePath, a.BranchName)
 	return nil
 }
 
 func fmtCreateBranch(_ json.RawMessage, args any, _ *output.Printer) error {
-	a := args.(*tools.CreateBranchArgs)
+	a, ok := args.(*tools.CreateBranchArgs)
+	if !ok {
+		return fmt.Errorf("unexpected args type for create_branch")
+	}
 	successf("Created branch %s from %s in %s/%s", a.Branch, a.OldBranch, a.Owner, a.Repo)
 	return nil
 }
 
 func fmtDeleteBranch(_ json.RawMessage, args any, _ *output.Printer) error {
-	a := args.(*tools.DeleteBranchArgs)
+	a, ok := args.(*tools.DeleteBranchArgs)
+	if !ok {
+		return fmt.Errorf("unexpected args type for delete_branch")
+	}
 	successf("Deleted branch %s in %s/%s", a.Branch, a.Owner, a.Repo)
 	return nil
 }

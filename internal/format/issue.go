@@ -291,7 +291,9 @@ func fmtGetIssueComment(raw json.RawMessage, _ any, p *output.Printer) error {
 func fmtEditIssueComment(raw json.RawMessage, args any, _ *output.Printer) error {
 	var r mutationResult
 	if raw != nil {
-		_ = json.Unmarshal(raw, &r)
+		if err := json.Unmarshal(raw, &r); err != nil {
+			return err
+		}
 	}
 	id := r.ID
 	if id == 0 {

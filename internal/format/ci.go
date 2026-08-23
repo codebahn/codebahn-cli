@@ -50,7 +50,7 @@ func formatListWorkflowRuns(raw json.RawMessage, _ any, p *output.Printer) error
 	var wrapped struct {
 		Runs []workflowRun `json:"workflow_runs"`
 	}
-	if err := json.Unmarshal(raw, &wrapped); err == nil && len(wrapped.Runs) > 0 {
+	if err := json.Unmarshal(raw, &wrapped); err == nil && wrapped.Runs != nil {
 		runs = wrapped.Runs
 	} else if err := json.Unmarshal(raw, &runs); err != nil {
 		return err

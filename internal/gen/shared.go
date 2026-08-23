@@ -82,8 +82,18 @@ func resolveRepoContext(cmd *cobra.Command, args any) error {
 	if !ownerField.CanSet() || !repoField.CanSet() {
 		return nil
 	}
-	if ownerField.String() != "" || repoField.String() != "" {
+	if ownerField.String() != "" && repoField.String() != "" {
 		return nil
+	}
+
+	ownerSet := ownerField.String() != ""
+	repoSet := repoField.String() != ""
+
+	if ownerSet != repoSet {
+		if ownerSet {
+			return fmt.Errorf("--owner also requires --repo; use both or neither to auto-detect from git remote")
+		}
+		return fmt.Errorf("--repo also requires --owner; use both or neither to auto-detect from git remote")
 	}
 
 	instanceURL, _ := cmd.Flags().GetString("instance")
