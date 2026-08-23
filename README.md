@@ -129,6 +129,25 @@ sha256sum -c checksums.txt --ignore-missing
 The public key is also embedded in the CLI binary itself, so
 `codebahn update` does not need to fetch it separately.
 
+## Cutting a release
+
+Tag and push:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The GitHub Actions workflow runs tests, builds with
+[GoReleaser](https://goreleaser.com/) (parallel cross-compilation, GPG
+signing), and uploads everything to `releases.codebahn.net`. The
+`latest.json` manifest is updated so existing installs pick up the new
+version within 24 hours.
+
+For a local release (bypassing CI): `./scripts/release.sh v0.1.0`.
+Requires `goreleaser`, `gpg` (with the release key), and `aws` CLI
+configured for Scaleway.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
