@@ -1,48 +1,58 @@
 package update
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/ProtonMail/go-crypto/openpgp/armor"
 )
 
-func signFile(t *testing.T, path string) string {
-	t.Helper()
-	sigPath := path + ".asc"
-	cmd := exec.Command("gpg", "--batch", "--yes", "--detach-sign", "--armor",
-		"--local-user", "releases@codebahn.net", "-o", sigPath, path)
-	out, err := cmd.CombinedOutput()
+var testEntity *openpgp.Entity
+
+func TestMain(m *testing.M) {
+	entity, err := openpgp.NewEntity("Test", "", "test@test.com", nil)
 	if err != nil {
-		t.Fatalf("gpg sign: %v\n%s", err, out)
+		panic(err)
 	}
-	return sigPath
+	testEntity = entity
+
+	var pubBuf bytes.Buffer
+	w, _ := armor.Encode(&pubBuf, "PGP PUBLIC KEY BLOCK", nil)
+	entity.Serialize(w)
+	w.Close()
+	publicKey = pubBuf.String()
+
+	os.Exit(m.Run())
+}
+
+func signBytes(t *testing.T, data []byte) []byte {
+	t.Helper()
+	var sigBuf bytes.Buffer
+	err := openpgp.ArmoredDetachSign(&sigBuf, testEntity, bytes.NewReader(data), nil)
+	if err != nil {
+		t.Fatalf("signing: %v", err)
+	}
+	return sigBuf.Bytes()
 }
 
 func setupReleaseServer(t *testing.T, version, binaryContent string) *httptest.Server {
 	t.Helper()
 
-	dir := t.TempDir()
-
 	binaryName := fmt.Sprintf("codebahn-%s-%s", runtime.GOOS, runtime.GOARCH)
-	binaryPath := filepath.Join(dir, binaryName)
-	os.WriteFile(binaryPath, []byte(binaryContent), 0755)
 
 	h := sha256.Sum256([]byte(binaryContent))
 	checksumLine := fmt.Sprintf("%x  %s\n", h, binaryName)
-	checksumPath := filepath.Join(dir, "checksums.txt")
-	os.WriteFile(checksumPath, []byte(checksumLine), 0644)
-
-	signFile(t, checksumPath)
-
-	sigData, _ := os.ReadFile(checksumPath + ".asc")
-	checksumData, _ := os.ReadFile(checksumPath)
+	checksumData := []byte(checksumLine)
+	sigData := signBytes(t, checksumData)
 
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
