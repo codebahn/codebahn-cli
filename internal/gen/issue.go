@@ -41,13 +41,11 @@ func IssueGetCmd() *cobra.Command {
 		Short: `Get issue by index`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_issue_by_index")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `Issue index`)
 	_ = cmd.MarkFlagRequired("index")
 	return cmd
@@ -60,13 +58,11 @@ func IssueListCmd() *cobra.Command {
 		Short: `List repo issues`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_repo_issues")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.State, "state", "open", `State (open|closed|all)`)
 	cmd.Flags().StringVar(&args.Type, "type", "", `Type (issues|pulls)`)
 	cmd.Flags().StringVar(&args.Milestones, "milestones", "", `Milestone names/IDs (comma-separated)`)
@@ -83,13 +79,11 @@ func IssueCreateCmd() *cobra.Command {
 		Short: `Create issue`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("create_issue")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Title, "title", "", `Title`)
 	_ = cmd.MarkFlagRequired("title")
 	cmd.Flags().StringVar(&args.Body, "body", "", `Content body`)
@@ -103,13 +97,11 @@ func IssueCommentCmd() *cobra.Command {
 		Short: `Create issue comment`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("create_issue_comment")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `Issue/PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Body, "body", "", `Content body`)
@@ -124,13 +116,11 @@ func IssueUpdateCmd() *cobra.Command {
 		Short: `Update issue`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("update_issue")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `Issue index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Title, "title", "", `Title`)
@@ -148,13 +138,11 @@ func IssueAddLabelsCmd() *cobra.Command {
 		Short: `Add labels to issue`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("add_issue_labels")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `Issue index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Labels, "labels", "", `Labels to add (comma-separated)`)
@@ -169,13 +157,11 @@ func IssueRemoveLabelsCmd() *cobra.Command {
 		Short: `Remove labels from issue`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("remove_issue_labels")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `Issue index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Labels, "labels", "", `Labels to remove (comma-separated label IDs)`)
@@ -190,13 +176,11 @@ func IssueStateCmd() *cobra.Command {
 		Short: `Change issue state`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("issue_state_change")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `Issue index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.State, "state", "", `State (open|closed)`)
@@ -211,13 +195,11 @@ func IssueCommentsCmd() *cobra.Command {
 		Short: `List issue/PR comments. Returns all comments; the API does not support pagination for this endpoint.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_issue_comments")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `Issue/PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Since, "since", "", `After (RFC 3339)`)
@@ -232,13 +214,11 @@ func IssueGetCommentCmd() *cobra.Command {
 		Short: `Get comment by ID`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_issue_comment")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.CommentID, "comment_id", 0, `Comment ID`)
 	_ = cmd.MarkFlagRequired("comment_id")
 	return cmd
@@ -251,13 +231,11 @@ func IssueEditCommentCmd() *cobra.Command {
 		Short: `Edit issue/PR comment`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("edit_issue_comment")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.CommentID, "comment_id", 0, `Comment ID`)
 	_ = cmd.MarkFlagRequired("comment_id")
 	cmd.Flags().StringVar(&args.Body, "body", "", `Content body`)
@@ -272,13 +250,11 @@ func IssueDeleteCommentCmd() *cobra.Command {
 		Short: `Delete issue/PR comment`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("delete_issue_comment")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.CommentID, "comment_id", 0, `Comment ID`)
 	_ = cmd.MarkFlagRequired("comment_id")
 	return cmd
@@ -291,13 +267,11 @@ func IssueMilestonesCmd() *cobra.Command {
 		Short: `List repository milestones`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_repo_milestones")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
 	cmd.Flags().IntVar(&args.Limit, "limit", 100, `Page size`)
 	cmd.Flags().StringVar(&args.State, "state", "open", `Milestone state (open|closed|all)`)
@@ -311,13 +285,11 @@ func IssueLabelsCmd() *cobra.Command {
 		Short: `List repository labels. When the owner is an organization and include_org_labels is true (default), org-level labels are merged into the response. Each label carries a scope field of "repo" or "org".`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_repo_labels")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
 	cmd.Flags().IntVar(&args.Limit, "limit", 100, `Page size`)
 	cmd.Flags().BoolVar(&args.IncludeOrgLabels, "include_org_labels", true, `Merge org-level labels into the response when the owner is an organization. Default true.`)
@@ -331,11 +303,10 @@ func IssueCreateLabelCmd() *cobra.Command {
 		Short: `Create a label on a repository or organization`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("create_label")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner or organization name`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Name, "name", "", `Label name`)
 	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().StringVar(&args.Color, "color", "", `Label color hex code (e.g. #00aabb)`)
@@ -353,11 +324,10 @@ func IssueEditLabelCmd() *cobra.Command {
 		Short: `Edit a label on a repository or organization`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("edit_label")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner or organization name`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().IntVar(&args.ID, "id", 0, `Label ID`)
 	_ = cmd.MarkFlagRequired("id")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name. Omit to edit an org-level label.`)
@@ -375,11 +345,10 @@ func IssueDeleteLabelCmd() *cobra.Command {
 		Short: `Delete a label from a repository or organization`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("delete_label")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner or organization name`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().IntVar(&args.ID, "id", 0, `Label ID`)
 	_ = cmd.MarkFlagRequired("id")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name. Omit to delete an org-level label.`)

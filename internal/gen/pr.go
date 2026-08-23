@@ -40,13 +40,11 @@ func PRGetCmd() *cobra.Command {
 		Short: `Get pull request by index`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_pull_request_by_index")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	return cmd
@@ -59,13 +57,11 @@ func PRListCmd() *cobra.Command {
 		Short: `List repo pull requests`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_repo_pull_requests")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.State, "state", "open", `State (open|closed|all)`)
 	cmd.Flags().StringVar(&args.Sort, "sort", "", `Sort (oldest|recentupdate|leastupdate|mostcomment)`)
 	cmd.Flags().StringVar(&args.Milestone, "milestone", "", `Milestone ID`)
@@ -82,13 +78,11 @@ func PRCreateCmd() *cobra.Command {
 		Short: `Create pull request`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("create_pull_request")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Head, "head", "", `Head branch`)
 	_ = cmd.MarkFlagRequired("head")
 	cmd.Flags().StringVar(&args.Base, "base", "", `Base branch`)
@@ -106,13 +100,11 @@ func PRUpdateCmd() *cobra.Command {
 		Short: `Update pull request`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("update_pull_request")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Title, "title", "", `Title`)
@@ -130,13 +122,11 @@ func PRReviewsCmd() *cobra.Command {
 		Short: `List reviews for a pull request`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_pull_reviews")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
@@ -151,13 +141,11 @@ func PRGetReviewCmd() *cobra.Command {
 		Short: `Get a specific pull request review`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_pull_review")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().IntVar(&args.ID, "id", 0, `Review ID`)
@@ -172,13 +160,11 @@ func PRReviewCommentsCmd() *cobra.Command {
 		Short: `List comments on a pull request review`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_pull_review_comments")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().IntVar(&args.ID, "id", 0, `Review ID`)
@@ -193,13 +179,11 @@ func PRMergeCmd() *cobra.Command {
 		Short: `Merge a pull request`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("merge_pull_request")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Style, "style", "", `Merge style (merge, rebase, rebase-merge, squash)`)
@@ -219,13 +203,11 @@ func PRFilesCmd() *cobra.Command {
 		Short: `List changed files in a pull request`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_pull_request_files")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
@@ -240,13 +222,11 @@ func PRDiffCmd() *cobra.Command {
 		Short: `Get the unified diff of a pull request. Pass an optional file_path to receive only the hunks for that file (match is exact on either the pre- or post-rename path). Use list_pull_request_files first to discover the file paths in the PR.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_pull_request_diff")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.FilePath, "file_path", "", `Optional. Return only the diff section for this file (matched on the diff --git boundary). Omit for the full diff.`)
@@ -260,13 +240,11 @@ func PRCreateReviewCmd() *cobra.Command {
 		Short: `Create a pull request review with optional inline comments`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("create_pull_review")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.State, "state", "", `Review state (APPROVED, REQUEST_CHANGES, COMMENT)`)
@@ -283,13 +261,11 @@ func PRSubmitReviewCmd() *cobra.Command {
 		Short: `Submit a pending pull request review`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("submit_pull_review")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().IntVar(&args.ID, "id", 0, `Review ID`)
@@ -307,13 +283,11 @@ func PRDismissReviewCmd() *cobra.Command {
 		Short: `Dismiss a pull request review`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("dismiss_pull_review")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().IntVar(&args.ID, "id", 0, `Review ID`)
@@ -330,13 +304,11 @@ func PRDeleteReviewCmd() *cobra.Command {
 		Short: `Delete a pending pull request review`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("delete_pull_review")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().IntVar(&args.ID, "id", 0, `Review ID`)
@@ -351,13 +323,11 @@ func PRRequestReviewCmd() *cobra.Command {
 		Short: `Request reviews from specific users or teams`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("create_review_requests")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Reviewers, "reviewers", "", `Reviewer usernames (comma-separated)`)
@@ -372,13 +342,11 @@ func PRCancelReviewCmd() *cobra.Command {
 		Short: `Cancel pending review requests`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("delete_review_requests")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Reviewers, "reviewers", "", `Reviewer usernames (comma-separated)`)

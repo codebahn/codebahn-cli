@@ -3,6 +3,7 @@ package output
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -33,6 +34,7 @@ func Green(s string) string   { return colorize("32", s) }
 func Red(s string) string     { return colorize("31", s) }
 func Yellow(s string) string  { return colorize("33", s) }
 func Magenta(s string) string { return colorize("35", s) }
+func Cyan(s string) string    { return colorize("36", s) }
 func Bold(s string) string    { return colorize("1", s) }
 func Dim(s string) string     { return colorize("2", s) }
 
@@ -54,11 +56,12 @@ func StatusColor(status string) string {
 }
 
 type Printer struct {
+	w        io.Writer
 	jsonMode bool
 }
 
-func NewPrinter(jsonMode bool) *Printer {
-	return &Printer{jsonMode: jsonMode}
+func NewPrinter(w io.Writer, jsonMode bool) *Printer {
+	return &Printer{w: w, jsonMode: jsonMode}
 }
 
 func (p *Printer) JSON(v any) {
@@ -67,7 +70,7 @@ func (p *Printer) JSON(v any) {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		return
 	}
-	fmt.Println(string(data))
+	fmt.Fprintln(p.w, string(data))
 }
 
 func (p *Printer) Table(headers []string, rows [][]string) {
@@ -75,7 +78,7 @@ func (p *Printer) Table(headers []string, rows [][]string) {
 		p.tableAsJSON(headers, rows)
 		return
 	}
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	w := tabwriter.NewWriter(p.w, 0, 0, 2, ' ', 0)
 	if len(headers) > 0 {
 		_, _ = fmt.Fprintln(w, Bold(strings.Join(headers, "\t")))
 	}
@@ -100,7 +103,11 @@ func (p *Printer) tableAsJSON(headers []string, rows [][]string) {
 }
 
 func (p *Printer) Text(s string) {
-	fmt.Println(s)
+	fmt.Fprintln(p.w, s)
+}
+
+func (p *Printer) Fprintf(format string, args ...any) {
+	fmt.Fprintf(p.w, format, args...)
 }
 
 func (p *Printer) IsJSON() bool {

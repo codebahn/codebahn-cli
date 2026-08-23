@@ -21,10 +21,11 @@ import (
 )
 
 var (
-	version  = "dev"
-	instance string
-	token    string
-	noColor  bool
+	version    = "dev"
+	instance   string
+	token      string
+	noColor    bool
+	jsonOutput bool
 )
 
 func main() {
@@ -73,6 +74,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&instance, "instance", "https://codebahn.net", "Codebahn instance URL")
 	rootCmd.PersistentFlags().StringVar(&token, "token", "", "Personal access token")
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "Disable color output")
+	rootCmd.PersistentFlags().BoolVar(&jsonOutput, "json", false, "Output raw JSON")
 
 	for _, cmd := range gen.GroupCommands() {
 		rootCmd.AddCommand(cmd)

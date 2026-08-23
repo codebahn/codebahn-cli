@@ -25,7 +25,7 @@ func UserInfoCmd() *cobra.Command {
 		Short: `Get current user info`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_my_user_info")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	return cmd

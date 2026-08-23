@@ -35,14 +35,30 @@ func TestAllToolsHaveCommands(t *testing.T) {
 
 func TestRequiredFlagsMarked(t *testing.T) {
 	cmd := IssueCreateCmd()
-	for _, name := range []string{"owner", "repo", "title"} {
+
+	// owner and repo should exist but NOT be cobra-required (context-inferred)
+	for _, name := range []string{"owner", "repo"} {
 		f := cmd.Flags().Lookup(name)
 		if f == nil {
 			t.Errorf("flag %s not found", name)
 			continue
 		}
+		if _, ok := f.Annotations["cobra_annotation_bash_completion_one_required_flag"]; ok {
+			t.Errorf("flag %s should not be cobra-required (context-inferred)", name)
+		}
 	}
-	f := cmd.Flags().Lookup("body")
+
+	// title should still be cobra-required
+	f := cmd.Flags().Lookup("title")
+	if f == nil {
+		t.Fatal("flag title not found")
+	}
+	if _, ok := f.Annotations["cobra_annotation_bash_completion_one_required_flag"]; !ok {
+		t.Error("flag title should be cobra-required")
+	}
+
+	// body should exist and not be required
+	f = cmd.Flags().Lookup("body")
 	if f == nil {
 		t.Error("flag body not found")
 	}

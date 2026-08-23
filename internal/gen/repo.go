@@ -36,7 +36,7 @@ func RepoCreateCmd() *cobra.Command {
 		Short: `Create repo`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("create_repo")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Name, "name", "", `Repo name`)
@@ -61,7 +61,7 @@ func RepoListCmd() *cobra.Command {
 		Short: `List my repos`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_my_repos")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
@@ -78,13 +78,11 @@ func RepoCatCmd() *cobra.Command {
 		Short: `Get file content as plain text by default. Set with_metadata=true for binary files, or when you need the SHA/encoding/links from the full ContentsResponse (e.g. before a follow-up update_file call). Optional start_line and end_line request a 1-indexed inclusive line range; out-of-range values clamp to the file extent. Range parameters are ignored when with_metadata=true.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_file_content")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Ref, "ref", "", `Ref (branch/tag/commit)`)
 	_ = cmd.MarkFlagRequired("ref")
 	cmd.Flags().StringVar(&args.FilePath, "filePath", "", `File path`)
@@ -102,13 +100,11 @@ func RepoCreateFileCmd() *cobra.Command {
 		Short: `Create file`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("create_file")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.FilePath, "filePath", "", `File path`)
 	_ = cmd.MarkFlagRequired("filePath")
 	cmd.Flags().StringVar(&args.Content, "content", "", `Content (plain text, base64-encoded automatically)`)
@@ -128,13 +124,11 @@ func RepoUpdateFileCmd() *cobra.Command {
 		Short: `Update file`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("update_file")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.FilePath, "filePath", "", `File path`)
 	_ = cmd.MarkFlagRequired("filePath")
 	cmd.Flags().StringVar(&args.Content, "content", "", `Content (plain text, base64-encoded automatically)`)
@@ -156,13 +150,11 @@ func RepoDeleteFileCmd() *cobra.Command {
 		Short: `Delete file`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("delete_file")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.FilePath, "filePath", "", `File path`)
 	_ = cmd.MarkFlagRequired("filePath")
 	cmd.Flags().StringVar(&args.Message, "message", "", `Commit message`)
@@ -182,13 +174,11 @@ func RepoCreateBranchCmd() *cobra.Command {
 		Short: `Create branch`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("create_branch")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Branch, "branch", "", `Branch name`)
 	_ = cmd.MarkFlagRequired("branch")
 	cmd.Flags().StringVar(&args.OldBranch, "old_branch", "", `Source branch`)
@@ -203,13 +193,11 @@ func RepoDeleteBranchCmd() *cobra.Command {
 		Short: `Delete branch`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("delete_branch")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Branch, "branch", "", `Branch name`)
 	_ = cmd.MarkFlagRequired("branch")
 	return cmd
@@ -222,13 +210,11 @@ func RepoBranchesCmd() *cobra.Command {
 		Short: `List branches`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_branches")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
 	_ = cmd.MarkFlagRequired("page")
 	cmd.Flags().IntVar(&args.Limit, "limit", 100, `Page size`)
@@ -243,13 +229,11 @@ func RepoLogCmd() *cobra.Command {
 		Short: `List repo commits`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_repo_commits")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Path, "path", "", `File/dir path`)
 	cmd.Flags().StringVar(&args.SHA, "sha", "", `SHA/branch to start from`)
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
@@ -266,13 +250,11 @@ func RepoLsCmd() *cobra.Command {
 		Short: `List the files and directories at a given path in a repository. Use path="" to list the repository root. Returns one level of entries at the specified path; for a full recursive file tree use get_repo_tree with recursive=true.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_repo_contents")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Ref, "ref", "", `Ref (branch/tag/commit)`)
 	_ = cmd.MarkFlagRequired("ref")
 	cmd.Flags().StringVar(&args.Path, "path", "", `Directory path within the repository (empty string lists the repository root)`)
@@ -287,13 +269,11 @@ func RepoTreeCmd() *cobra.Command {
 		Short: `Get the Git tree of a repository. With recursive=true, returns the complete file tree in a single response (subject to the server's tree-endpoint size cap); use this when you need all paths at once. With recursive=false (default), returns only the top-level entries of the tree.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_repo_tree")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Ref, "ref", "", `Ref (branch/tag/commit)`)
 	_ = cmd.MarkFlagRequired("ref")
 	cmd.Flags().BoolVar(&args.Recursive, "recursive", false, `Return the complete file tree in one response (subject to server cap); default false returns top-level entries only`)

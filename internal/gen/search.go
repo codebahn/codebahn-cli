@@ -27,7 +27,7 @@ func SearchAllCmd() *cobra.Command {
 		Short: `Search across all types (code, repos, issues, users, organizations). Returns hit counts and a preview of results for each type. Use search_code or search_repos for paginated results.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("search")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Keyword, "keyword", "", `Search keyword`)
@@ -42,7 +42,7 @@ func SearchCodeCmd() *cobra.Command {
 		Short: `Search code across all accessible repositories`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("search_code")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Keyword, "keyword", "", `Search keyword`)
@@ -62,7 +62,7 @@ func SearchReposCmd() *cobra.Command {
 		Short: `Search repositories by name or description`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("search_repos")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Keyword, "keyword", "", `Search keyword`)

@@ -5,8 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
+
+	"github.com/spf13/cobra"
 
 	"github.com/codebahn/codebahn-cli/client"
+	"github.com/codebahn/codebahn-cli/internal/context_detect"
+	"github.com/codebahn/codebahn-cli/internal/format"
+	"github.com/codebahn/codebahn-cli/internal/output"
 	"github.com/codebahn/codebahn-cli/tools"
 )
 
@@ -26,23 +32,69 @@ func ClientFrom(ctx context.Context) *client.Client {
 }
 
 // ExecuteAndPrint runs a tool's API call and prints the result.
-// TTY output gets indented JSON; piped output gets compact JSON.
-func ExecuteAndPrint(ctx context.Context, td tools.ToolDef, args any) error {
-	c := ClientFrom(ctx)
+func ExecuteAndPrint(cmd *cobra.Command, td tools.ToolDef, args any) error {
+	c := ClientFrom(cmd.Context())
 	if c == nil {
 		return fmt.Errorf("not logged in; run 'codebahn auth login' first")
 	}
 
-	raw, err := c.Execute(ctx, td, args)
+	if err := resolveRepoContext(cmd, args); err != nil {
+		return err
+	}
+
+	raw, err := c.Execute(cmd.Context(), td, args)
 	if err != nil {
 		return err
+	}
+
+	jsonMode, _ := cmd.Flags().GetBool("json")
+	if jsonMode {
+		if raw == nil {
+			return nil
+		}
+		return printJSON(raw)
+	}
+
+	if f, ok := format.Get(td.Name); ok {
+		return f(raw, args, output.NewPrinter(os.Stdout, false))
 	}
 
 	if raw == nil {
 		return nil
 	}
-
 	return printJSON(raw)
+}
+
+func resolveRepoContext(cmd *cobra.Command, args any) error {
+	v := reflect.ValueOf(args)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	if v.Kind() != reflect.Struct {
+		return nil
+	}
+
+	ownerField := v.FieldByName("Owner")
+	repoField := v.FieldByName("Repo")
+	if !ownerField.IsValid() || !repoField.IsValid() {
+		return nil
+	}
+	if !ownerField.CanSet() || !repoField.CanSet() {
+		return nil
+	}
+	if ownerField.String() != "" || repoField.String() != "" {
+		return nil
+	}
+
+	instanceURL, _ := cmd.Flags().GetString("instance")
+	ctx, ok := context_detect.DetectRepo(instanceURL)
+	if !ok {
+		return fmt.Errorf("could not detect repository from git remote; use --owner and --repo flags")
+	}
+
+	ownerField.SetString(ctx.Owner)
+	repoField.SetString(ctx.Repo)
+	return nil
 }
 
 func printJSON(raw json.RawMessage) error {
