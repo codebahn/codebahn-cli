@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Import GPG key
+        run: echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Configure AWS CLI for Scaleway
+        run: |
+          aws configure set aws_access_key_id "$SCW_ACCESS_KEY"
+          aws configure set aws_secret_access_key "$SCW_SECRET_KEY"
+          aws configure set default.region fr-par
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: Build and publish
+        run: ./scripts/release.sh "${{ github.ref_name }}"
