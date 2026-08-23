@@ -115,7 +115,7 @@ To verify manually:
 
 ```bash
 # Import the public key
-curl -sS https://codebahn.net/pgp-key.asc | gpg --import
+curl -sS https://codebahn.net/release-signing-key.asc | gpg --import
 
 # Download and verify
 curl -O https://releases.codebahn.net/cli/v0.1.0/checksums.txt
