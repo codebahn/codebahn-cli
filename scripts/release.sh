@@ -28,6 +28,7 @@ for target in "${TARGETS[@]}"; do
   name="codebahn-${os}-${arch}"
   echo "Building ${name}..."
   GOOS="$os" GOARCH="$arch" CGO_ENABLED=0 go build \
+    -trimpath \
     -ldflags "-s -w -X main.version=${TAG}" \
     -o "${DIST}/${name}" \
     ./cmd/codebahn
