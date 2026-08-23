@@ -17,7 +17,7 @@ func signFile(t *testing.T, path string) string {
 	t.Helper()
 	sigPath := path + ".asc"
 	cmd := exec.Command("gpg", "--batch", "--yes", "--detach-sign", "--armor",
-		"--local-user", "test@codebahn.net", "-o", sigPath, path)
+		"--local-user", "releases@codebahn.net", "-o", sigPath, path)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("gpg sign: %v\n%s", err, out)
