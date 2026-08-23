@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -79,11 +80,15 @@ func main() {
 	rootCmd.AddCommand(authCmd())
 	rootCmd.AddCommand(updateCmd())
 
-	checkUpdateInBackground(rootCmd)
+	notice := checkUpdateInBackground(rootCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		output.Errorf("%v", err)
 		os.Exit(1)
+	}
+
+	if msg := notice(); msg != "" {
+		fmt.Fprint(os.Stderr, msg)
 	}
 }
 
@@ -193,7 +198,9 @@ func authStatusCmd() *cobra.Command {
 	}
 }
 
-func checkUpdateInBackground(rootCmd *cobra.Command) {
+func checkUpdateInBackground(rootCmd *cobra.Command) func() string {
+	ch := make(chan string, 1)
+
 	origPreRun := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := origPreRun(cmd, args); err != nil {
@@ -212,15 +219,29 @@ func checkUpdateInBackground(rootCmd *cobra.Command) {
 		go func() {
 			rel, err := update.CheckLatest(version)
 			if err != nil {
+				ch <- ""
 				return
 			}
 			update.RecordCheck()
 			if rel.Newer {
-				update.PrintUpdateNotice(os.Stderr, version, rel.Version)
+				var buf bytes.Buffer
+				update.PrintUpdateNotice(&buf, version, rel.Version)
+				ch <- buf.String()
+			} else {
+				ch <- ""
 			}
 		}()
 
 		return nil
+	}
+
+	return func() string {
+		select {
+		case msg := <-ch:
+			return msg
+		default:
+			return ""
+		}
 	}
 }
 

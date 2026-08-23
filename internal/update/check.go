@@ -13,7 +13,7 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-var BaseURL = "https://releases.codebahn.net/cli"
+var baseURL = "https://releases.codebahn.net/cli"
 
 const checkInterval = 24 * time.Hour
 
@@ -26,7 +26,7 @@ func releasesURL() string {
 	if u := os.Getenv("CODEBAHN_RELEASES_URL"); u != "" {
 		return u
 	}
-	return BaseURL
+	return baseURL
 }
 
 func CheckLatest(currentVersion string) (*Release, error) {
@@ -47,6 +47,9 @@ func CheckLatest(currentVersion string) (*Release, error) {
 	}
 
 	latest := "v" + rel.Version
+	if !semver.IsValid(latest) {
+		return nil, fmt.Errorf("invalid version from server: %q", rel.Version)
+	}
 	if semver.Compare(currentVersion, latest) < 0 {
 		rel.Newer = true
 	}

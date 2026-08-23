@@ -19,11 +19,12 @@ func updateCmd() *cobra.Command {
 				return fmt.Errorf("cannot update a development build; install a release build first")
 			}
 
-			if checkOnly {
-				rel, err := update.CheckLatest(version)
-				if err != nil {
-					return fmt.Errorf("checking for updates: %w", err)
-				}
+			rel, err := update.CheckLatest(version)
+			if err != nil {
+				return fmt.Errorf("checking for updates: %w", err)
+			}
+
+			if checkOnly || !rel.Newer {
 				if rel.Newer {
 					fmt.Printf("Update available: v%s (current: %s).\n", rel.Version, version)
 				} else {
@@ -32,17 +33,8 @@ func updateCmd() *cobra.Command {
 				return nil
 			}
 
-			rel, err := update.CheckLatest(version)
-			if err != nil {
-				return fmt.Errorf("checking for updates: %w", err)
-			}
-			if !rel.Newer {
-				fmt.Println("Already up to date.")
-				return nil
-			}
-
 			fmt.Printf("Updating to v%s...\n", rel.Version)
-			if err := update.Update(version, ""); err != nil {
+			if err := update.Update(rel, ""); err != nil {
 				return err
 			}
 			fmt.Printf("Updated to v%s.\n", rel.Version)

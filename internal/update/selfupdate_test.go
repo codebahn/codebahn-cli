@@ -78,7 +78,8 @@ func TestUpdate_Success(t *testing.T) {
 	fakeExe := filepath.Join(t.TempDir(), "codebahn")
 	os.WriteFile(fakeExe, []byte("old binary"), 0755)
 
-	err := Update("v1.0.0", fakeExe)
+	rel := &Release{Version: "2.0.0", Newer: true}
+	err := Update(rel, fakeExe)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,17 +87,6 @@ func TestUpdate_Success(t *testing.T) {
 	data, _ := os.ReadFile(fakeExe)
 	if string(data) != "#!/bin/sh\necho updated\n" {
 		t.Errorf("binary not updated, got %q", data)
-	}
-}
-
-func TestUpdate_AlreadyCurrent(t *testing.T) {
-	srv := setupReleaseServer(t, "1.0.0", "binary")
-	defer srv.Close()
-	t.Setenv("CODEBAHN_RELEASES_URL", srv.URL+"/cli")
-
-	err := Update("v1.0.0", "")
-	if err != nil {
-		t.Fatal(err)
 	}
 }
 
@@ -122,7 +112,8 @@ func TestUpdate_BadChecksum(t *testing.T) {
 	fakeExe := filepath.Join(t.TempDir(), "codebahn")
 	os.WriteFile(fakeExe, []byte("old"), 0755)
 
-	err := Update("v1.0.0", fakeExe)
+	rel := &Release{Version: "2.0.0", Newer: true}
+	err := Update(rel, fakeExe)
 	if err == nil {
 		t.Fatal("expected error for bad signature")
 	}
@@ -142,7 +133,8 @@ func TestUpdate_HomebrewDetection(t *testing.T) {
 	os.MkdirAll(filepath.Dir(brewPath), 0755)
 	os.WriteFile(brewPath, []byte("brew binary"), 0755)
 
-	err := Update("v1.0.0", brewPath)
+	rel := &Release{Version: "2.0.0", Newer: true}
+	err := Update(rel, brewPath)
 	if err == nil || !strings.Contains(err.Error(), "brew upgrade") {
 		t.Errorf("expected Homebrew detection error, got: %v", err)
 	}

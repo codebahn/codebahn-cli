@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
-	"golang.org/x/mod/semver"
 )
 
 //go:embed pgp/release-key.asc
@@ -21,15 +20,7 @@ var publicKey string
 
 var ErrHomebrew = fmt.Errorf("installed via Homebrew; run: brew upgrade codebahn")
 
-func Update(currentVersion, execPath string) error {
-	rel, err := CheckLatest(currentVersion)
-	if err != nil {
-		return fmt.Errorf("checking for updates: %w", err)
-	}
-	if !rel.Newer {
-		return nil
-	}
-
+func Update(rel *Release, execPath string) error {
 	if execPath == "" {
 		p, err := os.Executable()
 		if err != nil {
@@ -48,12 +39,12 @@ func Update(currentVersion, execPath string) error {
 	tag := "v" + rel.Version
 	base := releasesURL()
 
-	checksumData, err := fetch(base + "/" + tag + "/checksums.txt")
+	checksumData, err := fetchMetadata(base + "/" + tag + "/checksums.txt")
 	if err != nil {
 		return fmt.Errorf("downloading checksums: %w", err)
 	}
 
-	sigData, err := fetch(base + "/" + tag + "/checksums.txt.asc")
+	sigData, err := fetchMetadata(base + "/" + tag + "/checksums.txt.asc")
 	if err != nil {
 		return fmt.Errorf("downloading signature: %w", err)
 	}
@@ -68,7 +59,7 @@ func Update(currentVersion, execPath string) error {
 		return err
 	}
 
-	binaryData, err := fetch(base + "/" + tag + "/" + binaryName)
+	binaryData, err := fetchBinary(base + "/" + tag + "/" + binaryName)
 	if err != nil {
 		return fmt.Errorf("downloading binary: %w", err)
 	}
@@ -86,7 +77,18 @@ func isHomebrew(execPath string) bool {
 	return strings.Contains(lower, "/cellar/") || strings.Contains(lower, "/homebrew/")
 }
 
-func fetch(url string) ([]byte, error) {
+const maxBinarySize = 256 << 20 // 256 MB
+const maxMetadataSize = 1 << 20 // 1 MB
+
+func fetchBinary(url string) ([]byte, error) {
+	return fetchWithLimit(url, maxBinarySize)
+}
+
+func fetchMetadata(url string) ([]byte, error) {
+	return fetchWithLimit(url, maxMetadataSize)
+}
+
+func fetchWithLimit(url string, limit int64) ([]byte, error) {
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
@@ -98,7 +100,7 @@ func fetch(url string) ([]byte, error) {
 		return nil, fmt.Errorf("HTTP %d for %s", resp.StatusCode, url)
 	}
 
-	return io.ReadAll(resp.Body)
+	return io.ReadAll(io.LimitReader(resp.Body, limit))
 }
 
 func verifySignature(data, sig []byte) error {
@@ -152,19 +154,4 @@ func replaceBinary(execPath string, data []byte) error {
 	}
 
 	return nil
-}
-
-func LatestVersion() string {
-	rel, err := CheckLatest("v0.0.0")
-	if err != nil {
-		return ""
-	}
-	return rel.Version
-}
-
-func IsNewer(current, latest string) bool {
-	if !strings.HasPrefix(latest, "v") {
-		latest = "v" + latest
-	}
-	return semver.Compare(current, latest) < 0
 }
