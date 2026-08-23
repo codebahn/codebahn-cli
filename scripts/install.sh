@@ -68,7 +68,7 @@ verify_checksum() {
   checksums="$2"
   name="$3"
 
-  expected="$(grep "  ${name}$" "$checksums" | cut -d' ' -f1)"
+  expected="$(awk -v f="$name" '$2 == f || $2 == "*"f { print $1 }' "$checksums")"
   if [ -z "$expected" ]; then
     echo "No checksum found for $name" >&2
     exit 1
