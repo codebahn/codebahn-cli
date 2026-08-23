@@ -13,9 +13,19 @@ One binary. OAuth login. No config files.
 
 ## Install
 
-Download the latest binary for your platform from
-[releases.codebahn.net](https://releases.codebahn.net/cli/latest.json),
-or install from source:
+```bash
+curl -fsSL https://releases.codebahn.net/cli/install.sh | sh
+```
+
+This detects your platform, downloads the latest binary, verifies its
+SHA256 checksum, and installs to `~/.local/bin`. Override the location
+with `INSTALL_DIR`:
+
+```bash
+curl -fsSL https://releases.codebahn.net/cli/install.sh | INSTALL_DIR=/usr/local/bin sh
+```
+
+Alternatively, install from source (note: source builds skip auto-update):
 
 ```bash
 go install github.com/codebahn/codebahn-cli/cmd/codebahn@latest

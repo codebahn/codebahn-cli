@@ -37,6 +37,14 @@ echo "Uploading checksums..."
 upload dist/checksums.txt checksums.txt
 [ -f dist/checksums.txt.asc ] && upload dist/checksums.txt.asc checksums.txt.asc
 
+echo "Uploading install script..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+aws s3 cp "$SCRIPT_DIR/install.sh" "s3://${BUCKET}/cli/install.sh" \
+  --endpoint-url "$ENDPOINT" \
+  --content-type text/plain \
+  --acl public-read \
+  --quiet
+
 echo "Updating latest.json..."
 echo "{\"version\":\"${VERSION}\"}" | aws s3 cp - \
   "s3://${BUCKET}/cli/latest.json" \
