@@ -16,6 +16,7 @@ import (
 	"github.com/codebahn/codebahn-cli/internal/gen"
 	"github.com/codebahn/codebahn-cli/internal/oauth"
 	"github.com/codebahn/codebahn-cli/internal/output"
+	"github.com/codebahn/codebahn-cli/internal/update"
 )
 
 var (
@@ -76,6 +77,9 @@ func main() {
 		rootCmd.AddCommand(cmd)
 	}
 	rootCmd.AddCommand(authCmd())
+	rootCmd.AddCommand(updateCmd())
+
+	checkUpdateInBackground(rootCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		output.Errorf("%v", err)
@@ -186,6 +190,37 @@ func authStatusCmd() *cobra.Command {
 			fmt.Println()
 			return nil
 		},
+	}
+}
+
+func checkUpdateInBackground(rootCmd *cobra.Command) {
+	origPreRun := rootCmd.PersistentPreRunE
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := origPreRun(cmd, args); err != nil {
+			return err
+		}
+
+		if cmd.Name() == "update" {
+			return nil
+		}
+
+		cfg, _ := config.LoadConfig()
+		if !update.ShouldCheck(version, cfg.CheckUpdates) {
+			return nil
+		}
+
+		go func() {
+			rel, err := update.CheckLatest(version)
+			if err != nil {
+				return
+			}
+			update.RecordCheck()
+			if rel.Newer {
+				update.PrintUpdateNotice(os.Stderr, version, rel.Version)
+			}
+		}()
+
+		return nil
 	}
 }
 
