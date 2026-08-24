@@ -54,12 +54,14 @@ type toolData struct {
 }
 
 type fieldData struct {
-	GoName   string
-	JSONName string
-	FlagType string
-	Desc     string
-	Required bool
-	Default  string
+	GoName       string
+	JSONName     string
+	FlagType     string
+	Desc         string
+	Required     bool
+	Default      string
+	HasDefault   bool
+	ContextInfer bool
 }
 
 func groupedTools() map[string][]tools.ToolDef {
@@ -93,13 +95,17 @@ func generateGroup(name string, defs []tools.ToolDef) error {
 
 		for i := range rt.NumField() {
 			f := rt.Field(i)
+			jsonName := f.Tag.Get("json")
+			def := f.Tag.Get("default")
 			t.Fields = append(t.Fields, fieldData{
-				GoName:   f.Name,
-				JSONName: f.Tag.Get("json"),
-				FlagType: flagType(f.Type),
-				Desc:     f.Tag.Get("desc"),
-				Required: f.Tag.Get("required") == "true",
-				Default:  f.Tag.Get("default"),
+				GoName:       f.Name,
+				JSONName:     jsonName,
+				FlagType:     flagType(f.Type),
+				Desc:         f.Tag.Get("desc"),
+				Required:     f.Tag.Get("required") == "true",
+				Default:      def,
+				HasDefault:   def != "",
+				ContextInfer: jsonName == "owner" || jsonName == "repo",
 			})
 		}
 
@@ -282,12 +288,12 @@ func {{.FuncName}}Cmd() *cobra.Command {
 		Short: ` + "`{{.Description}}`" + `,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("{{.ToolName}}")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 {{- range .Fields}}
 	cmd.Flags().{{.FlagType}}Var(&args.{{.GoName}}, "{{.JSONName}}", {{defaultVal .FlagType .Default}}, ` + "`{{.Desc}}`" + `)
-{{- if .Required}}
+{{- if and .Required (not .ContextInfer) (not .HasDefault)}}
 	_ = cmd.MarkFlagRequired("{{.JSONName}}")
 {{- end}}
 {{- end}}

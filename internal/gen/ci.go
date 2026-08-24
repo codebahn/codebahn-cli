@@ -29,13 +29,11 @@ func CIDispatchCmd() *cobra.Command {
 		Short: `Trigger a workflow run. Returns the run ID.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("dispatch_workflow")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Workflow, "workflow", "", `Workflow file (e.g. ci.yml)`)
 	_ = cmd.MarkFlagRequired("workflow")
 	cmd.Flags().StringVar(&args.Ref, "ref", "", `Git ref to build (branch/tag). Defaults to repo default branch.`)
@@ -50,13 +48,11 @@ func CIListCmd() *cobra.Command {
 		Short: `List workflow runs for a repository`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_workflow_runs")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().StringVar(&args.Status, "status", "", `Filter by status (waiting, running, success, failure, cancelled)`)
 	cmd.Flags().StringVar(&args.Event, "event", "", `Filter by event (push, pull_request, workflow_dispatch)`)
 	cmd.Flags().IntVar(&args.RunNumber, "run_number", 0, `Filter by run number`)
@@ -73,13 +69,11 @@ func CIGetCmd() *cobra.Command {
 		Short: `Get details of a specific workflow run`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_workflow_run")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.RunID, "run_id", 0, `Run ID`)
 	_ = cmd.MarkFlagRequired("run_id")
 	return cmd
@@ -92,13 +86,11 @@ func CILogsCmd() *cobra.Command {
 		Short: `Get logs for a CI build run, grouped by job`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("get_job_logs")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.RunID, "run_id", 0, `Workflow run ID`)
 	_ = cmd.MarkFlagRequired("run_id")
 	cmd.Flags().StringVar(&args.Job, "job", "", `Filter logs to a specific job name`)
@@ -113,13 +105,11 @@ func CICancelCmd() *cobra.Command {
 		Short: `Cancel a running CI build`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("cancel_build")
-			return ExecuteAndPrint(cmd.Context(), td, args)
+			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	_ = cmd.MarkFlagRequired("repo")
 	cmd.Flags().IntVar(&args.RunID, "run_id", 0, `Workflow run ID`)
 	_ = cmd.MarkFlagRequired("run_id")
 	return cmd
