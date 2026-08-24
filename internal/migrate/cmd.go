@@ -80,6 +80,10 @@ func MirrorCmd() *cobra.Command {
 }
 
 func mirrorOne(ctx context.Context, c *client.Client, src Source, destOwner, token string, public bool, p *output.Printer) error {
+	if err := PreflightSingleRepo(ctx, c, src, token, destOwner); err != nil {
+		return err
+	}
+
 	opts := MigrateRepoOptions{
 		CloneAddr: src.CloneURL,
 		RepoOwner: destOwner,
@@ -121,6 +125,13 @@ func mirrorOrg(ctx context.Context, c *client.Client, src Source, destOwner, tok
 	var results []migrateResult
 
 	for _, r := range repos {
+		if err := checkDestNotExists(ctx, c, destOwner, r.Name); err != nil {
+			failed++
+			results = append(results, migrateResult{Repo: r.FullName, Error: err.Error()})
+			fmt.Printf("  %s %s: %v\n", output.Red("SKIP"), r.FullName, err)
+			continue
+		}
+
 		opts := MigrateRepoOptions{
 			CloneAddr: r.CloneURL,
 			RepoOwner: destOwner,
@@ -275,6 +286,10 @@ func buildImportOpts(repoName, cloneURL, destOwner, service, token string, publi
 }
 
 func importOne(ctx context.Context, c *client.Client, src Source, destOwner, token string, public bool, meta metadataFlags, p *output.Printer) error {
+	if err := PreflightSingleRepo(ctx, c, src, token, destOwner); err != nil {
+		return err
+	}
+
 	opts := buildImportOpts(src.Repo, src.CloneURL, destOwner, src.Service, token, public, meta)
 
 	raw, err := MigrateRepo(ctx, c, opts)
@@ -308,6 +323,13 @@ func importOrg(ctx context.Context, c *client.Client, src Source, destOwner, tok
 	var results []migrateResult
 
 	for _, r := range repos {
+		if err := checkDestNotExists(ctx, c, destOwner, r.Name); err != nil {
+			failed++
+			results = append(results, migrateResult{Repo: r.FullName, Error: err.Error()})
+			fmt.Printf("  %s %s: %v\n", output.Red("SKIP"), r.FullName, err)
+			continue
+		}
+
 		opts := buildImportOpts(r.Name, r.CloneURL, destOwner, src.Service, token, public, meta)
 
 		raw, err := MigrateRepo(ctx, c, opts)
