@@ -67,7 +67,7 @@ func TestConnectGitHubApp(t *testing.T) {
 	defer ts.Close()
 
 	c := client.New(ts.URL, "test-token")
-	conn, err := ConnectGitHubApp(context.Background(), c, "ghu_test")
+	conn, err := ConnectGitHubApp(context.Background(), c, "ghu_test", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -79,6 +79,32 @@ func TestConnectGitHubApp(t *testing.T) {
 	}
 }
 
+func TestConnectGitHubApp_WithAccount(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/github-app/connect" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if got := r.URL.Query().Get("account"); got != "hackerman-co" {
+			t.Errorf("account = %q, want hackerman-co", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"installation_id":99,"account_login":"hackerman-co","account_type":"Organization"}`)
+	}))
+	defer ts.Close()
+
+	c := client.New(ts.URL, "test-token")
+	conn, err := ConnectGitHubApp(context.Background(), c, "ghu_test", "hackerman-co")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if conn.InstallationID != 99 {
+		t.Errorf("InstallationID = %d, want 99", conn.InstallationID)
+	}
+	if conn.AccountLogin != "hackerman-co" {
+		t.Errorf("AccountLogin = %q, want hackerman-co", conn.AccountLogin)
+	}
+}
+
 func TestConnectGitHubApp_NotInstalled(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -87,7 +113,7 @@ func TestConnectGitHubApp_NotInstalled(t *testing.T) {
 	defer ts.Close()
 
 	c := client.New(ts.URL, "test-token")
-	conn, err := ConnectGitHubApp(context.Background(), c, "ghu_test")
+	conn, err := ConnectGitHubApp(context.Background(), c, "ghu_test", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
