@@ -15,6 +15,7 @@ import (
 	"github.com/codebahn/codebahn-cli/client"
 	"github.com/codebahn/codebahn-cli/internal/config"
 	"github.com/codebahn/codebahn-cli/internal/gen"
+	"github.com/codebahn/codebahn-cli/internal/migrate"
 	"github.com/codebahn/codebahn-cli/internal/oauth"
 	"github.com/codebahn/codebahn-cli/internal/output"
 	"github.com/codebahn/codebahn-cli/internal/update"
@@ -76,6 +77,10 @@ func main() {
 	rootCmd.PersistentFlags().Bool("json", false, "Output raw JSON")
 
 	for _, cmd := range gen.GroupCommands() {
+		if cmd.Name() == "repo" {
+			cmd.AddCommand(migrate.MirrorCmd())
+			cmd.AddCommand(migrate.ImportCmd())
+		}
 		rootCmd.AddCommand(cmd)
 	}
 	rootCmd.AddCommand(authCmd())
