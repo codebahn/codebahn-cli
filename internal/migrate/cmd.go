@@ -71,7 +71,7 @@ func MirrorCmd() *cobra.Command {
 	cmd.Flags().StringVar(&owner, "owner", "", "Destination org on Codebahn (default: your username)")
 	cmd.Flags().BoolVar(&private, "private", false, "Make mirror private")
 	cmd.Flags().BoolVar(&public, "public", false, "Make mirror public")
-	cmd.Flags().StringVar(&token, "token", "", "Source PAT (or set GITHUB_TOKEN)")
+	cmd.Flags().StringVar(&token, "source-token", "", "Source PAT (or set GITHUB_TOKEN)")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Skip confirmation in org mode")
 	cmd.Flags().Var(&include, "include", "Glob pattern to select repos (repeatable)")
 	cmd.Flags().Var(&exclude, "exclude", "Glob pattern to skip repos (repeatable)")
@@ -100,7 +100,7 @@ func mirrorOne(ctx context.Context, c *client.Client, src Source, destOwner, tok
 
 func mirrorOrg(ctx context.Context, c *client.Client, src Source, destOwner, token string, private, public bool, include, exclude []string, yes bool, p *output.Printer) error {
 	if token == "" {
-		return fmt.Errorf("--token or GITHUB_TOKEN required to list repos from %s/%s", src.Host, src.Owner)
+		return fmt.Errorf("--source-token or GITHUB_TOKEN required to list repos from %s/%s", src.Host, src.Owner)
 	}
 
 	repos, err := ListSourceRepos(ctx, src, token)
@@ -231,7 +231,7 @@ func ImportCmd() *cobra.Command {
 	cmd.Flags().StringVar(&owner, "owner", "", "Destination org on Codebahn (default: your username)")
 	cmd.Flags().BoolVar(&private, "private", false, "Make imported repo private")
 	cmd.Flags().BoolVar(&public, "public", false, "Make imported repo public")
-	cmd.Flags().StringVar(&token, "token", "", "Source PAT (or set GITHUB_TOKEN)")
+	cmd.Flags().StringVar(&token, "source-token", "", "Source PAT (or set GITHUB_TOKEN)")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Skip confirmation in org mode")
 	cmd.Flags().BoolVar(&noIssues, "no-issues", false, "Do not import issues")
 	cmd.Flags().BoolVar(&noPRs, "no-prs", false, "Do not import pull requests")
@@ -287,7 +287,7 @@ func importOne(ctx context.Context, c *client.Client, src Source, destOwner, tok
 
 func importOrg(ctx context.Context, c *client.Client, src Source, destOwner, token string, public bool, meta metadataFlags, include, exclude []string, yes bool, p *output.Printer) error {
 	if token == "" {
-		return fmt.Errorf("--token or GITHUB_TOKEN required to list repos from %s/%s", src.Host, src.Owner)
+		return fmt.Errorf("--source-token or GITHUB_TOKEN required to list repos from %s/%s", src.Host, src.Owner)
 	}
 
 	repos, err := ListSourceRepos(ctx, src, token)
