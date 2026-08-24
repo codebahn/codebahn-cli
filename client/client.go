@@ -191,6 +191,58 @@ func (c *Client) doRaw(ctx context.Context, method, path string, body any) (json
 	return json.RawMessage(raw), nil
 }
 
+// DoRawWithHeaders is like doRaw but sets additional request headers.
+func (c *Client) DoRawWithHeaders(ctx context.Context, method, path string, body any, headers map[string]string) (json.RawMessage, error) {
+	if err := c.ensureValidToken(ctx); err != nil {
+		return nil, err
+	}
+
+	var bodyReader io.Reader
+	if body != nil {
+		buf, err := json.Marshal(body)
+		if err != nil {
+			return nil, fmt.Errorf("marshal body: %w", err)
+		}
+		bodyReader = bytes.NewReader(buf)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, c.apiURL(path), bodyReader)
+	if err != nil {
+		return nil, fmt.Errorf("build request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+c.accessToken)
+	req.Header.Set("Accept", "application/json")
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		respBody := make([]byte, 512)
+		n, _ := io.ReadFull(resp.Body, respBody)
+		return nil, &StatusCodeError{Code: resp.StatusCode, Body: string(respBody[:n])}
+	}
+
+	if resp.StatusCode == http.StatusNoContent {
+		return nil, nil
+	}
+
+	const maxResponseSize = 50 * 1024 * 1024
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseSize))
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+	return json.RawMessage(raw), nil
+}
+
 func (c *Client) GetRaw(ctx context.Context, path string) (json.RawMessage, error) {
 	return c.doRaw(ctx, http.MethodGet, path, nil)
 }

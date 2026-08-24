@@ -61,6 +61,10 @@ func MirrorCmd() *cobra.Command {
 			jsonMode, _ := cmd.Flags().GetBool("json")
 			p := output.NewPrinter(os.Stdout, jsonMode)
 
+			if sourceToken == "" && src.Service == "github" {
+				return mirrorViaGitHubApp(ctx, c, src, destOwner, public, include, exclude, yes, p)
+			}
+
 			if src.IsOrg() {
 				return mirrorOrg(ctx, c, src, destOwner, sourceToken, private, public, include, exclude, yes, p)
 			}
@@ -232,6 +236,10 @@ func ImportCmd() *cobra.Command {
 			jsonMode, _ := cmd.Flags().GetBool("json")
 			p := output.NewPrinter(os.Stdout, jsonMode)
 
+			if sourceToken == "" && src.Service == "github" {
+				return importViaGitHubApp(ctx, c, src, destOwner, public, meta, include, exclude, yes, p)
+			}
+
 			if src.IsOrg() {
 				return importOrg(ctx, c, src, destOwner, sourceToken, public, meta, include, exclude, yes, p)
 			}
@@ -386,4 +394,146 @@ func collectResult(raw []byte, fullName string) migrateResult {
 	}
 	_ = json.Unmarshal(raw, &created)
 	return migrateResult{Repo: fullName, Status: "queued", URL: created.HTMLURL}
+}
+
+func mirrorViaGitHubApp(ctx context.Context, c *client.Client, src Source, destOwner string, public bool, include, exclude []string, yes bool, p *output.Printer) error {
+	ghToken, conn, err := authenticateGitHubApp(ctx, c)
+	if err != nil {
+		return err
+	}
+
+	repos, err := ListGitHubAppRepos(ctx, c, conn.InstallationID, ghToken)
+	if err != nil {
+		return err
+	}
+
+	if !src.IsOrg() {
+		repos = filterByName(repos, src.Repo)
+		if len(repos) == 0 {
+			return fmt.Errorf("%s/%s not found in the GitHub App installation", src.Owner, src.Repo)
+		}
+	}
+
+	repos = FilterRepos(repos, include, exclude)
+	if len(repos) == 0 {
+		return fmt.Errorf("no repositories matched")
+	}
+
+	if src.IsOrg() {
+		if err := ConfirmMigration(repos, destOwner, true, yes); err != nil {
+			return err
+		}
+	}
+
+	req := GitHubAppImportRequest{
+		InstallationID: conn.InstallationID,
+		Owner:          destOwner,
+		Mirror:         true,
+	}
+	for _, r := range repos {
+		req.Repos = append(req.Repos, ghAppImportRepo{FullName: r.FullName})
+	}
+
+	results, err := ImportViaGitHubApp(ctx, c, ghToken, req)
+	if err != nil {
+		return err
+	}
+
+	return printGitHubAppResults(results, true, p)
+}
+
+func importViaGitHubApp(ctx context.Context, c *client.Client, src Source, destOwner string, public bool, meta metadataFlags, include, exclude []string, yes bool, p *output.Printer) error {
+	ghToken, conn, err := authenticateGitHubApp(ctx, c)
+	if err != nil {
+		return err
+	}
+
+	repos, err := ListGitHubAppRepos(ctx, c, conn.InstallationID, ghToken)
+	if err != nil {
+		return err
+	}
+
+	if !src.IsOrg() {
+		repos = filterByName(repos, src.Repo)
+		if len(repos) == 0 {
+			return fmt.Errorf("%s/%s not found in the GitHub App installation", src.Owner, src.Repo)
+		}
+	}
+
+	repos = FilterRepos(repos, include, exclude)
+	if len(repos) == 0 {
+		return fmt.Errorf("no repositories matched")
+	}
+
+	if src.IsOrg() {
+		if err := ConfirmMigration(repos, destOwner, false, yes); err != nil {
+			return err
+		}
+	}
+
+	req := GitHubAppImportRequest{
+		InstallationID: conn.InstallationID,
+		Owner:          destOwner,
+		Issues:         meta.Issues,
+		PullRequests:   meta.PullReqs,
+		Labels:         meta.Labels,
+		Milestones:     meta.Milestones,
+		Releases:       meta.Releases,
+	}
+	for _, r := range repos {
+		req.Repos = append(req.Repos, ghAppImportRepo{FullName: r.FullName})
+	}
+
+	results, err := ImportViaGitHubApp(ctx, c, ghToken, req)
+	if err != nil {
+		return err
+	}
+
+	return printGitHubAppResults(results, false, p)
+}
+
+func filterByName(repos []SourceRepo, name string) []SourceRepo {
+	for _, r := range repos {
+		if r.Name == name {
+			return []SourceRepo{r}
+		}
+	}
+	return nil
+}
+
+func printGitHubAppResults(results []migrateResult, isMirror bool, p *output.Printer) error {
+	if p.IsJSON() {
+		p.JSON(results)
+		return nil
+	}
+
+	var succeeded, failed int
+	for _, r := range results {
+		if r.Error != "" {
+			failed++
+			fmt.Printf("  %s %s: %s\n", output.Red("FAIL"), r.Repo, r.Error)
+		} else {
+			succeeded++
+			mode := "import"
+			if isMirror {
+				mode = "mirror"
+			}
+			fmt.Printf("  %s %s (%s)\n", output.Green("OK"), r.Repo, mode)
+		}
+	}
+
+	if len(results) > 1 {
+		fmt.Printf("\n%d succeeded, %d failed\n", succeeded, failed)
+	} else if len(results) == 1 && results[0].Error == "" {
+		mode := "import"
+		if isMirror {
+			mode = "mirror"
+		}
+		fmt.Printf("Queued: %s (%s)\n", results[0].Repo, mode)
+	}
+
+	if failed > 0 {
+		return fmt.Errorf("%d repositories failed", failed)
+	}
+	return nil
 }
