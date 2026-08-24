@@ -15,11 +15,11 @@ var githubAPIBase = "https://api.github.com"
 func SetGitHubAPIBase(url string) { githubAPIBase = url }
 
 type SourceRepo struct {
-	Name        string
-	FullName    string
-	CloneURL    string
-	Description string
-	Private     bool
+	Name        string `json:"name"`
+	FullName    string `json:"full_name"`
+	CloneURL    string `json:"clone_url"`
+	Description string `json:"description"`
+	Private     bool   `json:"private"`
 }
 
 func ListGitHubRepos(ctx context.Context, owner, token string) ([]SourceRepo, error) {
