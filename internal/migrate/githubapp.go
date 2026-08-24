@@ -130,6 +130,15 @@ func ImportViaGitHubApp(ctx context.Context, c *client.Client, ghToken string, r
 }
 
 func authenticateGitHubApp(ctx context.Context, c *client.Client, account string) (ghToken string, conn *Connection, err error) {
+	if token, ok := loadGitHubSession(); ok {
+		result, err := ConnectGitHubApp(ctx, c, token, account)
+		if err == nil && result.Error == "" {
+			fmt.Printf("Connected as %s (%s)\n\n", output.Green(result.AccountLogin), result.AccountType)
+			return token, result, nil
+		}
+		clearGitHubSession()
+	}
+
 	cfg, err := FetchGitHubAppConfig(ctx, c)
 	if err != nil {
 		return "", nil, err
@@ -149,14 +158,16 @@ func authenticateGitHubApp(ctx context.Context, c *client.Client, account string
 	_ = openBrowser(code.VerificationURI)
 
 	fmt.Print("Waiting for authorization...")
-	token, err := PollForToken(ctx, cfg.ClientID, code.DeviceCode, code.Interval)
+	tokenResp, err := PollForToken(ctx, cfg.ClientID, code.DeviceCode, code.Interval)
 	if err != nil {
 		fmt.Println()
 		return "", nil, err
 	}
 	fmt.Println(" done")
 
-	result, err := ConnectGitHubApp(ctx, c, token, account)
+	_ = saveGitHubSession(tokenResp.AccessToken, tokenResp.ExpiresIn)
+
+	result, err := ConnectGitHubApp(ctx, c, tokenResp.AccessToken, account)
 	if err != nil {
 		return "", nil, err
 	}
@@ -169,5 +180,5 @@ func authenticateGitHubApp(ctx context.Context, c *client.Client, account string
 	}
 
 	fmt.Printf("Connected as %s (%s)\n\n", output.Green(result.AccountLogin), result.AccountType)
-	return token, result, nil
+	return tokenResp.AccessToken, result, nil
 }

@@ -56,7 +56,7 @@ func TestPollForToken_Success(t *testing.T) {
 			fmt.Fprint(w, `{"error": "authorization_pending"}`)
 			return
 		}
-		fmt.Fprint(w, `{"access_token": "ghu_test123", "token_type": "bearer"}`)
+		fmt.Fprint(w, `{"access_token": "ghu_test123", "token_type": "bearer", "expires_in": 28800}`)
 	}))
 	defer ts.Close()
 
@@ -64,12 +64,15 @@ func TestPollForToken_Success(t *testing.T) {
 	SetGitHubDeviceBase(ts.URL)
 	defer SetGitHubDeviceBase(orig)
 
-	token, err := PollForToken(context.Background(), "client", "device", 0)
+	resp, err := PollForToken(context.Background(), "client", "device", 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if token != "ghu_test123" {
-		t.Errorf("token = %q, want ghu_test123", token)
+	if resp.AccessToken != "ghu_test123" {
+		t.Errorf("AccessToken = %q, want ghu_test123", resp.AccessToken)
+	}
+	if resp.ExpiresIn != 28800 {
+		t.Errorf("ExpiresIn = %d, want 28800", resp.ExpiresIn)
 	}
 	if calls.Load() != 3 {
 		t.Errorf("expected 3 calls, got %d", calls.Load())
@@ -133,11 +136,11 @@ func TestPollForToken_SlowDown(t *testing.T) {
 	SetGitHubDeviceBase(ts.URL)
 	defer SetGitHubDeviceBase(orig)
 
-	token, err := PollForToken(context.Background(), "client", "device", 0)
+	resp, err := PollForToken(context.Background(), "client", "device", 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if token != "ghu_ok" {
-		t.Errorf("token = %q, want ghu_ok", token)
+	if resp.AccessToken != "ghu_ok" {
+		t.Errorf("AccessToken = %q, want ghu_ok", resp.AccessToken)
 	}
 }
