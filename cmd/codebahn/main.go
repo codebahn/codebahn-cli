@@ -162,6 +162,7 @@ func authLogoutCmd() *cobra.Command {
 			if err := config.ClearTokens(); err != nil {
 				return err
 			}
+			migrate.ClearGitHubSession()
 			fmt.Println("Logged out.")
 			return nil
 		},

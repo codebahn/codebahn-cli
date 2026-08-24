@@ -69,7 +69,12 @@ func RequestDeviceCode(ctx context.Context, clientID string) (*DeviceCodeRespons
 	return &code, nil
 }
 
-func PollForToken(ctx context.Context, clientID, deviceCode string, interval int) (string, error) {
+type TokenResponse struct {
+	AccessToken string
+	ExpiresIn   int
+}
+
+func PollForToken(ctx context.Context, clientID, deviceCode string, interval int) (*TokenResponse, error) {
 	form := url.Values{
 		"client_id":   {clientID},
 		"device_code": {deviceCode},
@@ -79,7 +84,7 @@ func PollForToken(ctx context.Context, clientID, deviceCode string, interval int
 	for {
 		select {
 		case <-ctx.Done():
-			return "", ctx.Err()
+			return nil, ctx.Err()
 		case <-time.After(time.Duration(interval) * time.Second):
 		}
 
@@ -87,7 +92,7 @@ func PollForToken(ctx context.Context, clientID, deviceCode string, interval int
 			githubDeviceBase+"/login/oauth/access_token",
 			nil)
 		if err != nil {
-			return "", fmt.Errorf("building token request: %w", err)
+			return nil, fmt.Errorf("building token request: %w", err)
 		}
 		req.Header.Set("Accept", "application/json")
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -95,41 +100,45 @@ func PollForToken(ctx context.Context, clientID, deviceCode string, interval int
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			return "", fmt.Errorf("token request: %w", err)
+			return nil, fmt.Errorf("token request: %w", err)
 		}
 
 		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 1<<16))
 		_ = resp.Body.Close()
 		if readErr != nil {
-			return "", fmt.Errorf("reading token response: %w", readErr)
+			return nil, fmt.Errorf("reading token response: %w", readErr)
 		}
 
 		var tokenResp struct {
 			AccessToken string `json:"access_token"`
 			TokenType   string `json:"token_type"`
+			ExpiresIn   int    `json:"expires_in"`
 			Error       string `json:"error"`
 		}
 		if err := json.Unmarshal(body, &tokenResp); err != nil {
-			return "", fmt.Errorf("decoding token response: %w", err)
+			return nil, fmt.Errorf("decoding token response: %w", err)
 		}
 
 		switch tokenResp.Error {
 		case "":
 			if tokenResp.AccessToken != "" {
-				return tokenResp.AccessToken, nil
+				return &TokenResponse{
+					AccessToken: tokenResp.AccessToken,
+					ExpiresIn:   tokenResp.ExpiresIn,
+				}, nil
 			}
-			return "", fmt.Errorf("GitHub returned empty access token")
+			return nil, fmt.Errorf("GitHub returned empty access token")
 		case "authorization_pending":
 			continue
 		case "slow_down":
 			interval += 5
 			continue
 		case "expired_token":
-			return "", fmt.Errorf("authorization timed out; re-run the command to try again")
+			return nil, fmt.Errorf("authorization timed out; re-run the command to try again")
 		case "access_denied":
-			return "", fmt.Errorf("authorization denied by user")
+			return nil, fmt.Errorf("authorization denied by user")
 		default:
-			return "", fmt.Errorf("GitHub OAuth error: %s", tokenResp.Error)
+			return nil, fmt.Errorf("GitHub OAuth error: %s", tokenResp.Error)
 		}
 	}
 }
