@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/codebahn/codebahn-cli/client"
 	"github.com/codebahn/codebahn-cli/internal/output"
@@ -60,8 +61,12 @@ func FetchGitHubAppConfig(ctx context.Context, c *client.Client) (*GitHubAppConf
 	return &cfg, nil
 }
 
-func ConnectGitHubApp(ctx context.Context, c *client.Client, ghToken string) (*Connection, error) {
-	raw, err := c.DoRawWithHeaders(ctx, http.MethodPost, "/github-app/connect", nil, ghHeaders(ghToken))
+func ConnectGitHubApp(ctx context.Context, c *client.Client, ghToken, account string) (*Connection, error) {
+	path := "/github-app/connect"
+	if account != "" {
+		path += "?account=" + url.QueryEscape(account)
+	}
+	raw, err := c.DoRawWithHeaders(ctx, http.MethodPost, path, nil, ghHeaders(ghToken))
 	if err != nil {
 		return nil, fmt.Errorf("connecting GitHub App: %w", err)
 	}
@@ -124,7 +129,7 @@ func ImportViaGitHubApp(ctx context.Context, c *client.Client, ghToken string, r
 	return resp.Results, nil
 }
 
-func authenticateGitHubApp(ctx context.Context, c *client.Client) (ghToken string, conn *Connection, err error) {
+func authenticateGitHubApp(ctx context.Context, c *client.Client, account string) (ghToken string, conn *Connection, err error) {
 	cfg, err := FetchGitHubAppConfig(ctx, c)
 	if err != nil {
 		return "", nil, err
@@ -151,7 +156,7 @@ func authenticateGitHubApp(ctx context.Context, c *client.Client) (ghToken strin
 	}
 	fmt.Println(" done")
 
-	result, err := ConnectGitHubApp(ctx, c, token)
+	result, err := ConnectGitHubApp(ctx, c, token, account)
 	if err != nil {
 		return "", nil, err
 	}

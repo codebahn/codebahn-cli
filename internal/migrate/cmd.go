@@ -397,7 +397,7 @@ func collectResult(raw []byte, fullName string) migrateResult {
 }
 
 func mirrorViaGitHubApp(ctx context.Context, c *client.Client, src Source, destOwner string, public bool, include, exclude []string, yes bool, p *output.Printer) error {
-	ghToken, conn, err := authenticateGitHubApp(ctx, c)
+	ghToken, conn, err := authenticateGitHubApp(ctx, c, src.Owner)
 	if err != nil {
 		return err
 	}
@@ -443,7 +443,7 @@ func mirrorViaGitHubApp(ctx context.Context, c *client.Client, src Source, destO
 }
 
 func importViaGitHubApp(ctx context.Context, c *client.Client, src Source, destOwner string, public bool, meta metadataFlags, include, exclude []string, yes bool, p *output.Printer) error {
-	ghToken, conn, err := authenticateGitHubApp(ctx, c)
+	ghToken, conn, err := authenticateGitHubApp(ctx, c, src.Owner)
 	if err != nil {
 		return err
 	}
