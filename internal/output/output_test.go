@@ -113,6 +113,9 @@ func TestTruncate(t *testing.T) {
 		{"hello world", 8, "hello..."},
 		{"hi", 2, "hi"},
 		{"hello", 3, "hel"},
+		{"日本語のテスト", 5, "日本..."},
+		{"日本", 5, "日本"},
+		{"abcdef", 6, "abcdef"},
 	}
 	for _, tt := range tests {
 		got := Truncate(tt.in, tt.n)

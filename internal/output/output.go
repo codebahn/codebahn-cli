@@ -115,13 +115,14 @@ func (p *Printer) IsJSON() bool {
 }
 
 func Truncate(s string, n int) string {
-	if len(s) <= n {
+	runes := []rune(s)
+	if len(runes) <= n {
 		return s
 	}
 	if n <= 3 {
-		return s[:n]
+		return string(runes[:n])
 	}
-	return s[:n-3] + "..."
+	return string(runes[:n-3]) + "..."
 }
 
 func Errorf(format string, args ...any) {

@@ -93,6 +93,52 @@ func TestFormatGetWorkflowRun(t *testing.T) {
 	}
 }
 
+func TestFormatListWorkflowRunsEmptyObject(t *testing.T) {
+	raw := json.RawMessage(`{"total_count":0}`)
+
+	var buf bytes.Buffer
+	output.SetNoColor(true)
+	defer output.SetNoColor(false)
+
+	p := output.NewPrinter(&buf, false)
+	f, ok := Get("list_workflow_runs")
+	if !ok {
+		t.Fatal("formatter not registered for list_workflow_runs")
+	}
+	if err := f(raw, nil, p); err != nil {
+		t.Fatalf("expected no error for empty object response, got: %v", err)
+	}
+	if buf.Len() != 0 {
+		t.Errorf("expected empty output for zero results, got: %s", buf.String())
+	}
+}
+
+func TestFormatDispatchWorkflowBadArgs(t *testing.T) {
+	f, ok := Get("dispatch_workflow")
+	if !ok {
+		t.Fatal("formatter not registered")
+	}
+	var buf bytes.Buffer
+	p := output.NewPrinter(&buf, false)
+	err := f(nil, "wrong-type", p)
+	if err == nil {
+		t.Fatal("expected error for wrong args type")
+	}
+}
+
+func TestFormatCancelBuildBadArgs(t *testing.T) {
+	f, ok := Get("cancel_build")
+	if !ok {
+		t.Fatal("formatter not registered")
+	}
+	var buf bytes.Buffer
+	p := output.NewPrinter(&buf, false)
+	err := f(nil, "wrong-type", p)
+	if err == nil {
+		t.Fatal("expected error for wrong args type")
+	}
+}
+
 func TestFormatDispatchWorkflow(t *testing.T) {
 	oldStderr := os.Stderr
 	r, w, _ := os.Pipe()

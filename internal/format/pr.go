@@ -47,19 +47,6 @@ func prState(state string, merged bool) string {
 	return state
 }
 
-func prStateColor(state string) string {
-	switch state {
-	case "open":
-		return output.Green(state)
-	case "closed":
-		return output.Red(state)
-	case "merged":
-		return output.Magenta(state)
-	default:
-		return state
-	}
-}
-
 func fmtPRList(raw json.RawMessage, _ any, p *output.Printer) error {
 	var prs []prRow
 	if err := json.Unmarshal(raw, &prs); err != nil {
@@ -144,7 +131,7 @@ func fmtPRGet(raw json.RawMessage, _ any, p *output.Printer) error {
 
 	p.Text(fmt.Sprintf("%s  %s#%d", output.Bold(pr.Title), repoName, pr.Number))
 	p.Text(fmt.Sprintf("%s · %s wants to merge into %s from %s · %s",
-		prStateColor(state), pr.User.Login, pr.Base.Ref, pr.Head.Ref, TimeAgo(pr.CreatedAt)))
+		output.StatusColor(state), pr.User.Login, pr.Base.Ref, pr.Head.Ref, TimeAgo(pr.CreatedAt)))
 	p.Text(fmt.Sprintf("%s %s", output.Green(fmt.Sprintf("+%d", pr.Additions)), output.Red(fmt.Sprintf("-%d", pr.Deletions))))
 
 	if len(pr.Assignees) > 0 {

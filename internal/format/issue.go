@@ -230,7 +230,7 @@ func fmtIssueStateChange(raw json.RawMessage, _ any, p *output.Printer) error {
 func fmtAddIssueLabels(_ json.RawMessage, args any, p *output.Printer) error {
 	a, ok := args.(*tools.AddIssueLabelsArgs)
 	if !ok {
-		return nil
+		return fmt.Errorf("unexpected args type for add_issue_labels")
 	}
 	successf("Added labels to %s/%s#%d", a.Owner, a.Repo, a.Index)
 	return nil
@@ -239,7 +239,7 @@ func fmtAddIssueLabels(_ json.RawMessage, args any, p *output.Printer) error {
 func fmtRemoveIssueLabels(_ json.RawMessage, args any, p *output.Printer) error {
 	a, ok := args.(*tools.RemoveIssueLabelsArgs)
 	if !ok {
-		return nil
+		return fmt.Errorf("unexpected args type for remove_issue_labels")
 	}
 	successf("Removed labels from %s/%s#%d", a.Owner, a.Repo, a.Index)
 	return nil
@@ -308,7 +308,7 @@ func fmtEditIssueComment(raw json.RawMessage, args any, _ *output.Printer) error
 func fmtDeleteIssueComment(_ json.RawMessage, args any, _ *output.Printer) error {
 	a, ok := args.(*tools.DeleteIssueCommentArgs)
 	if !ok {
-		return nil
+		return fmt.Errorf("unexpected args type for delete_issue_comment")
 	}
 	successf("Deleted comment #%d", a.CommentID)
 	return nil
@@ -385,7 +385,7 @@ func fmtEditLabel(raw json.RawMessage, _ any, _ *output.Printer) error {
 func fmtDeleteLabel(_ json.RawMessage, args any, _ *output.Printer) error {
 	a, ok := args.(*tools.DeleteLabelArgs)
 	if !ok {
-		return nil
+		return fmt.Errorf("unexpected args type for delete_label")
 	}
 	successf("Deleted label #%d", a.ID)
 	return nil

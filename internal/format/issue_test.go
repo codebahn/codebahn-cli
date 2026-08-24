@@ -310,6 +310,42 @@ func TestDeleteLabel(t *testing.T) {
 	}
 }
 
+func TestDeleteLabelBadArgs(t *testing.T) {
+	f, _ := Get("delete_label")
+	var buf bytes.Buffer
+	p := output.NewPrinter(&buf, false)
+	if err := f(nil, "wrong-type", p); err == nil {
+		t.Fatal("expected error for wrong args type")
+	}
+}
+
+func TestAddIssueLabelssBadArgs(t *testing.T) {
+	f, _ := Get("add_issue_labels")
+	var buf bytes.Buffer
+	p := output.NewPrinter(&buf, false)
+	if err := f(nil, "wrong-type", p); err == nil {
+		t.Fatal("expected error for wrong args type")
+	}
+}
+
+func TestRemoveIssueLabelsBadArgs(t *testing.T) {
+	f, _ := Get("remove_issue_labels")
+	var buf bytes.Buffer
+	p := output.NewPrinter(&buf, false)
+	if err := f(nil, "wrong-type", p); err == nil {
+		t.Fatal("expected error for wrong args type")
+	}
+}
+
+func TestDeleteIssueCommentBadArgs(t *testing.T) {
+	f, _ := Get("delete_issue_comment")
+	var buf bytes.Buffer
+	p := output.NewPrinter(&buf, false)
+	if err := f(nil, "wrong-type", p); err == nil {
+		t.Fatal("expected error for wrong args type")
+	}
+}
+
 func TestGetIssueComment(t *testing.T) {
 	created := time.Now().Add(-30 * time.Minute).UTC().Format(time.RFC3339)
 	raw := json.RawMessage(`{

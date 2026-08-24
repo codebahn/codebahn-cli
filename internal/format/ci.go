@@ -50,7 +50,7 @@ func formatListWorkflowRuns(raw json.RawMessage, _ any, p *output.Printer) error
 	var wrapped struct {
 		Runs []workflowRun `json:"workflow_runs"`
 	}
-	if err := json.Unmarshal(raw, &wrapped); err == nil && wrapped.Runs != nil {
+	if err := json.Unmarshal(raw, &wrapped); err == nil {
 		runs = wrapped.Runs
 	} else if err := json.Unmarshal(raw, &runs); err != nil {
 		return err
@@ -98,7 +98,7 @@ func formatGetWorkflowRun(raw json.RawMessage, _ any, p *output.Printer) error {
 func formatDispatchWorkflow(_ json.RawMessage, args any, _ *output.Printer) error {
 	a, ok := args.(*tools.DispatchWorkflowArgs)
 	if !ok {
-		return nil
+		return fmt.Errorf("unexpected args type for dispatch_workflow")
 	}
 	successf("Dispatched workflow in %s/%s", a.Owner, a.Repo)
 	return nil
@@ -107,7 +107,7 @@ func formatDispatchWorkflow(_ json.RawMessage, args any, _ *output.Printer) erro
 func formatCancelBuild(_ json.RawMessage, args any, _ *output.Printer) error {
 	a, ok := args.(*tools.CancelBuildArgs)
 	if !ok {
-		return nil
+		return fmt.Errorf("unexpected args type for cancel_build")
 	}
 	successf("Cancelled run %d in %s/%s", a.RunID, a.Owner, a.Repo)
 	return nil
