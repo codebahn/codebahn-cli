@@ -80,6 +80,7 @@ func main() {
 		if cmd.Name() == "repo" {
 			cmd.AddCommand(migrate.MirrorCmd())
 			cmd.AddCommand(migrate.ImportCmd())
+			cmd.AddCommand(migrate.ListRemoteCmd())
 		}
 		rootCmd.AddCommand(cmd)
 	}

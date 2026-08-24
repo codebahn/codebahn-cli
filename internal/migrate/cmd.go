@@ -492,6 +492,77 @@ func importViaGitHubApp(ctx context.Context, c *client.Client, src Source, destO
 	return printGitHubAppResults(results, false, p)
 }
 
+func ListRemoteCmd() *cobra.Command {
+	var (
+		include StringSlice
+		exclude StringSlice
+	)
+
+	cmd := &cobra.Command{
+		Use:   "list-remote <source>",
+		Short: "List repositories available for import from GitHub",
+		Long:  "List repositories accessible via the Codebahn GitHub App for a given account or organization.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			src, err := ParseSource(args[0])
+			if err != nil {
+				return err
+			}
+
+			c := gen.ClientFrom(cmd.Context())
+			if c == nil {
+				return fmt.Errorf("not logged in; run 'codebahn auth login' first")
+			}
+
+			ctx := cmd.Context()
+			ghToken, conn, err := authenticateGitHubApp(ctx, c, src.Owner)
+			if err != nil {
+				return err
+			}
+
+			repos, err := ListGitHubAppRepos(ctx, c, conn.InstallationID, ghToken)
+			if err != nil {
+				return err
+			}
+
+			repos = FilterRepos(repos, include, exclude)
+
+			jsonMode, _ := cmd.Flags().GetBool("json")
+			p := output.NewPrinter(os.Stdout, jsonMode)
+			printRemoteRepos(repos, p)
+			return nil
+		},
+	}
+
+	cmd.Flags().Var(&include, "include", "Glob pattern to select repos (repeatable)")
+	cmd.Flags().Var(&exclude, "exclude", "Glob pattern to skip repos (repeatable)")
+
+	return cmd
+}
+
+func printRemoteRepos(repos []SourceRepo, p *output.Printer) {
+	if p.IsJSON() {
+		p.JSON(repos)
+		return
+	}
+
+	if len(repos) == 0 {
+		p.Text("No repositories found.")
+		return
+	}
+
+	headers := []string{"REPOSITORY", "VISIBILITY", "DESCRIPTION"}
+	rows := make([][]string, len(repos))
+	for i, r := range repos {
+		vis := output.Green("public")
+		if r.Private {
+			vis = output.Yellow("private")
+		}
+		rows[i] = []string{r.FullName, vis, output.Truncate(r.Description, 60)}
+	}
+	p.Table(headers, rows)
+}
+
 func filterByName(repos []SourceRepo, name string) []SourceRepo {
 	for _, r := range repos {
 		if r.Name == name {
