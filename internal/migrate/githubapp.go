@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/codebahn/codebahn-cli/client"
+	"github.com/codebahn/codebahn-cli/internal/browser"
 	"github.com/codebahn/codebahn-cli/internal/output"
 )
 
@@ -155,7 +156,7 @@ func authenticateGitHubApp(ctx context.Context, c *client.Client, account string
 	fmt.Printf("\nEnter the code at %s\n", code.VerificationURI)
 	fmt.Printf("Code: %s\n\n", output.Bold(code.UserCode))
 
-	_ = openBrowser(code.VerificationURI)
+	_ = browser.Open(code.VerificationURI)
 
 	fmt.Print("Waiting for authorization...")
 	tokenResp, err := PollForToken(ctx, cfg.ClientID, code.DeviceCode, code.Interval)
