@@ -119,7 +119,7 @@ func repoTools() []ToolDef {
 			CLIName:     "create",
 			Description: "Create repo",
 			Method:      "POST",
-			PathTmpl:    "/user/repos",
+			PathTmpl:    "{{if .Owner}}/orgs/{{.Owner}}/repos{{else}}/user/repos{{end}}",
 			Args:        CreateRepoArgs{},
 		},
 		{
