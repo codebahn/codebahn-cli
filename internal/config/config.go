@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 type Config struct {
@@ -26,8 +27,12 @@ func ConfigDir() string {
 	if dir := os.Getenv("XDG_CONFIG_HOME"); dir != "" {
 		return filepath.Join(dir, "codebahn")
 	}
-	dir, _ := os.UserConfigDir()
-	return filepath.Join(dir, "codebahn")
+	if runtime.GOOS == "windows" {
+		dir, _ := os.UserConfigDir()
+		return filepath.Join(dir, "codebahn")
+	}
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".config", "codebahn")
 }
 
 func ConfigPath() string {

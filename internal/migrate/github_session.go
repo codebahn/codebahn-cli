@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -17,7 +18,12 @@ type githubSession struct {
 var githubSessionPath = func() string {
 	dir := os.Getenv("XDG_CONFIG_HOME")
 	if dir == "" {
-		dir, _ = os.UserConfigDir()
+		if runtime.GOOS == "windows" {
+			dir, _ = os.UserConfigDir()
+		} else {
+			home, _ := os.UserHomeDir()
+			dir = filepath.Join(home, ".config")
+		}
 	}
 	return filepath.Join(dir, "codebahn", "github-session.json")
 }

@@ -169,7 +169,14 @@ func replaceBinary(execPath string, data []byte) error {
 
 	if err := os.Rename(tmpPath, execPath); err != nil {
 		os.Remove(tmpPath)
+		if runtime.GOOS == "windows" {
+			os.Rename(execPath+".old", execPath)
+		}
 		return fmt.Errorf("replacing binary: %w", err)
+	}
+
+	if runtime.GOOS == "windows" {
+		os.Remove(execPath + ".old")
 	}
 
 	return nil
