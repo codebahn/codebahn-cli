@@ -36,6 +36,9 @@ func Update(rel *Release, execPath string) error {
 		return ErrHomebrew
 	}
 
+	// Clean up leftover .old file from a previous Windows update.
+	os.Remove(execPath + ".old")
+
 	tag := "v" + rel.Version
 	base := releasesURL()
 
@@ -54,6 +57,9 @@ func Update(rel *Release, execPath string) error {
 	}
 
 	binaryName := fmt.Sprintf("codebahn-%s-%s", runtime.GOOS, runtime.GOARCH)
+	if runtime.GOOS == "windows" {
+		binaryName += ".exe"
+	}
 	expectedHash, err := findChecksum(checksumData, binaryName)
 	if err != nil {
 		return err
@@ -143,9 +149,22 @@ func replaceBinary(execPath string, data []byte) error {
 	}
 	tmp.Close()
 
-	if err := os.Chmod(tmpPath, info.Mode()); err != nil {
-		os.Remove(tmpPath)
-		return fmt.Errorf("setting permissions: %w", err)
+	if runtime.GOOS != "windows" {
+		if err := os.Chmod(tmpPath, info.Mode()); err != nil {
+			os.Remove(tmpPath)
+			return fmt.Errorf("setting permissions: %w", err)
+		}
+	}
+
+	// On Windows, a running .exe is locked and cannot be overwritten.
+	// Rename it aside first (Windows allows renaming a locked file).
+	if runtime.GOOS == "windows" {
+		oldPath := execPath + ".old"
+		os.Remove(oldPath) // clean up from previous update
+		if err := os.Rename(execPath, oldPath); err != nil {
+			os.Remove(tmpPath)
+			return fmt.Errorf("moving old binary aside: %w", err)
+		}
 	}
 
 	if err := os.Rename(tmpPath, execPath); err != nil {

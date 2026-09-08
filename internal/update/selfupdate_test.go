@@ -124,6 +124,47 @@ func TestUpdate_BadChecksum(t *testing.T) {
 	}
 }
 
+func TestFindChecksum_WithExeSuffix(t *testing.T) {
+	checksumData := []byte(
+		"aaa111  codebahn-linux-amd64\n" +
+			"bbb222  codebahn-windows-amd64.exe\n" +
+			"ccc333  codebahn-darwin-arm64\n",
+	)
+
+	hash, err := findChecksum(checksumData, "codebahn-windows-amd64.exe")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if hash != "bbb222" {
+		t.Errorf("expected bbb222, got %s", hash)
+	}
+}
+
+func TestReplaceBinary_CleansUpOldFile(t *testing.T) {
+	dir := t.TempDir()
+	execPath := filepath.Join(dir, "codebahn")
+	oldPath := execPath + ".old"
+
+	// Create the current binary and a leftover .old file
+	os.WriteFile(execPath, []byte("current"), 0755)
+	os.WriteFile(oldPath, []byte("stale"), 0644)
+
+	// Simulate a full update which should clean up the .old file
+	srv := setupReleaseServer(t, "3.0.0", "new binary content")
+	defer srv.Close()
+	t.Setenv("CODEBAHN_RELEASES_URL", srv.URL+"/cli")
+
+	rel := &Release{Version: "3.0.0", Newer: true}
+	err := Update(rel, execPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(oldPath); err == nil {
+		t.Error(".old file should have been cleaned up")
+	}
+}
+
 func TestUpdate_HomebrewDetection(t *testing.T) {
 	srv := setupReleaseServer(t, "2.0.0", "new binary")
 	defer srv.Close()

@@ -26,8 +26,8 @@ func ConfigDir() string {
 	if dir := os.Getenv("XDG_CONFIG_HOME"); dir != "" {
 		return filepath.Join(dir, "codebahn")
 	}
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "codebahn")
+	dir, _ := os.UserConfigDir()
+	return filepath.Join(dir, "codebahn")
 }
 
 func ConfigPath() string {

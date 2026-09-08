@@ -17,8 +17,7 @@ type githubSession struct {
 var githubSessionPath = func() string {
 	dir := os.Getenv("XDG_CONFIG_HOME")
 	if dir == "" {
-		home, _ := os.UserHomeDir()
-		dir = filepath.Join(home, ".config")
+		dir, _ = os.UserConfigDir()
 	}
 	return filepath.Join(dir, "codebahn", "github-session.json")
 }
