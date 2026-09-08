@@ -54,6 +54,38 @@ func TestCheckLatest_AlreadyCurrent(t *testing.T) {
 	}
 }
 
+func TestCheckLatest_CurrentWithoutVPrefix(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"version":"0.2.0"}`)
+	}))
+	defer srv.Close()
+	t.Setenv("CODEBAHN_RELEASES_URL", srv.URL+"/cli")
+
+	rel, err := CheckLatest("0.2.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rel.Newer {
+		t.Error("expected Newer = false when current matches latest (no v prefix)")
+	}
+}
+
+func TestCheckLatest_OlderWithoutVPrefix(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"version":"1.2.3"}`)
+	}))
+	defer srv.Close()
+	t.Setenv("CODEBAHN_RELEASES_URL", srv.URL+"/cli")
+
+	rel, err := CheckLatest("1.0.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !rel.Newer {
+		t.Error("expected Newer = true when current is older (no v prefix)")
+	}
+}
+
 func TestShouldCheck_EnvVar(t *testing.T) {
 	t.Setenv("CODEBAHN_NO_UPDATE_CHECK", "1")
 	if ShouldCheck("v1.0.0", nil) {

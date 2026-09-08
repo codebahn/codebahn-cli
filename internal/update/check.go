@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/mod/semver"
@@ -50,7 +51,11 @@ func CheckLatest(currentVersion string) (*Release, error) {
 	if !semver.IsValid(latest) {
 		return nil, fmt.Errorf("invalid version from server: %q", rel.Version)
 	}
-	if semver.Compare(currentVersion, latest) < 0 {
+	current := currentVersion
+	if !strings.HasPrefix(current, "v") {
+		current = "v" + current
+	}
+	if semver.Compare(current, latest) < 0 {
 		rel.Newer = true
 	}
 
