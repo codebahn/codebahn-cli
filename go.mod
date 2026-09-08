@@ -2,6 +2,8 @@ module github.com/codebahn/codebahn-cli
 
 go 1.25.0
 
+replace github.com/codebahn/codebahn-cli/tools => ./tools
+
 require (
 	github.com/ProtonMail/go-crypto v1.4.1
 	github.com/codebahn/codebahn-cli/tools v0.1.0

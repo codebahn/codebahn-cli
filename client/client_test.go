@@ -28,6 +28,29 @@ func TestResolvePath(t *testing.T) {
 	}
 }
 
+func TestResolvePathConditional(t *testing.T) {
+	type args struct {
+		Owner string
+	}
+	tmpl := "{{if .Owner}}/orgs/{{.Owner}}/repos{{else}}/user/repos{{end}}"
+
+	got, err := resolvePath(tmpl, args{Owner: "hackerman"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "/orgs/hackerman/repos" {
+		t.Errorf("with owner: resolvePath = %q, want /orgs/hackerman/repos", got)
+	}
+
+	got, err = resolvePath(tmpl, args{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "/user/repos" {
+		t.Errorf("without owner: resolvePath = %q, want /user/repos", got)
+	}
+}
+
 func TestResolvePathNoTemplate(t *testing.T) {
 	type args struct{}
 	got, err := resolvePath("/user", args{})
@@ -269,6 +292,65 @@ func TestExecutePOST(t *testing.T) {
 		t.Fatal(err)
 	}
 	if string(result) != `{"number":1}` {
+		t.Errorf("result = %s", result)
+	}
+}
+
+func TestExecuteCreateRepoWithOwner(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("method = %s, want POST", r.Method)
+		}
+		if r.URL.Path != "/api/v1/orgs/hackerman/repos" {
+			t.Errorf("path = %s, want /api/v1/orgs/hackerman/repos", r.URL.Path)
+		}
+		body, _ := io.ReadAll(r.Body)
+		var m map[string]any
+		_ = json.Unmarshal(body, &m)
+		if m["name"] != "cli-test" {
+			t.Errorf("name = %v, want cli-test", m["name"])
+		}
+		if _, ok := m["owner"]; ok {
+			t.Error("owner should not be in body")
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"id":1,"name":"cli-test"}`)
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "tok")
+	td := tools.ByName("create_repo")
+	result, err := c.Execute(context.Background(), td, &tools.CreateRepoArgs{
+		Name:  "cli-test",
+		Owner: "hackerman",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(result) != `{"id":1,"name":"cli-test"}` {
+		t.Errorf("result = %s", result)
+	}
+}
+
+func TestExecuteCreateRepoWithoutOwner(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/user/repos" {
+			t.Errorf("path = %s, want /api/v1/user/repos", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"id":2,"name":"my-repo"}`)
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "tok")
+	td := tools.ByName("create_repo")
+	result, err := c.Execute(context.Background(), td, &tools.CreateRepoArgs{
+		Name: "my-repo",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(result) != `{"id":2,"name":"my-repo"}` {
 		t.Errorf("result = %s", result)
 	}
 }
