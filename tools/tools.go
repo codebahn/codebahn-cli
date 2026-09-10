@@ -3,7 +3,9 @@ package tools
 // ToolDef ties a tool's arg struct to its metadata. The Args field holds a
 // zero-value struct whose fields (via reflect) define the tool's parameters.
 // Struct tags: json (wire name), required ("true"), desc (description),
-// default (default value).
+// default (default value), api ("-" marks a parameter the REST API does not
+// understand; it is part of the tool schema but must be applied by the tool
+// implementation, never sent as a query or body field).
 type ToolDef struct {
 	Name        string // "create_issue"
 	Group       string // "issue" (cobra parent command)

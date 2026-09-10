@@ -3,6 +3,7 @@ package format
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -225,6 +226,91 @@ func TestGetFileContentNotRegistered(t *testing.T) {
 	if ok {
 		t.Error("get_file_content should not have a formatter (passthrough)")
 	}
+}
+
+func TestGetCommitDiffNotRegistered(t *testing.T) {
+	_, ok := Get("get_commit_diff")
+	if ok {
+		t.Error("get_commit_diff should not have a formatter (unified diff passthrough)")
+	}
+}
+
+func TestCompareRefs(t *testing.T) {
+	now := time.Now().UTC().Add(-1 * time.Hour).Format(time.RFC3339)
+	raw := mustJSON(t, map[string]any{
+		"total_commits": 2,
+		"commits": []map[string]any{
+			{
+				"sha": "abc123def456789",
+				"commit": map[string]any{
+					"message": "feat: first\n\nbody",
+					"author":  map[string]string{"name": "Simon", "date": now},
+				},
+				"stats": map[string]int{"additions": 10, "deletions": 2},
+			},
+			{
+				"sha": "def456abc123789",
+				"commit": map[string]any{
+					"message": "fix: second",
+					"author":  map[string]string{"name": "Alex", "date": now},
+				},
+				"stats": map[string]int{"additions": 1, "deletions": 1},
+			},
+		},
+		// Forgejo concatenates every commit's affected files, so the same
+		// path can appear more than once.
+		"files": []map[string]string{
+			{"filename": "pkg/foo.go", "status": "added"},
+			{"filename": "pkg/bar.go", "status": "modified"},
+			{"filename": "pkg/foo.go", "status": "modified"},
+		},
+	})
+
+	var buf bytes.Buffer
+	output.SetNoColor(true)
+	defer output.SetNoColor(false)
+	p := output.NewPrinter(&buf, false)
+	f, ok := Get("compare_refs")
+	if !ok {
+		t.Fatal("formatter not registered")
+	}
+	args := &tools.CompareRefsArgs{Owner: "acme", Repo: "web", Base: "main", Head: "feat/x"}
+	if err := f(raw, args, p); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	assertContains(t, out, "main...feat/x")
+	assertContains(t, out, "2 commits")
+	assertContains(t, out, "2 files changed")
+	assertContains(t, out, "+11")
+	assertContains(t, out, "-3")
+	assertContains(t, out, "abc123d")
+	assertContains(t, out, "feat: first")
+	assertNotContains(t, out, "body")
+	assertContains(t, out, "def456a")
+	assertContains(t, out, "Alex")
+	assertContains(t, out, "1h ago")
+	assertContains(t, out, "pkg/foo.go")
+	assertContains(t, out, "pkg/bar.go")
+	if n := strings.Count(out, "pkg/foo.go"); n != 1 {
+		t.Errorf("pkg/foo.go should be listed once, got %d times in:\n%s", n, out)
+	}
+}
+
+func TestCompareRefsIdentical(t *testing.T) {
+	raw := mustJSON(t, map[string]any{"total_commits": 0, "commits": []any{}, "files": []any{}})
+
+	var buf bytes.Buffer
+	output.SetNoColor(true)
+	defer output.SetNoColor(false)
+	p := output.NewPrinter(&buf, false)
+	f, _ := Get("compare_refs")
+	args := &tools.CompareRefsArgs{Base: "main", Head: "main"}
+	if err := f(raw, args, p); err != nil {
+		t.Fatal(err)
+	}
+	assertContains(t, buf.String(), "main...main")
+	assertContains(t, buf.String(), "0 commits")
 }
 
 func mustJSON(t *testing.T, v any) json.RawMessage {

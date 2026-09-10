@@ -16,6 +16,7 @@ func init() {
 	Register("update_pull_request", fmtPRUpdate)
 	Register("merge_pull_request", fmtPRMerge)
 	Register("list_pull_request_files", fmtPRFiles)
+	Register("list_pr_commits", fmtListCommits)
 	Register("list_pull_reviews", fmtPRReviews)
 	Register("get_pull_review", fmtPRGetReview)
 	Register("list_pull_review_comments", fmtPRReviewComments)
@@ -228,18 +229,9 @@ func fmtPRFiles(raw json.RawMessage, _ any, p *output.Printer) error {
 	}
 	var rows [][]string
 	for _, f := range files {
-		status := f.Status
-		switch status {
-		case "added":
-			status = output.Green(status)
-		case "modified", "renamed":
-			status = output.Yellow(status)
-		case "deleted":
-			status = output.Red(status)
-		}
 		add := output.Green(fmt.Sprintf("+%d", f.Additions))
 		del := output.Red(fmt.Sprintf("-%d", f.Deletions))
-		rows = append(rows, []string{status, f.Filename, add, del})
+		rows = append(rows, []string{fileStatus(f.Status), f.Filename, add, del})
 	}
 	p.Table(nil, rows)
 	return nil

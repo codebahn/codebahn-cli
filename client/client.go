@@ -346,7 +346,7 @@ func buildQueryParams(args any, inPath map[string]bool) url.Values {
 
 	for i := range rt.NumField() {
 		f := rt.Field(i)
-		if inPath[f.Name] {
+		if inPath[f.Name] || !apiField(f) {
 			continue
 		}
 		name := f.Tag.Get("json")
@@ -362,6 +362,12 @@ func buildQueryParams(args any, inPath map[string]bool) url.Values {
 	return q
 }
 
+// apiField reports whether a field is sent to the REST API. Fields tagged
+// api:"-" are tool parameters that the CLI applies client-side instead.
+func apiField(f reflect.StructField) bool {
+	return f.Tag.Get("api") != "-"
+}
+
 func buildBody(args any, inPath map[string]bool) any {
 	rv := reflect.ValueOf(args)
 	rt := rv.Type()
@@ -373,7 +379,7 @@ func buildBody(args any, inPath map[string]bool) any {
 	body := map[string]any{}
 	for i := range rt.NumField() {
 		f := rt.Field(i)
-		if inPath[f.Name] {
+		if inPath[f.Name] || !apiField(f) {
 			continue
 		}
 		name := f.Tag.Get("json")

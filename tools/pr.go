@@ -2,6 +2,8 @@ package tools
 
 const getPullRequestDiffDesc = `Get the unified diff of a pull request. Pass an optional file_path to receive only the hunks for that file (match is exact on either the pre- or post-rename path). Use list_pull_request_files first to discover the file paths in the PR.`
 
+const listPRCommitsDesc = `List the individual commits of a pull request, newest first, with SHA, message, author and date. Use it to review a PR commit by commit (pair with get_commit_diff), and to spot fixup commits, commits that do not belong, or changes introduced and then reverted within the PR, none of which are visible in the squashed diff.`
+
 type GetPullRequestByIndexArgs struct {
 	Owner string `json:"owner" required:"true" desc:"Repository owner"`
 	Repo  string `json:"repo"  required:"true" desc:"Repository name"`
@@ -85,7 +87,15 @@ type GetPullRequestDiffArgs struct {
 	Owner    string `json:"owner"     required:"true" desc:"Repository owner"`
 	Repo     string `json:"repo"      required:"true" desc:"Repository name"`
 	Index    int    `json:"index"     required:"true" desc:"PR index"`
-	FilePath string `json:"file_path" desc:"Optional. Return only the diff section for this file (matched on the diff --git boundary). Omit for the full diff."`
+	FilePath string `json:"file_path" api:"-" desc:"Optional. Return only the diff section for this file (matched on the diff --git boundary). Omit for the full diff."`
+}
+
+type ListPRCommitsArgs struct {
+	Owner string `json:"owner" required:"true" desc:"Repository owner"`
+	Repo  string `json:"repo"  required:"true" desc:"Repository name"`
+	Index int    `json:"index" required:"true" desc:"PR index"`
+	Page  int    `json:"page"  desc:"Page number (1-based)" default:"1"`
+	Limit int    `json:"limit" desc:"Page size"             default:"50"`
 }
 
 type CreatePullReviewArgs struct {
@@ -228,6 +238,15 @@ func prTools() []ToolDef {
 			Method:      "GET",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/pulls/{{.Index}}.diff",
 			Args:        GetPullRequestDiffArgs{},
+		},
+		{
+			Name:        "list_pr_commits",
+			Group:       "pr",
+			CLIName:     "commits",
+			Description: listPRCommitsDesc,
+			Method:      "GET",
+			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/pulls/{{.Index}}/commits",
+			Args:        ListPRCommitsArgs{},
 		},
 		{
 			Name:        "create_pull_review",

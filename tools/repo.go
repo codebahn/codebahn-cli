@@ -6,6 +6,12 @@ const listRepoContentsDesc = `List the files and directories at a given path in 
 
 const getRepoTreeDesc = `Get the Git tree of a repository. With recursive=true, returns the complete file tree in a single response (subject to the server's tree-endpoint size cap); use this when you need all paths at once. With recursive=false (default), returns only the top-level entries of the tree.`
 
+const listRepoCommitsDesc = `List commits, newest first, starting from sha (a branch, tag or commit; defaults to the default branch). Set path to a file or directory to get only the commits that touched it: file-scoped history shows who changed a file recently and how often, which tells you how much scrutiny a change there deserves.`
+
+const getCommitDiffDesc = `Get the unified diff of a single commit (its changes against its first parent). Pass an optional file_path to receive only the hunks for that file (match is exact on either the pre- or post-rename path). Pair with list_pr_commits to review a pull request commit by commit instead of only its squashed diff.`
+
+const compareRefsDesc = `Compare two refs (branches, tags or commit SHAs) as base...head: the commits reachable from head but not from base (newest first), and the files those commits touched with their status. No pull request is needed, so use it to preview a PR before it exists, to check what actually landed between two releases or deploys, or to measure how far two branches have diverged. For the hunks themselves use get_commit_diff on the listed commits.`
+
 type CreateRepoArgs struct {
 	Name          string `json:"name"           required:"true" desc:"Repo name"`
 	Description   string `json:"description"    desc:"Description"`
@@ -89,10 +95,24 @@ type ListBranchesArgs struct {
 type ListRepoCommitsArgs struct {
 	Owner string `json:"owner" required:"true" desc:"Repository owner"`
 	Repo  string `json:"repo"  required:"true" desc:"Repository name"`
-	Path  string `json:"path"  desc:"File/dir path"`
-	SHA   string `json:"sha"   desc:"SHA/branch to start from"`
+	Path  string `json:"path"  desc:"Optional file or directory path. Only commits that touched it are returned."`
+	SHA   string `json:"sha"   desc:"Branch, tag or commit SHA to start from (default: the default branch)"`
 	Page  int    `json:"page"  required:"true" desc:"Page number (1-based)" default:"1"`
 	Limit int    `json:"limit" required:"true" desc:"Page size"             default:"100"`
+}
+
+type GetCommitDiffArgs struct {
+	Owner    string `json:"owner"     required:"true" desc:"Repository owner"`
+	Repo     string `json:"repo"      required:"true" desc:"Repository name"`
+	SHA      string `json:"sha"       required:"true" desc:"Commit SHA (full or abbreviated)"`
+	FilePath string `json:"file_path" api:"-" desc:"Optional. Return only the diff section for this file (matched on the diff --git boundary). Omit for the full diff."`
+}
+
+type CompareRefsArgs struct {
+	Owner string `json:"owner" required:"true" desc:"Repository owner"`
+	Repo  string `json:"repo"  required:"true" desc:"Repository name"`
+	Base  string `json:"base"  required:"true" desc:"Base ref (branch, tag or commit SHA)"`
+	Head  string `json:"head"  required:"true" desc:"Head ref (branch, tag or commit SHA); the result is what head has that base does not"`
 }
 
 type ListRepoContentsArgs struct {
@@ -198,10 +218,28 @@ func repoTools() []ToolDef {
 			Name:        "list_repo_commits",
 			Group:       "repo",
 			CLIName:     "log",
-			Description: "List repo commits",
+			Description: listRepoCommitsDesc,
 			Method:      "GET",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/commits",
 			Args:        ListRepoCommitsArgs{},
+		},
+		{
+			Name:        "get_commit_diff",
+			Group:       "repo",
+			CLIName:     "show",
+			Description: getCommitDiffDesc,
+			Method:      "GET",
+			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/git/commits/{{.SHA}}.diff",
+			Args:        GetCommitDiffArgs{},
+		},
+		{
+			Name:        "compare_refs",
+			Group:       "repo",
+			CLIName:     "compare",
+			Description: compareRefsDesc,
+			Method:      "GET",
+			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/compare/{{.Base}}...{{.Head}}",
+			Args:        CompareRefsArgs{},
 		},
 		{
 			Name:        "list_repo_contents",

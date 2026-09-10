@@ -24,6 +24,7 @@ func NewPRCmd() *cobra.Command {
 	cmd.AddCommand(PRMergeCmd())
 	cmd.AddCommand(PRFilesCmd())
 	cmd.AddCommand(PRDiffCmd())
+	cmd.AddCommand(PRCommitsCmd())
 	cmd.AddCommand(PRCreateReviewCmd())
 	cmd.AddCommand(PRSubmitReviewCmd())
 	cmd.AddCommand(PRDismissReviewCmd())
@@ -230,6 +231,25 @@ func PRDiffCmd() *cobra.Command {
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.FilePath, "file_path", "", `Optional. Return only the diff section for this file (matched on the diff --git boundary). Omit for the full diff.`)
+	return cmd
+}
+
+func PRCommitsCmd() *cobra.Command {
+	var args tools.ListPRCommitsArgs
+	cmd := &cobra.Command{
+		Use:   "commits",
+		Short: `List the individual commits of a pull request, newest first, with SHA, message, author and date. Use it to review a PR commit by commit (pair with get_commit_diff), and to spot fixup commits, commits that do not belong, or changes introduced and then reverted within the PR, none of which are visible in the squashed diff.`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("list_pr_commits")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
+	_ = cmd.MarkFlagRequired("index")
+	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
+	cmd.Flags().IntVar(&args.Limit, "limit", 50, `Page size`)
 	return cmd
 }
 

@@ -46,6 +46,10 @@ func ExecuteAndPrint(cmd *cobra.Command, td tools.ToolDef, args any) error {
 	if err != nil {
 		return err
 	}
+	raw, err = shapeResponse(td, raw, args)
+	if err != nil {
+		return err
+	}
 
 	jsonMode, _ := cmd.Flags().GetBool("json")
 	if jsonMode {

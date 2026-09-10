@@ -355,6 +355,166 @@ func TestExecuteCreateRepoWithoutOwner(t *testing.T) {
 	}
 }
 
+// Regression test for codebahn/codebahn-cli#1: the path parameter must reach
+// the API as a query parameter so agents get file-scoped history.
+func TestExecuteListRepoCommitsSendsPath(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/repos/acme/test/commits" {
+			t.Errorf("path = %s", r.URL.Path)
+		}
+		if got := r.URL.Query().Get("path"); got != "tools/pr.go" {
+			t.Errorf("query path = %q, want tools/pr.go", got)
+		}
+		if got := r.URL.Query().Get("sha"); got != "main" {
+			t.Errorf("query sha = %q, want main", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `[{"sha":"abc"}]`)
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "tok")
+	td := tools.ByName("list_repo_commits")
+	result, err := c.Execute(context.Background(), td, &tools.ListRepoCommitsArgs{
+		Owner: "acme", Repo: "test", Path: "tools/pr.go", SHA: "main", Page: 1, Limit: 10,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(result) != `[{"sha":"abc"}]` {
+		t.Errorf("result = %s", result)
+	}
+}
+
+// Fields tagged api:"-" are handled client-side and must not leak into the
+// request; the REST API ignores them silently otherwise.
+func TestExecuteSkipsLocalFields(t *testing.T) {
+	for _, tc := range []struct {
+		td   tools.ToolDef
+		args any
+		path string
+	}{
+		{
+			td:   tools.ByName("get_pull_request_diff"),
+			args: &tools.GetPullRequestDiffArgs{Owner: "acme", Repo: "test", Index: 7, FilePath: "a.go"},
+			path: "/api/v1/repos/acme/test/pulls/7.diff",
+		},
+		{
+			td:   tools.ByName("get_commit_diff"),
+			args: &tools.GetCommitDiffArgs{Owner: "acme", Repo: "test", SHA: "abc123", FilePath: "a.go"},
+			path: "/api/v1/repos/acme/test/git/commits/abc123.diff",
+		},
+	} {
+		t.Run(tc.td.Name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != tc.path {
+					t.Errorf("path = %s, want %s", r.URL.Path, tc.path)
+				}
+				if r.URL.RawQuery != "" {
+					t.Errorf("query = %q, want none (file_path is client-side)", r.URL.RawQuery)
+				}
+				w.Header().Set("Content-Type", "text/plain")
+				_, _ = io.WriteString(w, "diff --git a/a.go b/a.go\n")
+			}))
+			defer srv.Close()
+
+			c := New(srv.URL, "tok")
+			result, err := c.Execute(context.Background(), tc.td, tc.args)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(result) != "diff --git a/a.go b/a.go\n" {
+				t.Errorf("non-JSON body should pass through unchanged, got %q", result)
+			}
+		})
+	}
+}
+
+func TestBuildQueryParamsSkipsAPIDash(t *testing.T) {
+	type args struct {
+		Owner    string `json:"owner"`
+		FilePath string `json:"file_path" api:"-"`
+		Page     int    `json:"page"`
+	}
+	q := buildQueryParams(args{Owner: "acme", FilePath: "x.go", Page: 2}, map[string]bool{"Owner": true})
+	if q.Get("file_path") != "" {
+		t.Error("api:\"-\" field should not be in query params")
+	}
+	if q.Get("page") != "2" {
+		t.Errorf("page = %q, want 2", q.Get("page"))
+	}
+}
+
+func TestBuildBodySkipsAPIDash(t *testing.T) {
+	type args struct {
+		Title string `json:"title"`
+		Local string `json:"local" api:"-"`
+	}
+	body := buildBody(args{Title: "hello", Local: "x"}, nil)
+	m, ok := body.(map[string]any)
+	if !ok {
+		t.Fatalf("body type = %T, want map[string]any", body)
+	}
+	if _, ok := m["local"]; ok {
+		t.Error("api:\"-\" field should not be in body")
+	}
+	if m["title"] != "hello" {
+		t.Errorf("title = %v, want hello", m["title"])
+	}
+}
+
+func TestExecuteCompareRefs(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/repos/acme/test/compare/main...feat/x" {
+			t.Errorf("path = %s", r.URL.Path)
+		}
+		if r.URL.RawQuery != "" {
+			t.Errorf("query = %q, want none", r.URL.RawQuery)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"total_commits":1}`)
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "tok")
+	td := tools.ByName("compare_refs")
+	result, err := c.Execute(context.Background(), td, &tools.CompareRefsArgs{
+		Owner: "acme", Repo: "test", Base: "main", Head: "feat/x",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(result) != `{"total_commits":1}` {
+		t.Errorf("result = %s", result)
+	}
+}
+
+func TestExecuteListPRCommits(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/repos/acme/test/pulls/14/commits" {
+			t.Errorf("path = %s", r.URL.Path)
+		}
+		if got := r.URL.Query().Get("limit"); got != "5" {
+			t.Errorf("limit = %q, want 5", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `[{"sha":"abc"}]`)
+	}))
+	defer srv.Close()
+
+	c := New(srv.URL, "tok")
+	td := tools.ByName("list_pr_commits")
+	result, err := c.Execute(context.Background(), td, &tools.ListPRCommitsArgs{
+		Owner: "acme", Repo: "test", Index: 14, Page: 1, Limit: 5,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(result) != `[{"sha":"abc"}]` {
+		t.Errorf("result = %s", result)
+	}
+}
+
 func TestDeleteMethod(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "DELETE" {

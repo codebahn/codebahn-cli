@@ -13,6 +13,7 @@ func init() {
 	Register("list_my_repos", fmtListRepos)
 	Register("list_branches", fmtListBranches)
 	Register("list_repo_commits", fmtListCommits)
+	Register("compare_refs", fmtCompareRefs)
 	Register("list_repo_contents", fmtListContents)
 	Register("get_repo_tree", fmtGetTree)
 	Register("create_repo", fmtCreateRepo)
@@ -94,22 +95,24 @@ func fmtListBranches(raw json.RawMessage, _ any, p *output.Printer) error {
 	return nil
 }
 
-func fmtListCommits(raw json.RawMessage, _ any, p *output.Printer) error {
-	var commits []struct {
-		SHA    string `json:"sha"`
-		Commit struct {
-			Message string `json:"message"`
-			Author  struct {
-				Name string `json:"name"`
-				Date string `json:"date"`
-			} `json:"author"`
-		} `json:"commit"`
-	}
-	if err := json.Unmarshal(raw, &commits); err != nil {
-		return err
-	}
+// commit is the subset of the API commit object the human views use.
+type commit struct {
+	SHA    string `json:"sha"`
+	Commit struct {
+		Message string `json:"message"`
+		Author  struct {
+			Name string `json:"name"`
+			Date string `json:"date"`
+		} `json:"author"`
+	} `json:"commit"`
+	Stats struct {
+		Additions int `json:"additions"`
+		Deletions int `json:"deletions"`
+	} `json:"stats"`
+}
 
-	var rows [][]string
+func commitRows(commits []commit) [][]string {
+	rows := make([][]string, 0, len(commits))
 	for _, c := range commits {
 		sha := c.SHA
 		if len(sha) > 7 {
@@ -122,8 +125,83 @@ func fmtListCommits(raw json.RawMessage, _ any, p *output.Printer) error {
 			output.Dim(TimeAgo(c.Commit.Author.Date)),
 		})
 	}
-	p.Table(nil, rows)
+	return rows
+}
+
+func fmtListCommits(raw json.RawMessage, _ any, p *output.Printer) error {
+	var commits []commit
+	if err := json.Unmarshal(raw, &commits); err != nil {
+		return err
+	}
+	p.Table(nil, commitRows(commits))
 	return nil
+}
+
+func fmtCompareRefs(raw json.RawMessage, args any, p *output.Printer) error {
+	a, ok := args.(*tools.CompareRefsArgs)
+	if !ok {
+		return fmt.Errorf("unexpected args type for compare_refs")
+	}
+	var cmp struct {
+		TotalCommits int      `json:"total_commits"`
+		Commits      []commit `json:"commits"`
+		Files        []struct {
+			Filename string `json:"filename"`
+			Status   string `json:"status"`
+		} `json:"files"`
+	}
+	if err := json.Unmarshal(raw, &cmp); err != nil {
+		return err
+	}
+
+	// The API concatenates every commit's affected files; a file touched by
+	// several commits appears several times. Keep the first status seen.
+	seen := make(map[string]bool, len(cmp.Files))
+	var fileRows [][]string
+	for _, f := range cmp.Files {
+		if seen[f.Filename] {
+			continue
+		}
+		seen[f.Filename] = true
+		fileRows = append(fileRows, []string{fileStatus(f.Status), f.Filename})
+	}
+
+	additions, deletions := 0, 0
+	for _, c := range cmp.Commits {
+		additions += c.Stats.Additions
+		deletions += c.Stats.Deletions
+	}
+
+	p.Text(fmt.Sprintf("%s  %d %s, %d %s, %s %s",
+		output.Bold(a.Base+"..."+a.Head),
+		cmp.TotalCommits, plural(cmp.TotalCommits, "commit", "commits"),
+		len(fileRows), plural(len(fileRows), "file changed", "files changed"),
+		output.Green(fmt.Sprintf("+%d", additions)),
+		output.Red(fmt.Sprintf("-%d", deletions))))
+
+	if len(cmp.Commits) > 0 {
+		p.Text("")
+		p.Table(nil, commitRows(cmp.Commits))
+	}
+	if len(fileRows) > 0 {
+		p.Text("")
+		p.Table(nil, fileRows)
+	}
+	return nil
+}
+
+// fileStatus colors a changed-file status the way the PR files view does.
+func fileStatus(status string) string {
+	switch status {
+	case "added":
+		return output.Green(status)
+	case "modified", "renamed":
+		return output.Yellow(status)
+	case "deleted":
+		return output.Red(status)
+	default:
+		return status
+	}
 }
 
 func fmtListContents(raw json.RawMessage, _ any, p *output.Printer) error {
