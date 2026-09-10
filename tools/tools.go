@@ -14,6 +14,12 @@ type ToolDef struct {
 	Method      string // "POST"
 	PathTmpl    string // "/repos/{{.Owner}}/{{.Repo}}/issues"
 	Args        any    // zero-value of the args struct (for reflection)
+	Destructive bool   // true for tools that irreversibly destroy resources
+	ReadOnly    bool   // explicit read-only flag for composite tools
+}
+
+func (td ToolDef) IsReadOnly() bool {
+	return td.Method == "GET" || td.ReadOnly
 }
 
 // All is the single registry of every tool. Both the CLI binary and the

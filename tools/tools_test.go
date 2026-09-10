@@ -175,3 +175,43 @@ func TestMethodValues(t *testing.T) {
 		}
 	}
 }
+
+func TestReadOnlyHint(t *testing.T) {
+	for _, td := range All {
+		if td.Method == "GET" && !td.IsReadOnly() {
+			t.Errorf("tool %s: GET but IsReadOnly() = false", td.Name)
+		}
+		if td.Method != "GET" && !td.ReadOnly && td.IsReadOnly() {
+			t.Errorf("tool %s: non-GET without ReadOnly but IsReadOnly() = true", td.Name)
+		}
+	}
+}
+
+func TestDestructiveTools(t *testing.T) {
+	want := map[string]bool{
+		"delete_file":            true,
+		"delete_branch":          true,
+		"remove_issue_labels":    true,
+		"delete_issue_comment":   true,
+		"delete_label":           true,
+		"delete_pull_review":     true,
+		"delete_review_requests": true,
+		"cancel_build":           true,
+	}
+	for _, td := range All {
+		if want[td.Name] && !td.Destructive {
+			t.Errorf("tool %s: expected Destructive = true", td.Name)
+		}
+		if !want[td.Name] && td.Destructive {
+			t.Errorf("tool %s: unexpected Destructive = true", td.Name)
+		}
+	}
+}
+
+func TestEveryDELETEIsDestructive(t *testing.T) {
+	for _, td := range All {
+		if td.Method == "DELETE" && !td.Destructive {
+			t.Errorf("tool %s: DELETE method but Destructive = false", td.Name)
+		}
+	}
+}
