@@ -63,9 +63,9 @@ For CI, set `CODEBAHN_TOKEN` instead.
 
 | Group    | What                                          |
 |----------|-----------------------------------------------|
-| `repo`   | Create, list, read files, branches, commits   |
+| `repo`   | Create, list, read files, branches, commits, diffs, compare refs |
 | `issue`  | Create, list, comment, labels, milestones     |
-| `pr`     | Create, list, merge, diff, reviews            |
+| `pr`     | Create, list, merge, diff, commits, reviews   |
 | `ci`     | Dispatch workflows, list runs, read logs      |
 | `search` | Code, repos, issues                           |
 
@@ -77,13 +77,22 @@ codebahn repo cat --ref main --filePath README.md
 codebahn ci logs --run_id 7
 ```
 
+Review a pull request commit by commit:
+
+```bash
+codebahn pr commits --index 42
+codebahn repo show --sha 1a2b3c4 --file_path internal/foo.go
+codebahn repo compare --base main --head feat/foo
+codebahn repo log --path internal/foo.go --limit 10
+```
+
 Every subcommand accepts `--help`.
 
 ## MCP and AI agents
 
 Codebahn has a built-in [MCP server](https://codebahn.net/docs/guides/mcp/) that connects AI coding agents to your repos, issues, and CI.
 
-The `tools/` package in this repo is the shared source of truth for both this CLI and the MCP endpoint. 54 tools, one set of types, zero drift.
+The `tools/` package in this repo is the shared source of truth for both this CLI and the MCP endpoint. 57 tools, one set of types, zero drift.
 
 ```go
 import "github.com/codebahn/codebahn-cli/tools"

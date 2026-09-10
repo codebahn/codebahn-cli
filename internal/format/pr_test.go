@@ -49,6 +49,37 @@ func TestListPullRequests(t *testing.T) {
 	}
 }
 
+func TestListPRCommits(t *testing.T) {
+	now := time.Now().UTC().Add(-3 * time.Hour).Format(time.RFC3339)
+	raw := json.RawMessage(fmt.Sprintf(`[
+		{"sha":"abc123def456789","commit":{"message":"feat: add thing\n\nlonger body","author":{"name":"Simon","date":%q}}},
+		{"sha":"def456abc123789","commit":{"message":"fixup! feat: add thing","author":{"name":"Simon","date":%q}}}
+	]`, now, now))
+
+	var buf bytes.Buffer
+	output.SetNoColor(true)
+	defer output.SetNoColor(false)
+	p := output.NewPrinter(&buf, false)
+
+	f, ok := Get("list_pr_commits")
+	if !ok {
+		t.Fatal("formatter not registered")
+	}
+	if err := f(raw, nil, p); err != nil {
+		t.Fatal(err)
+	}
+
+	out := buf.String()
+	for _, want := range []string{"abc123d", "feat: add thing", "def456a", "fixup! feat: add thing", "Simon", "3h ago"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected %q in output, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "longer body") {
+		t.Errorf("only the first line of the message should be shown, got:\n%s", out)
+	}
+}
+
 func TestGetPullRequest(t *testing.T) {
 	now := time.Now().UTC()
 	created := now.Add(-2 * time.Hour).Format(time.RFC3339)

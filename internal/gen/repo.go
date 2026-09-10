@@ -24,6 +24,8 @@ func NewRepoCmd() *cobra.Command {
 	cmd.AddCommand(RepoDeleteBranchCmd())
 	cmd.AddCommand(RepoBranchesCmd())
 	cmd.AddCommand(RepoLogCmd())
+	cmd.AddCommand(RepoShowCmd())
+	cmd.AddCommand(RepoCompareCmd())
 	cmd.AddCommand(RepoLsCmd())
 	cmd.AddCommand(RepoTreeCmd())
 	return cmd
@@ -222,7 +224,7 @@ func RepoLogCmd() *cobra.Command {
 	var args tools.ListRepoCommitsArgs
 	cmd := &cobra.Command{
 		Use:   "log",
-		Short: `List repo commits`,
+		Short: `List commits, newest first, starting from sha (a branch, tag or commit; defaults to the default branch). Set path to a file or directory to get only the commits that touched it: file-scoped history shows who changed a file recently and how often, which tells you how much scrutiny a change there deserves.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("list_repo_commits")
 			return ExecuteAndPrint(cmd, td, &args)
@@ -230,10 +232,47 @@ func RepoLogCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
-	cmd.Flags().StringVar(&args.Path, "path", "", `File/dir path`)
-	cmd.Flags().StringVar(&args.SHA, "sha", "", `SHA/branch to start from`)
+	cmd.Flags().StringVar(&args.Path, "path", "", `Optional file or directory path. Only commits that touched it are returned.`)
+	cmd.Flags().StringVar(&args.SHA, "sha", "", `Branch, tag or commit SHA to start from (default: the default branch)`)
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
 	cmd.Flags().IntVar(&args.Limit, "limit", 100, `Page size`)
+	return cmd
+}
+
+func RepoShowCmd() *cobra.Command {
+	var args tools.GetCommitDiffArgs
+	cmd := &cobra.Command{
+		Use:   "show",
+		Short: `Get the unified diff of a single commit (its changes against its first parent). Pass an optional file_path to receive only the hunks for that file (match is exact on either the pre- or post-rename path). Pair with list_pr_commits to review a pull request commit by commit instead of only its squashed diff.`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("get_commit_diff")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.SHA, "sha", "", `Commit SHA (full or abbreviated)`)
+	_ = cmd.MarkFlagRequired("sha")
+	cmd.Flags().StringVar(&args.FilePath, "file_path", "", `Optional. Return only the diff section for this file (matched on the diff --git boundary). Omit for the full diff.`)
+	return cmd
+}
+
+func RepoCompareCmd() *cobra.Command {
+	var args tools.CompareRefsArgs
+	cmd := &cobra.Command{
+		Use:   "compare",
+		Short: `Compare two refs (branches, tags or commit SHAs) as base...head: the commits reachable from head but not from base (newest first), and the files those commits touched with their status. No pull request is needed, so use it to preview a PR before it exists, to check what actually landed between two releases or deploys, or to measure how far two branches have diverged. For the hunks themselves use get_commit_diff on the listed commits.`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("compare_refs")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.Base, "base", "", `Base ref (branch, tag or commit SHA)`)
+	_ = cmd.MarkFlagRequired("base")
+	cmd.Flags().StringVar(&args.Head, "head", "", `Head ref (branch, tag or commit SHA); the result is what head has that base does not`)
+	_ = cmd.MarkFlagRequired("head")
 	return cmd
 }
 

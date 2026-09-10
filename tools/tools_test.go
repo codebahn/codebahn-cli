@@ -6,8 +6,62 @@ import (
 )
 
 func TestAllCount(t *testing.T) {
-	if got := len(All); got != 54 {
-		t.Errorf("len(All) = %d, want 54", got)
+	if got := len(All); got != 57 {
+		t.Errorf("len(All) = %d, want 57", got)
+	}
+}
+
+func TestReviewTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_pr_commits", "pr", "commits", "GET", "/repos/{{.Owner}}/{{.Repo}}/pulls/{{.Index}}/commits"},
+		{"get_commit_diff", "repo", "show", "GET", "/repos/{{.Owner}}/{{.Repo}}/git/commits/{{.SHA}}.diff"},
+		{"compare_refs", "repo", "compare", "GET", "/repos/{{.Owner}}/{{.Repo}}/compare/{{.Base}}...{{.Head}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+}
+
+// Fields tagged api:"-" are consumed by the tool implementation (MCP handler
+// or CLI) and must never be sent to the REST API. They are still part of the
+// tool's schema. The tag has exactly one valid value.
+func TestAPITagValues(t *testing.T) {
+	for _, td := range All {
+		rt := reflect.TypeOf(td.Args)
+		for i := range rt.NumField() {
+			f := rt.Field(i)
+			if tag, ok := f.Tag.Lookup("api"); ok && tag != "-" {
+				t.Errorf("tool %s: field %s has api:%q, want api:\"-\" or no tag", td.Name, f.Name, tag)
+			}
+		}
+	}
+}
+
+func TestDiffFilePathIsLocal(t *testing.T) {
+	for _, name := range []string{"get_pull_request_diff", "get_commit_diff"} {
+		rt := reflect.TypeOf(ByName(name).Args)
+		f, ok := rt.FieldByName("FilePath")
+		if !ok {
+			t.Errorf("tool %s: missing FilePath field", name)
+			continue
+		}
+		if f.Tag.Get("api") != "-" {
+			t.Errorf("tool %s: FilePath must be tagged api:\"-\" (the REST API does not filter diffs by file)", name)
+		}
 	}
 }
 
