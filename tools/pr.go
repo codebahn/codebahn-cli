@@ -283,6 +283,7 @@ func prTools() []ToolDef {
 			Method:      "DELETE",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/pulls/{{.Index}}/reviews/{{.ID}}",
 			Args:        DeletePullReviewArgs{},
+			Destructive: true,
 		},
 		{
 			Name:        "create_review_requests",
@@ -301,6 +302,7 @@ func prTools() []ToolDef {
 			Method:      "DELETE",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/pulls/{{.Index}}/requested_reviewers",
 			Args:        DeleteReviewRequestsArgs{},
+			Destructive: true,
 		},
 	}
 }

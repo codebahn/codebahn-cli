@@ -186,6 +186,7 @@ func repoTools() []ToolDef {
 			Method:      "DELETE",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/contents/{{.FilePath}}",
 			Args:        DeleteFileArgs{},
+			Destructive: true,
 		},
 		{
 			Name:        "create_branch",
@@ -204,6 +205,7 @@ func repoTools() []ToolDef {
 			Method:      "DELETE",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/branches/{{.Branch}}",
 			Args:        DeleteBranchArgs{},
+			Destructive: true,
 		},
 		{
 			Name:        "list_branches",

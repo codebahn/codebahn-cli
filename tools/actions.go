@@ -85,6 +85,7 @@ func actionsTools() []ToolDef {
 			Method:      "POST",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/actions/runs/{{.RunID}}/cancel",
 			Args:        CancelBuildArgs{},
+			Destructive: true,
 		},
 	}
 }

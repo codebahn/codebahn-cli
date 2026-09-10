@@ -199,6 +199,7 @@ func issueTools() []ToolDef {
 			Method:      "DELETE",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/issues/{{.Index}}/labels",
 			Args:        RemoveIssueLabelsArgs{},
+			Destructive: true,
 		},
 		{
 			Name:        "issue_state_change",
@@ -244,6 +245,7 @@ func issueTools() []ToolDef {
 			Method:      "DELETE",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/issues/comments/{{.CommentID}}",
 			Args:        DeleteIssueCommentArgs{},
+			Destructive: true,
 		},
 		{
 			Name:        "list_repo_milestones",
@@ -289,6 +291,7 @@ func issueTools() []ToolDef {
 			Method:      "DELETE",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/labels/{{.ID}}",
 			Args:        DeleteLabelArgs{},
+			Destructive: true,
 		},
 	}
 }
