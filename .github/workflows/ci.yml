@@ -26,3 +26,8 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+      # tools/ is its own module, so ./... from the root does not reach it.
+      - name: Test tools module
+        working-directory: tools
+        run: go test -race ./... && go vet ./...
