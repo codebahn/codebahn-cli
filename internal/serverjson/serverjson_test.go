@@ -17,7 +17,7 @@ type serverJSON struct {
 	Version string `json:"version"`
 	Remotes []struct {
 		URL           string `json:"url"`
-		TransportType string `json:"transportType"`
+		Type string `json:"type"`
 	} `json:"remotes"`
 	Packages json.RawMessage `json:"packages"`
 }
@@ -83,8 +83,8 @@ func TestRemotes(t *testing.T) {
 	if sj.Remotes[0].URL != "https://codebahn.net/mcp" {
 		t.Errorf("remotes[0].url = %q, want %q", sj.Remotes[0].URL, "https://codebahn.net/mcp")
 	}
-	if sj.Remotes[0].TransportType != "streamable-http" {
-		t.Errorf("remotes[0].transportType = %q, want %q", sj.Remotes[0].TransportType, "streamable-http")
+	if sj.Remotes[0].Type != "streamable-http" {
+		t.Errorf("remotes[0].type = %q, want %q", sj.Remotes[0].Type, "streamable-http")
 	}
 }
 

@@ -1,6 +1,6 @@
 # Codebahn CLI
 
-Codebahn is the private GitHub alternative: fast Git and CI for small teams. Your code is stored and served. Not scanned, not trained on, not tracked.
+Codebahn is the private GitHub alternative: fast Git and CI for small teams. Your code is stored and served. Not scanned, not trained on, not tracked. Swedish company, EU-only infrastructure, every sub-processor EU-incorporated. Built on Forgejo, easy to leave.
 
 Command-line interface for [Codebahn](https://codebahn.net).
 
