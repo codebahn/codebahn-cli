@@ -1,6 +1,8 @@
 # Codebahn CLI
 
-Command-line interface for [Codebahn](https://codebahn.net). Managed Git and CI for European teams.
+Codebahn is the private GitHub alternative: fast Git and CI for small teams. Your code is stored and served. Not scanned, not trained on, not tracked.
+
+Command-line interface for [Codebahn](https://codebahn.net).
 
 ```
 codebahn auth login
