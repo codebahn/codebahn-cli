@@ -92,17 +92,59 @@ Every subcommand accepts `--help`.
 
 ## MCP and AI agents
 
-Codebahn has a built-in [MCP server](https://codebahn.net/docs/guides/mcp/) that connects AI coding agents to your repos, issues, and CI.
+Codebahn has a built-in, hosted MCP server that connects AI coding agents to your repos, issues, pull requests, and CI:
+
+```
+https://codebahn.net/mcp
+```
 
 The `tools/` package in this repo is the shared source of truth for both this CLI and the MCP endpoint. 57 tools, one set of types, zero drift.
 
-```go
-import "github.com/codebahn/codebahn-cli/tools"
-import "github.com/codebahn/codebahn-cli/tools/schema"
+The server authenticates over OAuth, discovered via `/.well-known/oauth-protected-resource`. Add the URL to your MCP client and approve the OAuth prompt in your browser on first use.
 
-td := tools.ByName("create_issue")
-jsonSchema := schema.For(td)
+### Claude Code
+
+```bash
+claude mcp add --transport http codebahn https://codebahn.net/mcp
 ```
+
+### Codex
+
+```bash
+codex mcp add codebahn --url https://codebahn.net/mcp
+```
+
+### VS Code (Copilot)
+
+Create `.vscode/mcp.json` in your project root:
+
+```json
+{
+  "servers": {
+    "codebahn": {
+      "type": "http",
+      "url": "https://codebahn.net/mcp"
+    }
+  }
+}
+```
+
+### Cursor
+
+Create `.cursor/mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "codebahn": {
+      "type": "http",
+      "url": "https://codebahn.net/mcp"
+    }
+  }
+}
+```
+
+Full docs: [codebahn.net/docs/mcp/](https://codebahn.net/docs/mcp/).
 
 ## Release infrastructure
 
