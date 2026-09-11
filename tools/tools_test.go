@@ -1,6 +1,9 @@
 package tools
 
 import (
+	"bytes"
+	"fmt"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -213,5 +216,16 @@ func TestEveryDELETEIsDestructive(t *testing.T) {
 		if td.Method == "DELETE" && !td.Destructive {
 			t.Errorf("tool %s: DELETE method but Destructive = false", td.Name)
 		}
+	}
+}
+
+func TestREADMEToolCount(t *testing.T) {
+	data, err := os.ReadFile("../README.md")
+	if err != nil {
+		t.Fatalf("failed to read README.md: %v", err)
+	}
+	want := fmt.Sprintf("%d tools", len(All))
+	if !bytes.Contains(data, []byte(want)) {
+		t.Errorf("README.md does not contain %q; update the tool count", want)
 	}
 }
