@@ -47,4 +47,5 @@ signs:
     signature: "${artifact}.asc"
 
 release:
-  disable: true
+  draft: false
+  prerelease: auto
