@@ -84,14 +84,13 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ needs.resolve-tag.outputs.tag }}
 
       - name: Set version from tag
         run: |
-          VERSION=${{ needs.resolve-tag.outputs.tag }}
-          VERSION=${VERSION#v}
+          VERSION=${TAG#v}
           jq --arg v "$VERSION" '.version = $v' server.json > server.tmp && mv server.tmp server.json
+        env:
+          TAG: ${{ needs.resolve-tag.outputs.tag }}
 
       - name: Install mcp-publisher
         run: |
