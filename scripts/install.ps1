@@ -40,6 +40,31 @@ function Test-Checksum {
     }
 }
 
+function Test-Signature {
+    param([string]$ChecksumFile, [string]$TagUrl)
+
+    $sigFile = Join-Path (Split-Path $ChecksumFile) 'checksums.txt.asc'
+    Invoke-WebRequest -Uri "$TagUrl/checksums.txt.asc" -OutFile $sigFile -UseBasicParsing
+
+    $gpg = Get-Command gpg -ErrorAction SilentlyContinue
+    if (-not $gpg) {
+        Write-Host 'WARNING: gpg not found; PGP signature verification skipped.'
+        Write-Host '         Install GPG for Windows and re-run, or verify manually:'
+        Write-Host "           gpg --verify `"$sigFile`" `"$ChecksumFile`""
+        return
+    }
+
+    $keyFile = Join-Path (Split-Path $ChecksumFile) 'release-key.asc'
+    Invoke-WebRequest -Uri "$BaseUrl/release-key.asc" -OutFile $keyFile -UseBasicParsing
+    & gpg --batch --import $keyFile 2>$null
+
+    $null = & gpg --batch --verify $sigFile $ChecksumFile 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw 'PGP signature verification failed. The checksums file may have been tampered with.'
+    }
+    Write-Host 'ok'
+}
+
 function Install-Codebahn {
     $arch = Get-Arch
     $binary = "codebahn-windows-${arch}.exe"
@@ -65,6 +90,9 @@ function Install-Codebahn {
         Invoke-WebRequest -Uri "$tagUrl/checksums.txt" -OutFile $tempChecksums -UseBasicParsing
         Test-Checksum -File $tempBinary -ChecksumFile $tempChecksums -Name $binary
         Write-Host 'ok'
+
+        Write-Host 'Verifying PGP signature... ' -NoNewline
+        Test-Signature -ChecksumFile $tempChecksums -TagUrl $tagUrl
 
         New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
         Move-Item -Path $tempBinary -Destination (Join-Path $InstallDir 'codebahn.exe') -Force
