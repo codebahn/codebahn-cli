@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 type Config struct {
@@ -24,6 +25,10 @@ type Auth struct {
 
 func ConfigDir() string {
 	if dir := os.Getenv("XDG_CONFIG_HOME"); dir != "" {
+		return filepath.Join(dir, "codebahn")
+	}
+	if runtime.GOOS == "windows" {
+		dir, _ := os.UserConfigDir()
 		return filepath.Join(dir, "codebahn")
 	}
 	home, _ := os.UserHomeDir()

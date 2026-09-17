@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
-	"runtime"
 	"runtime/debug"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/codebahn/codebahn-cli/client"
+	"github.com/codebahn/codebahn-cli/internal/browser"
 	"github.com/codebahn/codebahn-cli/internal/config"
 	"github.com/codebahn/codebahn-cli/internal/gen"
 	"github.com/codebahn/codebahn-cli/internal/migrate"
@@ -132,7 +131,7 @@ func authLoginCmd() *cobra.Command {
 		Use:   "login",
 		Short: "Authenticate via browser (OAuth2 + PKCE)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			tokenResp, err := oauth.Login(cmd.Context(), loginURL, openBrowser)
+			tokenResp, err := oauth.Login(cmd.Context(), loginURL, browser.Open)
 			if err != nil {
 				return err
 			}
@@ -250,16 +249,5 @@ func checkUpdateInBackground(rootCmd *cobra.Command) func() string {
 		default:
 			return ""
 		}
-	}
-}
-
-func openBrowser(url string) error {
-	switch runtime.GOOS {
-	case "linux":
-		return exec.Command("xdg-open", url).Start()
-	case "darwin":
-		return exec.Command("open", url).Start()
-	default:
-		return nil
 	}
 }

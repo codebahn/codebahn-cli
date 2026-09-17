@@ -7,8 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os/exec"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -140,16 +138,5 @@ func PollForToken(ctx context.Context, clientID, deviceCode string, interval int
 		default:
 			return nil, fmt.Errorf("GitHub OAuth error: %s", tokenResp.Error)
 		}
-	}
-}
-
-func openBrowser(u string) error {
-	switch runtime.GOOS {
-	case "linux":
-		return exec.Command("xdg-open", u).Start()
-	case "darwin":
-		return exec.Command("open", u).Start()
-	default:
-		return nil
 	}
 }

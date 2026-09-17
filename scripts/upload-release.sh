@@ -18,13 +18,16 @@ echo "Uploading binaries..."
 for dir in dist/codebahn-cli_*; do
   [ -d "$dir" ] || continue
   binary="$dir/codebahn"
+  [ -f "$binary" ] || binary="$dir/codebahn.exe"
   [ -f "$binary" ] || continue
 
   # Extract os and arch from directory name (codebahn-cli_linux_amd64_v1)
   name=$(basename "$dir" | sed 's/codebahn-cli_//; s/_v[0-9.]*$//')
   os=$(echo "$name" | cut -d_ -f1)
   arch=$(echo "$name" | cut -d_ -f2)
-  upload "$binary" "codebahn-${os}-${arch}"
+  ext=""
+  case "$binary" in *.exe) ext=".exe" ;; esac
+  upload "$binary" "codebahn-${os}-${arch}${ext}"
 done
 
 echo "Uploading archives..."
@@ -37,9 +40,14 @@ echo "Uploading checksums..."
 upload dist/checksums.txt checksums.txt
 [ -f dist/checksums.txt.asc ] && upload dist/checksums.txt.asc checksums.txt.asc
 
-echo "Uploading install script..."
+echo "Uploading install scripts..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 aws s3 cp "$SCRIPT_DIR/install.sh" "s3://${BUCKET}/cli/install.sh" \
+  --endpoint-url "$ENDPOINT" \
+  --content-type text/plain \
+  --acl public-read \
+  --quiet
+aws s3 cp "$SCRIPT_DIR/install.ps1" "s3://${BUCKET}/cli/install.ps1" \
   --endpoint-url "$ENDPOINT" \
   --content-type text/plain \
   --acl public-read \
