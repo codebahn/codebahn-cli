@@ -48,6 +48,9 @@ func setupReleaseServer(t *testing.T, version, binaryContent string) *httptest.S
 	t.Helper()
 
 	binaryName := fmt.Sprintf("codebahn-%s-%s", runtime.GOOS, runtime.GOARCH)
+	if runtime.GOOS == "windows" {
+		binaryName += ".exe"
+	}
 
 	h := sha256.Sum256([]byte(binaryContent))
 	checksumLine := fmt.Sprintf("%x  %s\n", h, binaryName)
@@ -93,6 +96,9 @@ func TestUpdate_Success(t *testing.T) {
 func TestUpdate_BadChecksum(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		binaryName := fmt.Sprintf("codebahn-%s-%s", runtime.GOOS, runtime.GOARCH)
+		if runtime.GOOS == "windows" {
+			binaryName += ".exe"
+		}
 		switch {
 		case r.URL.Path == "/cli/latest.json":
 			fmt.Fprint(w, `{"version":"2.0.0"}`)

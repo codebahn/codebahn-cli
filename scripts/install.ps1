@@ -1,5 +1,6 @@
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $BaseUrl = 'https://releases.codebahn.net/cli'
 $InstallDir = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\codebahn' }
