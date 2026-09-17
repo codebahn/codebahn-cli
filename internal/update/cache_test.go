@@ -21,8 +21,8 @@ func TestCacheDir_Default(t *testing.T) {
 	t.Setenv("XDG_CACHE_HOME", "")
 
 	got := CacheDir()
-	base, _ := os.UserCacheDir()
-	want := filepath.Join(base, "codebahn")
+	home, _ := os.UserHomeDir()
+	want := filepath.Join(home, ".cache", "codebahn")
 	if got != want {
 		t.Errorf("CacheDir() = %q, want %q", got, want)
 	}

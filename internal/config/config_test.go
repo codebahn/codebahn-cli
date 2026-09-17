@@ -21,8 +21,8 @@ func TestConfigDir_Default(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", "")
 
 	got := ConfigDir()
-	base, _ := os.UserConfigDir()
-	want := filepath.Join(base, "codebahn")
+	home, _ := os.UserHomeDir()
+	want := filepath.Join(home, ".config", "codebahn")
 	if got != want {
 		t.Errorf("ConfigDir() = %q, want %q", got, want)
 	}

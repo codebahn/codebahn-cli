@@ -13,7 +13,7 @@ func Open(url string) error {
 	case "darwin":
 		return exec.Command("open", url).Start()
 	case "windows":
-		return exec.Command("cmd", "/c", "start", "", url).Start()
+		return exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 	default:
 		return nil
 	}
