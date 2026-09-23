@@ -15,6 +15,8 @@ One binary. OAuth login. No config files.
 
 ## Install
 
+### Linux and macOS
+
 ```bash
 curl -fsSL https://releases.codebahn.net/cli/install.sh | sh
 ```
@@ -27,7 +29,26 @@ with `INSTALL_DIR`:
 curl -fsSL https://releases.codebahn.net/cli/install.sh | INSTALL_DIR=/usr/local/bin sh
 ```
 
-Alternatively, install from source (note: source builds skip auto-update):
+### Windows
+
+```powershell
+irm https://releases.codebahn.net/cli/install.ps1 | iex
+```
+
+This downloads the latest binary, verifies its SHA256 checksum and GPG
+signature (if gpg is installed), and installs to
+`%LOCALAPPDATA%\Programs\codebahn`. Override with `$env:INSTALL_DIR`.
+
+After install, add the directory to your PATH if the script warns it is
+missing:
+
+```powershell
+[Environment]::SetEnvironmentVariable('Path', "$env:LOCALAPPDATA\Programs\codebahn;$([Environment]::GetEnvironmentVariable('Path', 'User'))", 'User')
+```
+
+### From source
+
+Install from source (note: source builds skip auto-update):
 
 ```bash
 go install github.com/codebahn/codebahn-cli/cmd/codebahn@latest
@@ -48,11 +69,14 @@ required.
 
 To check without installing: `codebahn update --check`.
 To silence the periodic check: set `CODEBAHN_NO_UPDATE_CHECK=1` or add
-`"check_updates": false` to `~/.config/codebahn/config.json`.
+`"check_updates": false` to the config file (`~/.config/codebahn/config.json`,
+or `%APPDATA%\codebahn\config.json` on Windows).
 
 ## Authentication
 
-Log in through the browser. Tokens are saved to `~/.config/codebahn/config.json`.
+Log in through the browser. Tokens are saved to
+`~/.config/codebahn/config.json` (`%APPDATA%\codebahn\config.json` on
+Windows).
 
 ```bash
 codebahn auth login
