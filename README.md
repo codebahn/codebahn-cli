@@ -36,15 +36,10 @@ irm https://releases.codebahn.net/cli/install.ps1 | iex
 ```
 
 This downloads the latest binary, verifies its SHA256 checksum and GPG
-signature (if gpg is installed), and installs to
-`%LOCALAPPDATA%\Programs\codebahn`. Override with `$env:INSTALL_DIR`.
-
-After install, add the directory to your PATH if the script warns it is
-missing:
-
-```powershell
-[Environment]::SetEnvironmentVariable('Path', "$env:LOCALAPPDATA\Programs\codebahn;$([Environment]::GetEnvironmentVariable('Path', 'User'))", 'User')
-```
+signature (if gpg is installed), installs to
+`%LOCALAPPDATA%\Programs\codebahn`, and adds it to your PATH.
+Override the install location with `$env:INSTALL_DIR`. Restart your
+terminal after install.
 
 ### From source
 

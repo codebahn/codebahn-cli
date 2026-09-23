@@ -101,10 +101,10 @@ function Install-Codebahn {
 
         $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
         if ($userPath -notlike "*$InstallDir*") {
-            Write-Host ''
-            Write-Host "Warning: $InstallDir is not in your PATH."
-            Write-Host "Add it with:  `$env:Path = `"$InstallDir;`$env:Path`""
-            Write-Host "Or permanently: [Environment]::SetEnvironmentVariable('Path', `"$InstallDir;`$([Environment]::GetEnvironmentVariable('Path', 'User'))`", 'User')"
+            [Environment]::SetEnvironmentVariable('Path', "$InstallDir;$userPath", 'User')
+            $env:Path = "$InstallDir;$env:Path"
+            Write-Host "Added $InstallDir to your PATH."
+            Write-Host 'Restart your terminal for the change to take effect in new sessions.'
         }
     }
     finally {
