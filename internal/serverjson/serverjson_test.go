@@ -16,7 +16,7 @@ type serverJSON struct {
 	} `json:"repository"`
 	Version string `json:"version"`
 	Remotes []struct {
-		URL           string `json:"url"`
+		URL  string `json:"url"`
 		Type string `json:"type"`
 	} `json:"remotes"`
 	Packages json.RawMessage `json:"packages"`
@@ -45,7 +45,7 @@ func TestName(t *testing.T) {
 
 func TestDescription(t *testing.T) {
 	sj := loadServerJSON(t)
-	want := "Codebahn is the private GitHub alternative: fast Git and CI for small teams."
+	want := "Codebahn is the private GitHub alternative: fast Git and CI for developers and teams."
 	if sj.Description != want {
 		t.Errorf("description = %q, want %q", sj.Description, want)
 	}

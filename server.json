@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.codebahn/codebahn",
-  "description": "Codebahn is the private GitHub alternative: fast Git and CI for small teams.",
+  "description": "Codebahn is the private GitHub alternative: fast Git and CI for developers and teams.",
   "repository": {
     "url": "https://github.com/codebahn/codebahn-cli",
     "source": "github"
