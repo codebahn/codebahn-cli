@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/codebahn/codebahn-cli/tools"
@@ -159,5 +160,24 @@ func TestToolsJSONParams(t *testing.T) {
 		if params[i] != w {
 			t.Errorf("params[%d] = %+v, want %+v", i, params[i], w)
 		}
+	}
+}
+
+// TestToolsJSONSync verifies the committed ../../tools.json byte-equals what
+// the generator produces right now, so drift gets caught (see
+// TestToolsJSONSync's CI counterpart: `go run ./cmd/gen && git diff --exit-code`).
+func TestToolsJSONSync(t *testing.T) {
+	want, err := marshalToolsJSON(buildToolsJSON())
+	if err != nil {
+		t.Fatalf("marshalToolsJSON: %v", err)
+	}
+
+	got, err := os.ReadFile("../../tools.json")
+	if err != nil {
+		t.Fatalf("read ../../tools.json: %v (run `go run ./cmd/gen`)", err)
+	}
+
+	if string(got) != string(want) {
+		t.Errorf("../../tools.json is stale; run `go run ./cmd/gen` to regenerate")
 	}
 }
