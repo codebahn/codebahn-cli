@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"os"
 	"reflect"
 
 	"github.com/codebahn/codebahn-cli/tools"
@@ -81,4 +83,27 @@ func buildToolsJSONParams(td tools.ToolDef) []toolsJSONParam {
 		})
 	}
 	return params
+}
+
+// marshalToolsJSON renders entries as the committed tools.json: 2-space
+// indent, no HTML escaping (descriptions can contain `&`, `<`, `>`
+// unescaped), trailing newline.
+func marshalToolsJSON(entries []toolsJSONEntry) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(entries); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// writeToolsJSON builds and writes the tools.json tool reference to path.
+func writeToolsJSON(path string) error {
+	data, err := marshalToolsJSON(buildToolsJSON())
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0o644)
 }
