@@ -387,6 +387,9 @@ func TestDestructiveTools(t *testing.T) {
 		"delete_release":            true,
 		"delete_release_attachment": true,
 		"delete_tag":                true,
+		"delete_hook":               true,
+		"delete_org_hook":           true,
+		"delete_branch_protection":  true,
 	}
 	for _, td := range All {
 		if want[td.Name] && !td.Destructive {
