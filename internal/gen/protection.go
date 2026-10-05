@@ -61,6 +61,7 @@ func ProtectionCreateCmd() *cobra.Command {
 	var _PushWhitelistDeployKeys bool
 	var _EnableMergeWhitelist bool
 	var _EnableStatusCheck bool
+	var _RequiredApprovals int
 	var _EnableApprovalsWhitelist bool
 	var _BlockOnRejectedReviews bool
 	var _BlockOnOfficialReviewRequests bool
@@ -85,6 +86,9 @@ func ProtectionCreateCmd() *cobra.Command {
 			}
 			if cmd.Flags().Changed("enable_status_check") {
 				args.EnableStatusCheck = &_EnableStatusCheck
+			}
+			if cmd.Flags().Changed("required_approvals") {
+				args.RequiredApprovals = &_RequiredApprovals
 			}
 			if cmd.Flags().Changed("enable_approvals_whitelist") {
 				args.EnableApprovalsWhitelist = &_EnableApprovalsWhitelist
@@ -122,7 +126,7 @@ func ProtectionCreateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.MergeWhitelistTeams, "merge_whitelist_teams", "", `Teams allowed to merge (comma-separated)`)
 	cmd.Flags().BoolVar(&_EnableStatusCheck, "enable_status_check", false, `Require status checks to pass before merging`)
 	cmd.Flags().StringVar(&args.StatusCheckContexts, "status_check_contexts", "", `Required status check contexts (comma-separated)`)
-	cmd.Flags().IntVar(&args.RequiredApprovals, "required_approvals", 0, `Minimum number of approving reviews required`)
+	cmd.Flags().IntVar(&_RequiredApprovals, "required_approvals", 0, `Minimum number of approving reviews required`)
 	cmd.Flags().BoolVar(&_EnableApprovalsWhitelist, "enable_approvals_whitelist", false, `Restrict qualifying approvals to the approvals whitelist`)
 	cmd.Flags().StringVar(&args.ApprovalsWhitelistUsernames, "approvals_whitelist_usernames", "", `Usernames whose approvals count (comma-separated)`)
 	cmd.Flags().StringVar(&args.ApprovalsWhitelistTeams, "approvals_whitelist_teams", "", `Teams whose approvals count (comma-separated)`)
@@ -143,6 +147,7 @@ func ProtectionUpdateCmd() *cobra.Command {
 	var _PushWhitelistDeployKeys bool
 	var _EnableMergeWhitelist bool
 	var _EnableStatusCheck bool
+	var _RequiredApprovals int
 	var _EnableApprovalsWhitelist bool
 	var _BlockOnRejectedReviews bool
 	var _BlockOnOfficialReviewRequests bool
@@ -167,6 +172,9 @@ func ProtectionUpdateCmd() *cobra.Command {
 			}
 			if cmd.Flags().Changed("enable_status_check") {
 				args.EnableStatusCheck = &_EnableStatusCheck
+			}
+			if cmd.Flags().Changed("required_approvals") {
+				args.RequiredApprovals = &_RequiredApprovals
 			}
 			if cmd.Flags().Changed("enable_approvals_whitelist") {
 				args.EnableApprovalsWhitelist = &_EnableApprovalsWhitelist
@@ -204,7 +212,7 @@ func ProtectionUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.MergeWhitelistTeams, "merge_whitelist_teams", "", `Teams allowed to merge (comma-separated)`)
 	cmd.Flags().BoolVar(&_EnableStatusCheck, "enable_status_check", false, `Require status checks to pass before merging`)
 	cmd.Flags().StringVar(&args.StatusCheckContexts, "status_check_contexts", "", `Required status check contexts (comma-separated)`)
-	cmd.Flags().IntVar(&args.RequiredApprovals, "required_approvals", 0, `Minimum number of approving reviews required`)
+	cmd.Flags().IntVar(&_RequiredApprovals, "required_approvals", 0, `Minimum number of approving reviews required`)
 	cmd.Flags().BoolVar(&_EnableApprovalsWhitelist, "enable_approvals_whitelist", false, `Restrict qualifying approvals to the approvals whitelist`)
 	cmd.Flags().StringVar(&args.ApprovalsWhitelistUsernames, "approvals_whitelist_usernames", "", `Usernames whose approvals count (comma-separated)`)
 	cmd.Flags().StringVar(&args.ApprovalsWhitelistTeams, "approvals_whitelist_teams", "", `Teams whose approvals count (comma-separated)`)

@@ -390,7 +390,28 @@ func buildBody(args any, inPath map[string]bool) any {
 		if v.IsZero() {
 			continue
 		}
-		body[name] = v.Interface()
+
+		val := v.Interface()
+
+		switch f.Tag.Get("body") {
+		case "csv":
+			if s, ok := val.(string); ok {
+				val = tools.SplitCSV(s)
+			}
+		case "nest":
+			nest := f.Tag.Get("nest")
+			if nest != "" {
+				sub, _ := body[nest].(map[string]any)
+				if sub == nil {
+					sub = map[string]any{}
+				}
+				sub[name] = val
+				body[nest] = sub
+				continue
+			}
+		}
+
+		body[name] = val
 	}
 	if len(body) == 0 {
 		return nil

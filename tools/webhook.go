@@ -4,10 +4,10 @@ type CreateHookArgs struct {
 	Owner               string `json:"owner"                 required:"true" desc:"Repository owner"`
 	Repo                string `json:"repo"                  required:"true" desc:"Repository name"`
 	Type                string `json:"type"                  required:"true" desc:"Webhook type (e.g. gitea, slack, discord)" default:"gitea"`
-	URL                 string `json:"url"                   required:"true" desc:"Target URL the webhook payload is delivered to"`
-	ContentType         string `json:"content_type"          desc:"Payload content type (json or form)" default:"json"`
-	Secret              string `json:"secret"                desc:"Secret used to sign the payload"`
-	Events              string `json:"events"                required:"true" desc:"Events that trigger the webhook (comma-separated, e.g. push,pull_request)"`
+	URL                 string `json:"url"                   required:"true" desc:"Target URL the webhook payload is delivered to" body:"nest" nest:"config"`
+	ContentType         string `json:"content_type"          desc:"Payload content type (json or form)" default:"json" body:"nest" nest:"config"`
+	Secret              string `json:"secret"                desc:"Secret used to sign the payload" body:"nest" nest:"config"`
+	Events              string `json:"events"                required:"true" desc:"Events that trigger the webhook (comma-separated, e.g. push,pull_request)" body:"csv"`
 	Active              *bool  `json:"active"                desc:"Whether the webhook is active"`
 	BranchFilter        string `json:"branch_filter"         desc:"Glob pattern restricting which branches trigger the webhook"`
 	AuthorizationHeader string `json:"authorization_header"  desc:"Authorization header value sent with each delivery"`
@@ -18,10 +18,10 @@ type UpdateHookArgs struct {
 	Repo                string `json:"repo"                 required:"true" desc:"Repository name"`
 	ID                  int    `json:"id"                   required:"true" desc:"Webhook ID"`
 	Type                string `json:"type"                 desc:"Webhook type (e.g. gitea, slack, discord)"`
-	URL                 string `json:"url"                  desc:"Target URL the webhook payload is delivered to"`
-	ContentType         string `json:"content_type"         desc:"Payload content type (json or form)"`
-	Secret              string `json:"secret"               desc:"Secret used to sign the payload"`
-	Events              string `json:"events"               desc:"Events that trigger the webhook (comma-separated, e.g. push,pull_request)"`
+	URL                 string `json:"url"                  desc:"Target URL the webhook payload is delivered to" body:"nest" nest:"config"`
+	ContentType         string `json:"content_type"         desc:"Payload content type (json or form)" body:"nest" nest:"config"`
+	Secret              string `json:"secret"               desc:"Secret used to sign the payload" body:"nest" nest:"config"`
+	Events              string `json:"events"               desc:"Events that trigger the webhook (comma-separated, e.g. push,pull_request)" body:"csv"`
 	Active              *bool  `json:"active"               desc:"Whether the webhook is active"`
 	BranchFilter        string `json:"branch_filter"        desc:"Glob pattern restricting which branches trigger the webhook"`
 	AuthorizationHeader string `json:"authorization_header" desc:"Authorization header value sent with each delivery"`
@@ -66,10 +66,10 @@ type GetOrgHookArgs struct {
 type CreateOrgHookArgs struct {
 	Owner               string `json:"owner"                required:"true" desc:"Organization name"`
 	Type                string `json:"type"                 required:"true" desc:"Webhook type (e.g. gitea, slack, discord)" default:"gitea"`
-	URL                 string `json:"url"                  required:"true" desc:"Target URL the webhook payload is delivered to"`
-	ContentType         string `json:"content_type"         desc:"Payload content type (json or form)" default:"json"`
-	Secret              string `json:"secret"               desc:"Secret used to sign the payload"`
-	Events              string `json:"events"               required:"true" desc:"Events that trigger the webhook (comma-separated, e.g. push,pull_request)"`
+	URL                 string `json:"url"                  required:"true" desc:"Target URL the webhook payload is delivered to" body:"nest" nest:"config"`
+	ContentType         string `json:"content_type"         desc:"Payload content type (json or form)" default:"json" body:"nest" nest:"config"`
+	Secret              string `json:"secret"               desc:"Secret used to sign the payload" body:"nest" nest:"config"`
+	Events              string `json:"events"               required:"true" desc:"Events that trigger the webhook (comma-separated, e.g. push,pull_request)" body:"csv"`
 	Active              *bool  `json:"active"               desc:"Whether the webhook is active"`
 	BranchFilter        string `json:"branch_filter"        desc:"Glob pattern restricting which branches trigger the webhook"`
 	AuthorizationHeader string `json:"authorization_header" desc:"Authorization header value sent with each delivery"`
@@ -79,10 +79,10 @@ type UpdateOrgHookArgs struct {
 	Owner               string `json:"owner"                required:"true" desc:"Organization name"`
 	ID                  int    `json:"id"                   required:"true" desc:"Webhook ID"`
 	Type                string `json:"type"                 desc:"Webhook type (e.g. gitea, slack, discord)"`
-	URL                 string `json:"url"                  desc:"Target URL the webhook payload is delivered to"`
-	ContentType         string `json:"content_type"         desc:"Payload content type (json or form)"`
-	Secret              string `json:"secret"               desc:"Secret used to sign the payload"`
-	Events              string `json:"events"               desc:"Events that trigger the webhook (comma-separated, e.g. push,pull_request)"`
+	URL                 string `json:"url"                  desc:"Target URL the webhook payload is delivered to" body:"nest" nest:"config"`
+	ContentType         string `json:"content_type"         desc:"Payload content type (json or form)" body:"nest" nest:"config"`
+	Secret              string `json:"secret"               desc:"Secret used to sign the payload" body:"nest" nest:"config"`
+	Events              string `json:"events"               desc:"Events that trigger the webhook (comma-separated, e.g. push,pull_request)" body:"csv"`
 	Active              *bool  `json:"active"               desc:"Whether the webhook is active"`
 	BranchFilter        string `json:"branch_filter"        desc:"Glob pattern restricting which branches trigger the webhook"`
 	AuthorizationHeader string `json:"authorization_header" desc:"Authorization header value sent with each delivery"`
