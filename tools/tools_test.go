@@ -330,6 +330,41 @@ func TestEveryDELETEIsDestructive(t *testing.T) {
 	}
 }
 
+func TestReleaseJSONTags(t *testing.T) {
+	wantCreate := map[string]string{
+		"Target": "target_commitish",
+		"Title":  "name",
+		"Note":   "body",
+	}
+	rt := reflect.TypeOf(CreateReleaseArgs{})
+	for field, wantTag := range wantCreate {
+		f, _ := rt.FieldByName(field)
+		if got := f.Tag.Get("json"); got != wantTag {
+			t.Errorf("CreateReleaseArgs.%s json tag = %q, want %q", field, got, wantTag)
+		}
+	}
+
+	wantUpdate := map[string]string{
+		"Target": "target_commitish",
+		"Title":  "name",
+		"Note":   "body",
+	}
+	rt = reflect.TypeOf(UpdateReleaseArgs{})
+	for field, wantTag := range wantUpdate {
+		f, _ := rt.FieldByName(field)
+		if got := f.Tag.Get("json"); got != wantTag {
+			t.Errorf("UpdateReleaseArgs.%s json tag = %q, want %q", field, got, wantTag)
+		}
+	}
+
+	for _, field := range []string{"Draft", "Prerelease"} {
+		f, _ := rt.FieldByName(field)
+		if f.Type.Kind() != reflect.Ptr || f.Type.Elem().Kind() != reflect.Bool {
+			t.Errorf("UpdateReleaseArgs.%s type = %v, want *bool", field, f.Type)
+		}
+	}
+}
+
 func TestREADMEToolCount(t *testing.T) {
 	data, err := os.ReadFile("../README.md")
 	if err != nil {

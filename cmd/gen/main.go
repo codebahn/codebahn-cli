@@ -62,6 +62,7 @@ type fieldData struct {
 	Default      string
 	HasDefault   bool
 	ContextInfer bool
+	IsOptBool    bool
 }
 
 func groupedTools() map[string][]tools.ToolDef {
@@ -106,6 +107,7 @@ func generateGroup(name string, defs []tools.ToolDef) error {
 				Default:      def,
 				HasDefault:   def != "",
 				ContextInfer: jsonName == "owner" || jsonName == "repo",
+				IsOptBool:    isOptBool(f.Type),
 			})
 		}
 
@@ -152,6 +154,9 @@ func writeTemplate(path, tmplText string, data any) error {
 }
 
 func flagType(t reflect.Type) string {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
 	switch t.Kind() {
 	case reflect.String:
 		return "String"
@@ -162,6 +167,10 @@ func flagType(t reflect.Type) string {
 	default:
 		return "String"
 	}
+}
+
+func isOptBool(t reflect.Type) bool {
+	return t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Bool
 }
 
 func toExportedName(s string) string {
@@ -284,16 +293,28 @@ func New{{exportedGroup .GroupName}}Cmd() *cobra.Command {
 {{range .Tools}}
 func {{.FuncName}}Cmd() *cobra.Command {
 	var args {{.ArgsType}}
+{{- range .Fields}}{{- if .IsOptBool}}
+	var _{{.GoName}} bool
+{{- end}}{{- end}}
 	cmd := &cobra.Command{
 		Use:   "{{.CLIName}}",
 		Short: ` + "`{{.Description}}`" + `,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+{{- range .Fields}}{{- if .IsOptBool}}
+			if cmd.Flags().Changed("{{.JSONName}}") {
+				args.{{.GoName}} = &_{{.GoName}}
+			}
+{{- end}}{{- end}}
 			td := tools.ByName("{{.ToolName}}")
 			return ExecuteAndPrint(cmd, td, &args)
 		},
 	}
 {{- range .Fields}}
+{{- if .IsOptBool}}
+	cmd.Flags().BoolVar(&_{{.GoName}}, "{{.JSONName}}", false, ` + "`{{.Desc}}`" + `)
+{{- else}}
 	cmd.Flags().{{.FlagType}}Var(&args.{{.GoName}}, "{{.JSONName}}", {{defaultVal .FlagType .Default}}, ` + "`{{.Desc}}`" + `)
+{{- end}}
 {{- if and .Required (not .ContextInfer) (not .HasDefault)}}
 	_ = cmd.MarkFlagRequired("{{.JSONName}}")
 {{- end}}

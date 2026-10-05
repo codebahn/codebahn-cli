@@ -60,9 +60,9 @@ func ReleaseCreateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
 	cmd.Flags().StringVar(&args.TagName, "tag_name", "", `Tag name for the release`)
 	_ = cmd.MarkFlagRequired("tag_name")
-	cmd.Flags().StringVar(&args.Target, "target", "", `Target branch or commit SHA (defaults to the repo default branch)`)
-	cmd.Flags().StringVar(&args.Title, "title", "", `Release title`)
-	cmd.Flags().StringVar(&args.Note, "note", "", `Release notes body`)
+	cmd.Flags().StringVar(&args.Target, "target_commitish", "", `Target branch or commit SHA (defaults to the repo default branch)`)
+	cmd.Flags().StringVar(&args.Title, "name", "", `Release title`)
+	cmd.Flags().StringVar(&args.Note, "body", "", `Release notes body`)
 	cmd.Flags().BoolVar(&args.Draft, "draft", false, `Create as a draft release`)
 	cmd.Flags().BoolVar(&args.Prerelease, "prerelease", false, `Mark as a prerelease`)
 	return cmd
@@ -119,10 +119,18 @@ func ReleaseGetByTagCmd() *cobra.Command {
 
 func ReleaseUpdateCmd() *cobra.Command {
 	var args tools.UpdateReleaseArgs
+	var _Draft bool
+	var _Prerelease bool
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: `Update a release`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if cmd.Flags().Changed("draft") {
+				args.Draft = &_Draft
+			}
+			if cmd.Flags().Changed("prerelease") {
+				args.Prerelease = &_Prerelease
+			}
 			td := tools.ByName("update_release")
 			return ExecuteAndPrint(cmd, td, &args)
 		},
@@ -132,11 +140,11 @@ func ReleaseUpdateCmd() *cobra.Command {
 	cmd.Flags().IntVar(&args.ID, "id", 0, `Release ID`)
 	_ = cmd.MarkFlagRequired("id")
 	cmd.Flags().StringVar(&args.TagName, "tag_name", "", `Tag name for the release`)
-	cmd.Flags().StringVar(&args.Target, "target", "", `Target branch or commit SHA`)
-	cmd.Flags().StringVar(&args.Title, "title", "", `Release title`)
-	cmd.Flags().StringVar(&args.Note, "note", "", `Release notes body`)
-	cmd.Flags().BoolVar(&args.Draft, "draft", false, `Mark as a draft release`)
-	cmd.Flags().BoolVar(&args.Prerelease, "prerelease", false, `Mark as a prerelease`)
+	cmd.Flags().StringVar(&args.Target, "target_commitish", "", `Target branch or commit SHA`)
+	cmd.Flags().StringVar(&args.Title, "name", "", `Release title`)
+	cmd.Flags().StringVar(&args.Note, "body", "", `Release notes body`)
+	cmd.Flags().BoolVar(&_Draft, "draft", false, `Mark as a draft release`)
+	cmd.Flags().BoolVar(&_Prerelease, "prerelease", false, `Mark as a prerelease`)
 	return cmd
 }
 
