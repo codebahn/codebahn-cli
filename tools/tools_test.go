@@ -146,6 +146,39 @@ func TestReleaseTools(t *testing.T) {
 	}
 }
 
+func TestWebhookTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_hooks", "webhook", "list", "GET", "/repos/{{.Owner}}/{{.Repo}}/hooks"},
+		{"get_hook", "webhook", "get", "GET", "/repos/{{.Owner}}/{{.Repo}}/hooks/{{.ID}}"},
+		{"create_hook", "webhook", "create", "POST", "/repos/{{.Owner}}/{{.Repo}}/hooks"},
+		{"update_hook", "webhook", "update", "PATCH", "/repos/{{.Owner}}/{{.Repo}}/hooks/{{.ID}}"},
+		{"delete_hook", "webhook", "delete", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/hooks/{{.ID}}"},
+		{"test_hook", "webhook", "test", "POST", "/repos/{{.Owner}}/{{.Repo}}/hooks/{{.ID}}/tests"},
+		{"list_org_hooks", "webhook", "list-org", "GET", "/orgs/{{.Owner}}/hooks"},
+		{"get_org_hook", "webhook", "get-org", "GET", "/orgs/{{.Owner}}/hooks/{{.ID}}"},
+		{"create_org_hook", "webhook", "create-org", "POST", "/orgs/{{.Owner}}/hooks"},
+		{"update_org_hook", "webhook", "update-org", "PATCH", "/orgs/{{.Owner}}/hooks/{{.ID}}"},
+		{"delete_org_hook", "webhook", "delete-org", "DELETE", "/orgs/{{.Owner}}/hooks/{{.ID}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+}
+
 func TestAPITagValues(t *testing.T) {
 	for _, td := range All {
 		rt := reflect.TypeOf(td.Args)
