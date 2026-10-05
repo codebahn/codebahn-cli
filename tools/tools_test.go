@@ -9,8 +9,8 @@ import (
 )
 
 func TestAllCount(t *testing.T) {
-	if got := len(All); got != 85 {
-		t.Errorf("len(All) = %d, want 85", got)
+	if got := len(All); got != 102 {
+		t.Errorf("len(All) = %d, want 102", got)
 	}
 }
 
