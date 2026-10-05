@@ -1,0 +1,3201 @@
+[
+  {
+    "name": "get_my_user_info",
+    "group": "user",
+    "description": "Get current user info",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": []
+  },
+  {
+    "name": "create_repo",
+    "group": "repo",
+    "description": "Create repo",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "name",
+        "type": "string",
+        "required": true,
+        "desc": "Repo name"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "required": false,
+        "desc": "Description"
+      },
+      {
+        "name": "owner",
+        "type": "string",
+        "required": false,
+        "desc": "Owner/org name"
+      },
+      {
+        "name": "private",
+        "type": "boolean",
+        "required": false,
+        "desc": "Private repo"
+      },
+      {
+        "name": "issue_labels",
+        "type": "string",
+        "required": false,
+        "desc": "Issue label set"
+      },
+      {
+        "name": "auto_init",
+        "type": "boolean",
+        "required": false,
+        "desc": "Auto-initialize"
+      },
+      {
+        "name": "template",
+        "type": "boolean",
+        "required": false,
+        "desc": "Template repo"
+      },
+      {
+        "name": "gitignores",
+        "type": "string",
+        "required": false,
+        "desc": "Gitignore templates"
+      },
+      {
+        "name": "license",
+        "type": "string",
+        "required": false,
+        "desc": "License"
+      },
+      {
+        "name": "readme",
+        "type": "string",
+        "required": false,
+        "desc": "README content"
+      },
+      {
+        "name": "default_branch",
+        "type": "string",
+        "required": false,
+        "desc": "Default branch"
+      }
+    ]
+  },
+  {
+    "name": "list_my_repos",
+    "group": "repo",
+    "description": "List my repos",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "100"
+      }
+    ]
+  },
+  {
+    "name": "get_file_content",
+    "group": "repo",
+    "description": "Get file content as plain text by default. Set with_metadata=true for binary files, or when you need the SHA/encoding/links from the full ContentsResponse (e.g. before a follow-up update_file call). Optional start_line and end_line request a 1-indexed inclusive line range; out-of-range values clamp to the file extent. Range parameters are ignored when with_metadata=true.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "ref",
+        "type": "string",
+        "required": true,
+        "desc": "Ref (branch/tag/commit)"
+      },
+      {
+        "name": "filePath",
+        "type": "string",
+        "required": true,
+        "desc": "File path"
+      },
+      {
+        "name": "with_metadata",
+        "type": "boolean",
+        "required": false,
+        "desc": "Return the full ContentsResponse (sha, encoding, links, type, size, base64 content) instead of plain text."
+      },
+      {
+        "name": "start_line",
+        "type": "number",
+        "required": false,
+        "desc": "Optional 1-indexed first line of the slice (inclusive). Defaults to 1 when only end_line is set."
+      },
+      {
+        "name": "end_line",
+        "type": "number",
+        "required": false,
+        "desc": "Optional 1-indexed last line of the slice (inclusive). Defaults to the file's last line when only start_line is set."
+      }
+    ]
+  },
+  {
+    "name": "create_file",
+    "group": "repo",
+    "description": "Create file",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "filePath",
+        "type": "string",
+        "required": true,
+        "desc": "File path"
+      },
+      {
+        "name": "content",
+        "type": "string",
+        "required": true,
+        "desc": "Content (plain text, base64-encoded automatically)"
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "required": true,
+        "desc": "Commit message"
+      },
+      {
+        "name": "branch_name",
+        "type": "string",
+        "required": true,
+        "desc": "Branch name"
+      },
+      {
+        "name": "new_branch_name",
+        "type": "string",
+        "required": false,
+        "desc": "New branch name"
+      }
+    ]
+  },
+  {
+    "name": "update_file",
+    "group": "repo",
+    "description": "Update file",
+    "method": "PUT",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "filePath",
+        "type": "string",
+        "required": true,
+        "desc": "File path"
+      },
+      {
+        "name": "content",
+        "type": "string",
+        "required": true,
+        "desc": "Content (plain text, base64-encoded automatically)"
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "required": true,
+        "desc": "Commit message"
+      },
+      {
+        "name": "branch_name",
+        "type": "string",
+        "required": true,
+        "desc": "Branch name"
+      },
+      {
+        "name": "sha",
+        "type": "string",
+        "required": true,
+        "desc": "File SHA"
+      },
+      {
+        "name": "new_branch_name",
+        "type": "string",
+        "required": false,
+        "desc": "New branch name"
+      }
+    ]
+  },
+  {
+    "name": "delete_file",
+    "group": "repo",
+    "description": "Delete file",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "filePath",
+        "type": "string",
+        "required": true,
+        "desc": "File path"
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "required": true,
+        "desc": "Commit message"
+      },
+      {
+        "name": "branch_name",
+        "type": "string",
+        "required": true,
+        "desc": "Branch name"
+      },
+      {
+        "name": "sha",
+        "type": "string",
+        "required": true,
+        "desc": "File SHA"
+      },
+      {
+        "name": "new_branch_name",
+        "type": "string",
+        "required": false,
+        "desc": "New branch name"
+      }
+    ]
+  },
+  {
+    "name": "create_branch",
+    "group": "repo",
+    "description": "Create branch",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "branch",
+        "type": "string",
+        "required": true,
+        "desc": "Branch name"
+      },
+      {
+        "name": "old_branch",
+        "type": "string",
+        "required": true,
+        "desc": "Source branch"
+      }
+    ]
+  },
+  {
+    "name": "delete_branch",
+    "group": "repo",
+    "description": "Delete branch",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "branch",
+        "type": "string",
+        "required": true,
+        "desc": "Branch name"
+      }
+    ]
+  },
+  {
+    "name": "list_branches",
+    "group": "repo",
+    "description": "List branches",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "100"
+      }
+    ]
+  },
+  {
+    "name": "list_repo_commits",
+    "group": "repo",
+    "description": "List commits, newest first, starting from sha (a branch, tag or commit; defaults to the default branch). Set path to a file or directory to get only the commits that touched it: file-scoped history shows who changed a file recently and how often, which tells you how much scrutiny a change there deserves.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "path",
+        "type": "string",
+        "required": false,
+        "desc": "Optional file or directory path. Only commits that touched it are returned."
+      },
+      {
+        "name": "sha",
+        "type": "string",
+        "required": false,
+        "desc": "Branch, tag or commit SHA to start from (default: the default branch)"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "100"
+      }
+    ]
+  },
+  {
+    "name": "get_commit_diff",
+    "group": "repo",
+    "description": "Get the unified diff of a single commit (its changes against its first parent). Pass an optional file_path to receive only the hunks for that file (match is exact on either the pre- or post-rename path). Pair with list_pr_commits to review a pull request commit by commit instead of only its squashed diff.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "sha",
+        "type": "string",
+        "required": true,
+        "desc": "Commit SHA (full or abbreviated)"
+      },
+      {
+        "name": "file_path",
+        "type": "string",
+        "required": false,
+        "desc": "Optional. Return only the diff section for this file (matched on the diff --git boundary). Omit for the full diff."
+      }
+    ]
+  },
+  {
+    "name": "compare_refs",
+    "group": "repo",
+    "description": "Compare two refs (branches, tags or commit SHAs) as base...head: the commits reachable from head but not from base (newest first), and the files those commits touched with their status. No pull request is needed, so use it to preview a PR before it exists, to check what actually landed between two releases or deploys, or to measure how far two branches have diverged. For the hunks themselves use get_commit_diff on the listed commits.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "base",
+        "type": "string",
+        "required": true,
+        "desc": "Base ref (branch, tag or commit SHA)"
+      },
+      {
+        "name": "head",
+        "type": "string",
+        "required": true,
+        "desc": "Head ref (branch, tag or commit SHA); the result is what head has that base does not"
+      }
+    ]
+  },
+  {
+    "name": "list_repo_contents",
+    "group": "repo",
+    "description": "List the files and directories at a given path in a repository. Use path=\"\" to list the repository root. Returns one level of entries at the specified path; for a full recursive file tree use get_repo_tree with recursive=true.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "ref",
+        "type": "string",
+        "required": true,
+        "desc": "Ref (branch/tag/commit)"
+      },
+      {
+        "name": "path",
+        "type": "string",
+        "required": true,
+        "desc": "Directory path within the repository (empty string lists the repository root)"
+      }
+    ]
+  },
+  {
+    "name": "get_repo_tree",
+    "group": "repo",
+    "description": "Get the Git tree of a repository. With recursive=true, returns the complete file tree in a single response (subject to the server's tree-endpoint size cap); use this when you need all paths at once. With recursive=false (default), returns only the top-level entries of the tree.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "ref",
+        "type": "string",
+        "required": true,
+        "desc": "Ref (branch/tag/commit)"
+      },
+      {
+        "name": "recursive",
+        "type": "boolean",
+        "required": false,
+        "desc": "Return the complete file tree in one response (subject to server cap); default false returns top-level entries only"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "1000"
+      }
+    ]
+  },
+  {
+    "name": "get_issue_by_index",
+    "group": "issue",
+    "description": "Get issue by index",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "Issue index"
+      }
+    ]
+  },
+  {
+    "name": "list_repo_issues",
+    "group": "issue",
+    "description": "List repo issues",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "state",
+        "type": "string",
+        "required": false,
+        "desc": "State (open|closed|all)",
+        "default": "open"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "required": false,
+        "desc": "Type (issues|pulls)"
+      },
+      {
+        "name": "milestones",
+        "type": "string",
+        "required": false,
+        "desc": "Milestone names/IDs (comma-separated)"
+      },
+      {
+        "name": "labels",
+        "type": "string",
+        "required": false,
+        "desc": "Labels (comma-separated)"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "20"
+      }
+    ]
+  },
+  {
+    "name": "create_issue",
+    "group": "issue",
+    "description": "Create issue",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": true,
+        "desc": "Title"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": false,
+        "desc": "Content body"
+      }
+    ]
+  },
+  {
+    "name": "create_issue_comment",
+    "group": "issue",
+    "description": "Create issue comment",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "Issue/PR index"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": true,
+        "desc": "Content body"
+      }
+    ]
+  },
+  {
+    "name": "update_issue",
+    "group": "issue",
+    "description": "Update issue",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "Issue index"
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": false,
+        "desc": "Title"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": false,
+        "desc": "Content body"
+      },
+      {
+        "name": "assignee",
+        "type": "string",
+        "required": false,
+        "desc": "Assignee username (convenience for a single user; equivalent to a one-element 'assignees')"
+      },
+      {
+        "name": "assignees",
+        "type": "string",
+        "required": false,
+        "desc": "Assignee usernames (comma-separated). Overrides 'assignee' if both are set. Pass an empty string to clear all assignees."
+      },
+      {
+        "name": "milestone",
+        "type": "string",
+        "required": false,
+        "desc": "Milestone ID"
+      }
+    ]
+  },
+  {
+    "name": "add_issue_labels",
+    "group": "issue",
+    "description": "Add labels to issue",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "Issue index"
+      },
+      {
+        "name": "labels",
+        "type": "string",
+        "required": true,
+        "desc": "Labels to add (comma-separated)"
+      }
+    ]
+  },
+  {
+    "name": "remove_issue_labels",
+    "group": "issue",
+    "description": "Remove labels from issue",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "Issue index"
+      },
+      {
+        "name": "labels",
+        "type": "string",
+        "required": true,
+        "desc": "Labels to remove (comma-separated label IDs)"
+      }
+    ]
+  },
+  {
+    "name": "issue_state_change",
+    "group": "issue",
+    "description": "Change issue state",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "Issue index"
+      },
+      {
+        "name": "state",
+        "type": "string",
+        "required": true,
+        "desc": "State (open|closed)"
+      }
+    ]
+  },
+  {
+    "name": "list_issue_comments",
+    "group": "issue",
+    "description": "List issue/PR comments. Returns all comments; the API does not support pagination for this endpoint.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "Issue/PR index"
+      },
+      {
+        "name": "since",
+        "type": "string",
+        "required": false,
+        "desc": "After (RFC 3339)"
+      },
+      {
+        "name": "before",
+        "type": "string",
+        "required": false,
+        "desc": "Before (RFC 3339)"
+      }
+    ]
+  },
+  {
+    "name": "get_issue_comment",
+    "group": "issue",
+    "description": "Get comment by ID",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "comment_id",
+        "type": "number",
+        "required": true,
+        "desc": "Comment ID"
+      }
+    ]
+  },
+  {
+    "name": "edit_issue_comment",
+    "group": "issue",
+    "description": "Edit issue/PR comment",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "comment_id",
+        "type": "number",
+        "required": true,
+        "desc": "Comment ID"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": true,
+        "desc": "Content body"
+      }
+    ]
+  },
+  {
+    "name": "delete_issue_comment",
+    "group": "issue",
+    "description": "Delete issue/PR comment",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "comment_id",
+        "type": "number",
+        "required": true,
+        "desc": "Comment ID"
+      }
+    ]
+  },
+  {
+    "name": "list_repo_milestones",
+    "group": "issue",
+    "description": "List repository milestones",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "100"
+      },
+      {
+        "name": "state",
+        "type": "string",
+        "required": false,
+        "desc": "Milestone state (open|closed|all)",
+        "default": "open"
+      }
+    ]
+  },
+  {
+    "name": "list_repo_labels",
+    "group": "issue",
+    "description": "List repository labels. When the owner is an organization and include_org_labels is true (default), org-level labels are merged into the response. Each label carries a scope field of \"repo\" or \"org\".",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "100"
+      },
+      {
+        "name": "include_org_labels",
+        "type": "boolean",
+        "required": false,
+        "desc": "Merge org-level labels into the response when the owner is an organization. Default true.",
+        "default": "true"
+      }
+    ]
+  },
+  {
+    "name": "create_label",
+    "group": "issue",
+    "description": "Create a label on a repository or organization",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner or organization name"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": true,
+        "desc": "Label name"
+      },
+      {
+        "name": "color",
+        "type": "string",
+        "required": true,
+        "desc": "Label color hex code (e.g. #00aabb)"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": false,
+        "desc": "Repository name. Omit to create an org-level label."
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "required": false,
+        "desc": "Label description"
+      },
+      {
+        "name": "exclusive",
+        "type": "boolean",
+        "required": false,
+        "desc": "Whether this label is exclusive (only one label with the same scope can be applied)",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "name": "edit_label",
+    "group": "issue",
+    "description": "Edit a label on a repository or organization",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner or organization name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Label ID"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": false,
+        "desc": "Repository name. Omit to edit an org-level label."
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": false,
+        "desc": "New label name"
+      },
+      {
+        "name": "color",
+        "type": "string",
+        "required": false,
+        "desc": "New label color hex code"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "required": false,
+        "desc": "New label description"
+      },
+      {
+        "name": "exclusive",
+        "type": "boolean",
+        "required": false,
+        "desc": "Whether this label is exclusive"
+      }
+    ]
+  },
+  {
+    "name": "delete_label",
+    "group": "issue",
+    "description": "Delete a label from a repository or organization",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner or organization name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Label ID"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": false,
+        "desc": "Repository name. Omit to delete an org-level label."
+      }
+    ]
+  },
+  {
+    "name": "get_pull_request_by_index",
+    "group": "pr",
+    "description": "Get pull request by index",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      }
+    ]
+  },
+  {
+    "name": "list_repo_pull_requests",
+    "group": "pr",
+    "description": "List repo pull requests",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "state",
+        "type": "string",
+        "required": false,
+        "desc": "State (open|closed|all)",
+        "default": "open"
+      },
+      {
+        "name": "sort",
+        "type": "string",
+        "required": false,
+        "desc": "Sort (oldest|recentupdate|leastupdate|mostcomment)"
+      },
+      {
+        "name": "milestone",
+        "type": "string",
+        "required": false,
+        "desc": "Milestone ID"
+      },
+      {
+        "name": "labels",
+        "type": "string",
+        "required": false,
+        "desc": "Label IDs"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "20"
+      }
+    ]
+  },
+  {
+    "name": "create_pull_request",
+    "group": "pr",
+    "description": "Create pull request",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "head",
+        "type": "string",
+        "required": true,
+        "desc": "Head branch"
+      },
+      {
+        "name": "base",
+        "type": "string",
+        "required": true,
+        "desc": "Base branch"
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": true,
+        "desc": "Title"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": false,
+        "desc": "Content body"
+      }
+    ]
+  },
+  {
+    "name": "update_pull_request",
+    "group": "pr",
+    "description": "Update pull request",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": false,
+        "desc": "Title"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": false,
+        "desc": "Content body"
+      },
+      {
+        "name": "base",
+        "type": "string",
+        "required": false,
+        "desc": "Base branch"
+      },
+      {
+        "name": "assignee",
+        "type": "string",
+        "required": false,
+        "desc": "Assignee username"
+      },
+      {
+        "name": "milestone",
+        "type": "string",
+        "required": false,
+        "desc": "Milestone ID"
+      }
+    ]
+  },
+  {
+    "name": "list_pull_reviews",
+    "group": "pr",
+    "description": "List reviews for a pull request",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "20"
+      }
+    ]
+  },
+  {
+    "name": "get_pull_review",
+    "group": "pr",
+    "description": "Get a specific pull request review",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Review ID"
+      }
+    ]
+  },
+  {
+    "name": "list_pull_review_comments",
+    "group": "pr",
+    "description": "List comments on a pull request review",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Review ID"
+      }
+    ]
+  },
+  {
+    "name": "merge_pull_request",
+    "group": "pr",
+    "description": "Merge a pull request",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "style",
+        "type": "string",
+        "required": true,
+        "desc": "Merge style (merge, rebase, rebase-merge, squash)"
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": false,
+        "desc": "Merge commit title"
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "required": false,
+        "desc": "Merge commit message"
+      },
+      {
+        "name": "delete_branch_after_merge",
+        "type": "boolean",
+        "required": false,
+        "desc": "Delete head branch after merge"
+      },
+      {
+        "name": "force_merge",
+        "type": "boolean",
+        "required": false,
+        "desc": "Force merge even if checks have not passed"
+      },
+      {
+        "name": "merge_when_checks_succeed",
+        "type": "boolean",
+        "required": false,
+        "desc": "Schedule merge for when all checks succeed"
+      }
+    ]
+  },
+  {
+    "name": "list_pull_request_files",
+    "group": "pr",
+    "description": "List changed files in a pull request",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "50"
+      }
+    ]
+  },
+  {
+    "name": "get_pull_request_diff",
+    "group": "pr",
+    "description": "Get the unified diff of a pull request. Pass an optional file_path to receive only the hunks for that file (match is exact on either the pre- or post-rename path). Use list_pull_request_files first to discover the file paths in the PR.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "file_path",
+        "type": "string",
+        "required": false,
+        "desc": "Optional. Return only the diff section for this file (matched on the diff --git boundary). Omit for the full diff."
+      }
+    ]
+  },
+  {
+    "name": "list_pr_commits",
+    "group": "pr",
+    "description": "List the individual commits of a pull request, newest first, with SHA, message, author and date. Use it to review a PR commit by commit (pair with get_commit_diff), and to spot fixup commits, commits that do not belong, or changes introduced and then reverted within the PR, none of which are visible in the squashed diff.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "50"
+      }
+    ]
+  },
+  {
+    "name": "create_pull_review",
+    "group": "pr",
+    "description": "Create a pull request review with optional inline comments",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "state",
+        "type": "string",
+        "required": true,
+        "desc": "Review state (APPROVED, REQUEST_CHANGES, COMMENT)"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": false,
+        "desc": "Review body"
+      },
+      {
+        "name": "comments",
+        "type": "string",
+        "required": false,
+        "desc": "Inline comments as JSON array, e.g. [{\"path\":\"file.go\",\"body\":\"Fix this\",\"new_position\":10}]"
+      }
+    ]
+  },
+  {
+    "name": "submit_pull_review",
+    "group": "pr",
+    "description": "Submit a pending pull request review",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Review ID"
+      },
+      {
+        "name": "state",
+        "type": "string",
+        "required": true,
+        "desc": "Review state (APPROVED, REQUEST_CHANGES, COMMENT)"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": false,
+        "desc": "Review body"
+      }
+    ]
+  },
+  {
+    "name": "dismiss_pull_review",
+    "group": "pr",
+    "description": "Dismiss a pull request review",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Review ID"
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "required": true,
+        "desc": "Dismissal message"
+      }
+    ]
+  },
+  {
+    "name": "delete_pull_review",
+    "group": "pr",
+    "description": "Delete a pending pull request review",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Review ID"
+      }
+    ]
+  },
+  {
+    "name": "create_review_requests",
+    "group": "pr",
+    "description": "Request reviews from specific users or teams",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "reviewers",
+        "type": "string",
+        "required": false,
+        "desc": "Reviewer usernames (comma-separated)"
+      },
+      {
+        "name": "team_reviewers",
+        "type": "string",
+        "required": false,
+        "desc": "Team reviewer names (comma-separated)"
+      }
+    ]
+  },
+  {
+    "name": "delete_review_requests",
+    "group": "pr",
+    "description": "Cancel pending review requests",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "required": true,
+        "desc": "PR index"
+      },
+      {
+        "name": "reviewers",
+        "type": "string",
+        "required": false,
+        "desc": "Reviewer usernames (comma-separated)"
+      },
+      {
+        "name": "team_reviewers",
+        "type": "string",
+        "required": false,
+        "desc": "Team reviewer names (comma-separated)"
+      }
+    ]
+  },
+  {
+    "name": "search",
+    "group": "search",
+    "description": "Search across all types (code, repos, issues, users, organizations). Returns hit counts and a preview of results for each type. Use search_code or search_repos for paginated results.",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "keyword",
+        "type": "string",
+        "required": true,
+        "desc": "Search keyword"
+      }
+    ]
+  },
+  {
+    "name": "search_code",
+    "group": "search",
+    "description": "Search code across all accessible repositories",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "keyword",
+        "type": "string",
+        "required": true,
+        "desc": "Search keyword"
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "required": false,
+        "desc": "Filter by programming language"
+      },
+      {
+        "name": "filename",
+        "type": "string",
+        "required": false,
+        "desc": "Filter by filename or path"
+      },
+      {
+        "name": "mode",
+        "type": "string",
+        "required": false,
+        "desc": "Search mode: exact, union, fuzzy",
+        "default": "exact"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "search_repos",
+    "group": "search",
+    "description": "Search repositories by name or description",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "keyword",
+        "type": "string",
+        "required": true,
+        "desc": "Search keyword"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "dispatch_workflow",
+    "group": "ci",
+    "description": "Trigger a workflow run. Returns the run ID.",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "workflow",
+        "type": "string",
+        "required": true,
+        "desc": "Workflow file (e.g. ci.yml)"
+      },
+      {
+        "name": "ref",
+        "type": "string",
+        "required": false,
+        "desc": "Git ref to build (branch/tag). Defaults to repo default branch."
+      },
+      {
+        "name": "inputs",
+        "type": "string",
+        "required": false,
+        "desc": "Workflow inputs as JSON object, e.g. {\"key\": \"value\"}"
+      }
+    ]
+  },
+  {
+    "name": "list_workflow_runs",
+    "group": "ci",
+    "description": "List workflow runs for a repository",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "required": false,
+        "desc": "Filter by status (waiting, running, success, failure, cancelled)"
+      },
+      {
+        "name": "event",
+        "type": "string",
+        "required": false,
+        "desc": "Filter by event (push, pull_request, workflow_dispatch)"
+      },
+      {
+        "name": "run_number",
+        "type": "number",
+        "required": false,
+        "desc": "Filter by run number"
+      },
+      {
+        "name": "head_sha",
+        "type": "string",
+        "required": false,
+        "desc": "Filter by HEAD SHA"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": false,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "get_workflow_run",
+    "group": "ci",
+    "description": "Get details of a specific workflow run",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "run_id",
+        "type": "number",
+        "required": true,
+        "desc": "Run ID"
+      }
+    ]
+  },
+  {
+    "name": "get_job_logs",
+    "group": "ci",
+    "description": "Get logs for a CI build run, grouped by job",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "run_id",
+        "type": "number",
+        "required": true,
+        "desc": "Workflow run ID"
+      },
+      {
+        "name": "job",
+        "type": "string",
+        "required": false,
+        "desc": "Filter logs to a specific job name"
+      },
+      {
+        "name": "tail_lines",
+        "type": "number",
+        "required": false,
+        "desc": "Max log lines per job (default 200, max 500)"
+      }
+    ]
+  },
+  {
+    "name": "cancel_build",
+    "group": "ci",
+    "description": "Cancel a running CI build",
+    "method": "POST",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "run_id",
+        "type": "number",
+        "required": true,
+        "desc": "Workflow run ID"
+      }
+    ]
+  },
+  {
+    "name": "list_secrets",
+    "group": "ci",
+    "description": "List repository Actions secret names (values are write-only and never returned)",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "set_secret",
+    "group": "ci",
+    "description": "Create or update a repository Actions secret. Secrets are write-only: there is no get_secret tool because the value cannot be read back.",
+    "method": "PUT",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "secret_name",
+        "type": "string",
+        "required": true,
+        "desc": "Secret name"
+      },
+      {
+        "name": "data",
+        "type": "string",
+        "required": true,
+        "desc": "Secret value. Write-only: there is no way to read it back once set."
+      }
+    ]
+  },
+  {
+    "name": "delete_secret",
+    "group": "ci",
+    "description": "Delete a repository Actions secret",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "secret_name",
+        "type": "string",
+        "required": true,
+        "desc": "Secret name"
+      }
+    ]
+  },
+  {
+    "name": "list_variables",
+    "group": "ci",
+    "description": "List repository Actions variables",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "get_variable",
+    "group": "ci",
+    "description": "Get a repository Actions variable",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "desc": "Variable name"
+      }
+    ]
+  },
+  {
+    "name": "create_variable",
+    "group": "ci",
+    "description": "Create a repository Actions variable",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "desc": "Variable name"
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "required": true,
+        "desc": "Variable value"
+      }
+    ]
+  },
+  {
+    "name": "update_variable",
+    "group": "ci",
+    "description": "Update a repository Actions variable",
+    "method": "PUT",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "desc": "Variable name"
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "required": true,
+        "desc": "Variable value"
+      }
+    ]
+  },
+  {
+    "name": "delete_variable",
+    "group": "ci",
+    "description": "Delete a repository Actions variable",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "desc": "Variable name"
+      }
+    ]
+  },
+  {
+    "name": "list_org_secrets",
+    "group": "ci",
+    "description": "List organization Actions secret names (values are write-only and never returned)",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "set_org_secret",
+    "group": "ci",
+    "description": "Create or update an organization Actions secret. Secrets are write-only: there is no get_org_secret tool because the value cannot be read back.",
+    "method": "PUT",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "secret_name",
+        "type": "string",
+        "required": true,
+        "desc": "Secret name"
+      },
+      {
+        "name": "data",
+        "type": "string",
+        "required": true,
+        "desc": "Secret value. Write-only: there is no way to read it back once set."
+      }
+    ]
+  },
+  {
+    "name": "delete_org_secret",
+    "group": "ci",
+    "description": "Delete an organization Actions secret",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "secret_name",
+        "type": "string",
+        "required": true,
+        "desc": "Secret name"
+      }
+    ]
+  },
+  {
+    "name": "list_org_variables",
+    "group": "ci",
+    "description": "List organization Actions variables",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "get_org_variable",
+    "group": "ci",
+    "description": "Get an organization Actions variable",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "desc": "Variable name"
+      }
+    ]
+  },
+  {
+    "name": "create_org_variable",
+    "group": "ci",
+    "description": "Create an organization Actions variable",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "desc": "Variable name"
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "required": true,
+        "desc": "Variable value"
+      }
+    ]
+  },
+  {
+    "name": "update_org_variable",
+    "group": "ci",
+    "description": "Update an organization Actions variable",
+    "method": "PUT",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "desc": "Variable name"
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "required": true,
+        "desc": "Variable value"
+      }
+    ]
+  },
+  {
+    "name": "delete_org_variable",
+    "group": "ci",
+    "description": "Delete an organization Actions variable",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "desc": "Variable name"
+      }
+    ]
+  },
+  {
+    "name": "list_releases",
+    "group": "release",
+    "description": "List releases for a repository",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "create_release",
+    "group": "release",
+    "description": "Create a release",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "tag_name",
+        "type": "string",
+        "required": true,
+        "desc": "Tag name for the release"
+      },
+      {
+        "name": "target_commitish",
+        "type": "string",
+        "required": false,
+        "desc": "Target branch or commit SHA (defaults to the repo default branch)"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": false,
+        "desc": "Release title"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": false,
+        "desc": "Release notes body"
+      },
+      {
+        "name": "draft",
+        "type": "boolean",
+        "required": false,
+        "desc": "Create as a draft release"
+      },
+      {
+        "name": "prerelease",
+        "type": "boolean",
+        "required": false,
+        "desc": "Mark as a prerelease"
+      }
+    ]
+  },
+  {
+    "name": "get_release",
+    "group": "release",
+    "description": "Get a release by ID",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Release ID"
+      }
+    ]
+  },
+  {
+    "name": "get_latest_release",
+    "group": "release",
+    "description": "Get the latest release",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      }
+    ]
+  },
+  {
+    "name": "get_release_by_tag",
+    "group": "release",
+    "description": "Get a release by tag name",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "tag",
+        "type": "string",
+        "required": true,
+        "desc": "Tag name"
+      }
+    ]
+  },
+  {
+    "name": "update_release",
+    "group": "release",
+    "description": "Update a release",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Release ID"
+      },
+      {
+        "name": "tag_name",
+        "type": "string",
+        "required": false,
+        "desc": "Tag name for the release"
+      },
+      {
+        "name": "target_commitish",
+        "type": "string",
+        "required": false,
+        "desc": "Target branch or commit SHA"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": false,
+        "desc": "Release title"
+      },
+      {
+        "name": "body",
+        "type": "string",
+        "required": false,
+        "desc": "Release notes body"
+      },
+      {
+        "name": "draft",
+        "type": "boolean",
+        "required": false,
+        "desc": "Mark as a draft release"
+      },
+      {
+        "name": "prerelease",
+        "type": "boolean",
+        "required": false,
+        "desc": "Mark as a prerelease"
+      }
+    ]
+  },
+  {
+    "name": "delete_release",
+    "group": "release",
+    "description": "Delete a release",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Release ID"
+      }
+    ]
+  },
+  {
+    "name": "list_release_attachments",
+    "group": "release",
+    "description": "List attachments (assets) of a release",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Release ID"
+      }
+    ]
+  },
+  {
+    "name": "delete_release_attachment",
+    "group": "release",
+    "description": "Delete a release attachment (asset)",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Release ID"
+      },
+      {
+        "name": "attachment_id",
+        "type": "number",
+        "required": true,
+        "desc": "Attachment (asset) ID"
+      }
+    ]
+  },
+  {
+    "name": "list_tags",
+    "group": "release",
+    "description": "List tags for a repository",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "create_tag",
+    "group": "release",
+    "description": "Create a tag",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "tag_name",
+        "type": "string",
+        "required": true,
+        "desc": "Tag name"
+      },
+      {
+        "name": "target",
+        "type": "string",
+        "required": false,
+        "desc": "Target branch or commit SHA (defaults to the repo default branch)"
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "required": false,
+        "desc": "Tag message"
+      }
+    ]
+  },
+  {
+    "name": "delete_tag",
+    "group": "release",
+    "description": "Delete a tag",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "tag",
+        "type": "string",
+        "required": true,
+        "desc": "Tag name"
+      }
+    ]
+  }
+]

@@ -34,7 +34,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("generated %d groups (%d tools) in %s/\n", len(groups), len(tools.All), outDir)
+	if err := writeToolsJSON("tools.json"); err != nil {
+		fmt.Fprintf(os.Stderr, "error generating tools.json: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("generated %d groups (%d tools) in %s/, tools.json\n", len(groups), len(tools.All), outDir)
 }
 
 type groupData struct {

@@ -27,6 +27,12 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Check generated files are up to date
+        run: |
+          go run ./cmd/gen
+          git add -N .
+          git diff --exit-code
+
       # tools/ is its own module, so ./... from the root does not reach it.
       - name: Test tools module
         working-directory: tools
