@@ -26,6 +26,44 @@ type CreateRepoArgs struct {
 	DefaultBranch string `json:"default_branch" desc:"Default branch"`
 }
 
+const updateRepoDesc = `Update repository settings (common subset): name, description, website, default_branch, private, archived, has_issues, has_pull_requests, has_releases, has_packages, has_actions, allow_merge_commits, allow_rebase, allow_squash_merge, default_merge_style, default_delete_branch_after_merge. All fields optional; omitted fields are left unchanged. Accepts the full Forgejo EditRepoOption surface beyond the common subset.`
+
+type UpdateRepoArgs struct {
+	Owner                         string `json:"owner"                             required:"true" desc:"Repository owner"`
+	Repo                          string `json:"repo"                              required:"true" desc:"Repository name"`
+	Name                          string `json:"name"                              desc:"New repository name"`
+	Description                   string `json:"description"                       desc:"Description"`
+	Website                       string `json:"website"                           desc:"Website URL"`
+	DefaultBranch                 string `json:"default_branch"                    desc:"Default branch"`
+	DefaultMergeStyle             string `json:"default_merge_style"               desc:"Default merge style (merge, rebase, rebase-merge, squash, fast-forward-only)"`
+	MirrorInterval                string `json:"mirror_interval"                   desc:"Mirror sync interval (e.g. 8h, 0 to disable)"`
+	ExternalTrackerURL            string `json:"external_tracker_url"              desc:"External issue tracker URL"`
+	ExternalTrackerFormat         string `json:"external_tracker_format"           desc:"External issue tracker URL format"`
+	ExternalTrackerStyle          string `json:"external_tracker_style"            desc:"External issue tracker numbering style"`
+	ExternalTrackerRegexpPattern  string `json:"external_tracker_regexp_pattern"   desc:"External issue tracker regexp pattern"`
+	ExternalWikiURL               string `json:"external_wiki_url"                 desc:"External wiki URL"`
+	Private                       *bool  `json:"private"                           desc:"Private repo"`
+	Template                      *bool  `json:"template"                          desc:"Template repo"`
+	Archived                      *bool  `json:"archived"                          desc:"Archived (read-only)"`
+	HasIssues                     *bool  `json:"has_issues"                        desc:"Enable issue tracker"`
+	HasWiki                       *bool  `json:"has_wiki"                          desc:"Enable wiki"`
+	HasPullRequests               *bool  `json:"has_pull_requests"                 desc:"Enable pull requests"`
+	HasProjects                   *bool  `json:"has_projects"                      desc:"Enable projects"`
+	HasReleases                   *bool  `json:"has_releases"                      desc:"Enable releases"`
+	HasPackages                   *bool  `json:"has_packages"                      desc:"Enable package registry"`
+	HasActions                    *bool  `json:"has_actions"                       desc:"Enable Actions CI"`
+	IgnoreWhitespaceConflicts     *bool  `json:"ignore_whitespace_conflicts"       desc:"Ignore whitespace-only conflicts when merging"`
+	AllowMergeCommits             *bool  `json:"allow_merge_commits"               desc:"Allow merge commits"`
+	AllowRebase                   *bool  `json:"allow_rebase"                      desc:"Allow rebase merging"`
+	AllowRebaseExplicit           *bool  `json:"allow_rebase_explicit"             desc:"Allow rebase with explicit merge commit"`
+	AllowRebaseUpdate             *bool  `json:"allow_rebase_update"               desc:"Allow rebase of PR head branch when behind base"`
+	AllowSquashMerge              *bool  `json:"allow_squash_merge"                desc:"Allow squash merging"`
+	AllowFastForwardOnlyMerge     *bool  `json:"allow_fast_forward_only_merge"     desc:"Allow fast-forward-only merging"`
+	DefaultDeleteBranchAfterMerge *bool  `json:"default_delete_branch_after_merge" desc:"Delete head branch by default after merge"`
+	DefaultAllowMaintainerEdit    *bool  `json:"default_allow_maintainer_edit"     desc:"Allow maintainer edits on PRs by default"`
+	EnablePrune                   *bool  `json:"enable_prune"                      desc:"Enable automatic pruning of obsolete mirror branches"`
+}
+
 type ListMyReposArgs struct {
 	Page  int `json:"page"  required:"true" desc:"Page number (1-based)" default:"1"`
 	Limit int `json:"limit" required:"true" desc:"Page size"             default:"100"`
@@ -150,6 +188,15 @@ func repoTools() []ToolDef {
 			Method:      "GET",
 			PathTmpl:    "/user/repos",
 			Args:        ListMyReposArgs{},
+		},
+		{
+			Name:        "update_repo",
+			Group:       "repo",
+			CLIName:     "update",
+			Description: updateRepoDesc,
+			Method:      "PATCH",
+			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}",
+			Args:        UpdateRepoArgs{},
 		},
 		{
 			Name:        "get_file_content",
