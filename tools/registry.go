@@ -8,5 +8,6 @@ func buildRegistry() []ToolDef {
 	all = append(all, prTools()...)
 	all = append(all, searchTools()...)
 	all = append(all, actionsTools()...)
+	all = append(all, releaseTools()...)
 	return all
 }
