@@ -208,6 +208,7 @@ func groupDescription(name string) string {
 		"search":  "Search code, repos, and issues",
 		"ci":      "Manage CI workflow runs",
 		"actions": "Manage CI workflow runs",
+		"release": "Manage releases and tags",
 	}
 	if d, ok := descs[name]; ok {
 		return d

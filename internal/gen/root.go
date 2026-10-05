@@ -13,5 +13,6 @@ func GroupCommands() []*cobra.Command {
 		NewPRCmd(),
 		NewSearchCmd(),
 		NewCICmd(),
+		NewReleaseCmd(),
 	}
 }

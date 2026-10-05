@@ -19,6 +19,22 @@ func NewCICmd() *cobra.Command {
 	cmd.AddCommand(CIGetCmd())
 	cmd.AddCommand(CILogsCmd())
 	cmd.AddCommand(CICancelCmd())
+	cmd.AddCommand(CIListSecretsCmd())
+	cmd.AddCommand(CISetSecretCmd())
+	cmd.AddCommand(CIDeleteSecretCmd())
+	cmd.AddCommand(CIListVariablesCmd())
+	cmd.AddCommand(CIGetVariableCmd())
+	cmd.AddCommand(CICreateVariableCmd())
+	cmd.AddCommand(CIUpdateVariableCmd())
+	cmd.AddCommand(CIDeleteVariableCmd())
+	cmd.AddCommand(CIListOrgSecretsCmd())
+	cmd.AddCommand(CISetOrgSecretCmd())
+	cmd.AddCommand(CIDeleteOrgSecretCmd())
+	cmd.AddCommand(CIListOrgVariablesCmd())
+	cmd.AddCommand(CIGetOrgVariableCmd())
+	cmd.AddCommand(CICreateOrgVariableCmd())
+	cmd.AddCommand(CIUpdateOrgVariableCmd())
+	cmd.AddCommand(CIDeleteOrgVariableCmd())
 	return cmd
 }
 
@@ -112,5 +128,281 @@ func CICancelCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
 	cmd.Flags().IntVar(&args.RunID, "run_id", 0, `Workflow run ID`)
 	_ = cmd.MarkFlagRequired("run_id")
+	return cmd
+}
+
+func CIListSecretsCmd() *cobra.Command {
+	var args tools.ListSecretsArgs
+	cmd := &cobra.Command{
+		Use:   "list-secrets",
+		Short: `List repository Actions secret names (values are write-only and never returned)`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("list_secrets")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
+	cmd.Flags().IntVar(&args.Limit, "limit", 30, `Page size`)
+	return cmd
+}
+
+func CISetSecretCmd() *cobra.Command {
+	var args tools.SetSecretArgs
+	cmd := &cobra.Command{
+		Use:   "set-secret",
+		Short: `Create or update a repository Actions secret. Secrets are write-only: there is no get_secret tool because the value cannot be read back.`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("set_secret")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.SecretName, "secret_name", "", `Secret name`)
+	_ = cmd.MarkFlagRequired("secret_name")
+	cmd.Flags().StringVar(&args.Data, "data", "", `Secret value. Write-only: there is no way to read it back once set.`)
+	_ = cmd.MarkFlagRequired("data")
+	return cmd
+}
+
+func CIDeleteSecretCmd() *cobra.Command {
+	var args tools.DeleteSecretArgs
+	cmd := &cobra.Command{
+		Use:   "delete-secret",
+		Short: `Delete a repository Actions secret`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("delete_secret")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.SecretName, "secret_name", "", `Secret name`)
+	_ = cmd.MarkFlagRequired("secret_name")
+	return cmd
+}
+
+func CIListVariablesCmd() *cobra.Command {
+	var args tools.ListVariablesArgs
+	cmd := &cobra.Command{
+		Use:   "list-variables",
+		Short: `List repository Actions variables`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("list_variables")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
+	cmd.Flags().IntVar(&args.Limit, "limit", 30, `Page size`)
+	return cmd
+}
+
+func CIGetVariableCmd() *cobra.Command {
+	var args tools.GetVariableArgs
+	cmd := &cobra.Command{
+		Use:   "get-variable",
+		Short: `Get a repository Actions variable`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("get_variable")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
+	_ = cmd.MarkFlagRequired("variable_name")
+	return cmd
+}
+
+func CICreateVariableCmd() *cobra.Command {
+	var args tools.CreateVariableArgs
+	cmd := &cobra.Command{
+		Use:   "create-variable",
+		Short: `Create a repository Actions variable`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("create_variable")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
+	_ = cmd.MarkFlagRequired("variable_name")
+	cmd.Flags().StringVar(&args.Value, "value", "", `Variable value`)
+	_ = cmd.MarkFlagRequired("value")
+	return cmd
+}
+
+func CIUpdateVariableCmd() *cobra.Command {
+	var args tools.UpdateVariableArgs
+	cmd := &cobra.Command{
+		Use:   "update-variable",
+		Short: `Update a repository Actions variable`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("update_variable")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
+	_ = cmd.MarkFlagRequired("variable_name")
+	cmd.Flags().StringVar(&args.Value, "value", "", `Variable value`)
+	_ = cmd.MarkFlagRequired("value")
+	return cmd
+}
+
+func CIDeleteVariableCmd() *cobra.Command {
+	var args tools.DeleteVariableArgs
+	cmd := &cobra.Command{
+		Use:   "delete-variable",
+		Short: `Delete a repository Actions variable`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("delete_variable")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
+	_ = cmd.MarkFlagRequired("variable_name")
+	return cmd
+}
+
+func CIListOrgSecretsCmd() *cobra.Command {
+	var args tools.ListOrgSecretsArgs
+	cmd := &cobra.Command{
+		Use:   "list-org-secrets",
+		Short: `List organization Actions secret names (values are write-only and never returned)`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("list_org_secrets")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
+	cmd.Flags().IntVar(&args.Limit, "limit", 30, `Page size`)
+	return cmd
+}
+
+func CISetOrgSecretCmd() *cobra.Command {
+	var args tools.SetOrgSecretArgs
+	cmd := &cobra.Command{
+		Use:   "set-org-secret",
+		Short: `Create or update an organization Actions secret. Secrets are write-only: there is no get_org_secret tool because the value cannot be read back.`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("set_org_secret")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	cmd.Flags().StringVar(&args.SecretName, "secret_name", "", `Secret name`)
+	_ = cmd.MarkFlagRequired("secret_name")
+	cmd.Flags().StringVar(&args.Data, "data", "", `Secret value. Write-only: there is no way to read it back once set.`)
+	_ = cmd.MarkFlagRequired("data")
+	return cmd
+}
+
+func CIDeleteOrgSecretCmd() *cobra.Command {
+	var args tools.DeleteOrgSecretArgs
+	cmd := &cobra.Command{
+		Use:   "delete-org-secret",
+		Short: `Delete an organization Actions secret`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("delete_org_secret")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	cmd.Flags().StringVar(&args.SecretName, "secret_name", "", `Secret name`)
+	_ = cmd.MarkFlagRequired("secret_name")
+	return cmd
+}
+
+func CIListOrgVariablesCmd() *cobra.Command {
+	var args tools.ListOrgVariablesArgs
+	cmd := &cobra.Command{
+		Use:   "list-org-variables",
+		Short: `List organization Actions variables`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("list_org_variables")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
+	cmd.Flags().IntVar(&args.Limit, "limit", 30, `Page size`)
+	return cmd
+}
+
+func CIGetOrgVariableCmd() *cobra.Command {
+	var args tools.GetOrgVariableArgs
+	cmd := &cobra.Command{
+		Use:   "get-org-variable",
+		Short: `Get an organization Actions variable`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("get_org_variable")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
+	_ = cmd.MarkFlagRequired("variable_name")
+	return cmd
+}
+
+func CICreateOrgVariableCmd() *cobra.Command {
+	var args tools.CreateOrgVariableArgs
+	cmd := &cobra.Command{
+		Use:   "create-org-variable",
+		Short: `Create an organization Actions variable`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("create_org_variable")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
+	_ = cmd.MarkFlagRequired("variable_name")
+	cmd.Flags().StringVar(&args.Value, "value", "", `Variable value`)
+	_ = cmd.MarkFlagRequired("value")
+	return cmd
+}
+
+func CIUpdateOrgVariableCmd() *cobra.Command {
+	var args tools.UpdateOrgVariableArgs
+	cmd := &cobra.Command{
+		Use:   "update-org-variable",
+		Short: `Update an organization Actions variable`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("update_org_variable")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
+	_ = cmd.MarkFlagRequired("variable_name")
+	cmd.Flags().StringVar(&args.Value, "value", "", `Variable value`)
+	_ = cmd.MarkFlagRequired("value")
+	return cmd
+}
+
+func CIDeleteOrgVariableCmd() *cobra.Command {
+	var args tools.DeleteOrgVariableArgs
+	cmd := &cobra.Command{
+		Use:   "delete-org-variable",
+		Short: `Delete an organization Actions variable`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("delete_org_variable")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
+	_ = cmd.MarkFlagRequired("variable_name")
 	return cmd
 }
