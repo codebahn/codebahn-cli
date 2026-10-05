@@ -179,6 +179,22 @@ func TestWebhookTools(t *testing.T) {
 	}
 }
 
+func TestUpdateRepoTool(t *testing.T) {
+	td := ByName("update_repo")
+	if td.Group != "repo" {
+		t.Errorf("update_repo: Group = %q, want %q", td.Group, "repo")
+	}
+	if td.CLIName != "update" {
+		t.Errorf("update_repo: CLIName = %q, want %q", td.CLIName, "update")
+	}
+	if td.Method != "PATCH" {
+		t.Errorf("update_repo: Method = %q, want %q", td.Method, "PATCH")
+	}
+	if td.PathTmpl != "/repos/{{.Owner}}/{{.Repo}}" {
+		t.Errorf("update_repo: PathTmpl = %q, want %q", td.PathTmpl, "/repos/{{.Owner}}/{{.Repo}}")
+	}
+}
+
 func TestAPITagValues(t *testing.T) {
 	for _, td := range All {
 		rt := reflect.TypeOf(td.Args)
