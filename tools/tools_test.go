@@ -195,6 +195,33 @@ func TestUpdateRepoTool(t *testing.T) {
 	}
 }
 
+func TestProtectionTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_branch_protections", "protection", "list", "GET", "/repos/{{.Owner}}/{{.Repo}}/branch_protections"},
+		{"get_branch_protection", "protection", "get", "GET", "/repos/{{.Owner}}/{{.Repo}}/branch_protections/{{.Name}}"},
+		{"create_branch_protection", "protection", "create", "POST", "/repos/{{.Owner}}/{{.Repo}}/branch_protections"},
+		{"update_branch_protection", "protection", "update", "PATCH", "/repos/{{.Owner}}/{{.Repo}}/branch_protections/{{.Name}}"},
+		{"delete_branch_protection", "protection", "delete", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/branch_protections/{{.Name}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+}
+
 func TestAPITagValues(t *testing.T) {
 	for _, td := range All {
 		rt := reflect.TypeOf(td.Args)
