@@ -112,6 +112,40 @@ func TestCIOrgSecretsVariablesTools(t *testing.T) {
 	}
 }
 
+func TestReleaseTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_releases", "release", "list", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases"},
+		{"create_release", "release", "create", "POST", "/repos/{{.Owner}}/{{.Repo}}/releases"},
+		{"get_release", "release", "get", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}"},
+		{"get_latest_release", "release", "get-latest", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases/latest"},
+		{"get_release_by_tag", "release", "get-by-tag", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases/tags/{{.Tag}}"},
+		{"update_release", "release", "update", "PATCH", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}"},
+		{"delete_release", "release", "delete", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}"},
+		{"list_release_attachments", "release", "list-attachments", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}/assets"},
+		{"delete_release_attachment", "release", "delete-attachment", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}/assets/{{.AttachmentID}}"},
+		{"list_tags", "release", "list-tags", "GET", "/repos/{{.Owner}}/{{.Repo}}/tags"},
+		{"create_tag", "release", "create-tag", "POST", "/repos/{{.Owner}}/{{.Repo}}/tags"},
+		{"delete_tag", "release", "delete-tag", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/tags/{{.Tag}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+}
+
 func TestAPITagValues(t *testing.T) {
 	for _, td := range All {
 		rt := reflect.TypeOf(td.Args)
