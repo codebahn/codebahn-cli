@@ -77,6 +77,41 @@ func TestCISecretsVariablesTools(t *testing.T) {
 	}
 }
 
+func TestCIOrgSecretsVariablesTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_org_secrets", "ci", "list-org-secrets", "GET", "/orgs/{{.Owner}}/actions/secrets"},
+		{"set_org_secret", "ci", "set-org-secret", "PUT", "/orgs/{{.Owner}}/actions/secrets/{{.SecretName}}"},
+		{"delete_org_secret", "ci", "delete-org-secret", "DELETE", "/orgs/{{.Owner}}/actions/secrets/{{.SecretName}}"},
+		{"list_org_variables", "ci", "list-org-variables", "GET", "/orgs/{{.Owner}}/actions/variables"},
+		{"get_org_variable", "ci", "get-org-variable", "GET", "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}"},
+		{"create_org_variable", "ci", "create-org-variable", "POST", "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}"},
+		{"update_org_variable", "ci", "update-org-variable", "PUT", "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}"},
+		{"delete_org_variable", "ci", "delete-org-variable", "DELETE", "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+	setOrgSecret := ByName("set_org_secret")
+	rt := reflect.TypeOf(setOrgSecret.Args)
+	if _, ok := rt.FieldByName("Data"); !ok {
+		t.Error("set_org_secret: missing Data field for upsert body")
+	}
+}
+
 func TestAPITagValues(t *testing.T) {
 	for _, td := range All {
 		rt := reflect.TypeOf(td.Args)
