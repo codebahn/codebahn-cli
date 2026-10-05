@@ -87,7 +87,8 @@ For CI, set `CODEBAHN_TOKEN` instead.
 | `repo`   | Create, list, read files, branches, commits, diffs, compare refs |
 | `issue`  | Create, list, comment, labels, milestones     |
 | `pr`     | Create, list, merge, diff, commits, reviews   |
-| `ci`     | Dispatch workflows, list runs, read logs      |
+| `ci`     | Dispatch workflows, list runs, read logs, secrets/variables |
+| `release`| Releases, attachments, tags                   |
 | `search` | Code, repos, issues                           |
 
 When you run inside a Git repo, `--owner` and `--repo` are detected from the remote.
@@ -117,7 +118,7 @@ Codebahn has a built-in, hosted MCP server that connects AI coding agents to you
 https://codebahn.net/mcp
 ```
 
-The `tools/` package in this repo is the shared source of truth for both this CLI and the MCP endpoint. 57 tools, one set of types, zero drift.
+The `tools/` package in this repo is the shared source of truth for both this CLI and the MCP endpoint. 85 tools, one set of types, zero drift.
 
 The server authenticates over OAuth, discovered via `/.well-known/oauth-protected-resource`. Add the URL to your MCP client and approve the OAuth prompt in your browser on first use.
 
