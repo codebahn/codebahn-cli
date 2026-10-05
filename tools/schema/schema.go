@@ -58,6 +58,9 @@ func For(td tools.ToolDef) json.RawMessage {
 }
 
 func goTypeToJSONType(t reflect.Type) string {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
 	switch t.Kind() {
 	case reflect.String:
 		return "string"
@@ -73,6 +76,9 @@ func goTypeToJSONType(t reflect.Type) string {
 }
 
 func coerceDefault(val string, t reflect.Type) any {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
 	switch t.Kind() {
 	case reflect.Bool:
 		return val == "true"
