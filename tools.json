@@ -96,13 +96,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "100"
       }
     ]
   },
@@ -406,13 +408,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "100"
       }
     ]
   },
@@ -452,13 +456,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "100"
       }
     ]
   },
@@ -600,13 +606,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "1000"
       }
     ]
   },
@@ -662,7 +670,8 @@
         "name": "state",
         "type": "string",
         "required": false,
-        "desc": "State (open|closed|all)"
+        "desc": "State (open|closed|all)",
+        "default": "open"
       },
       {
         "name": "type",
@@ -686,13 +695,15 @@
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "20"
       }
     ]
   },
@@ -1078,19 +1089,22 @@
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "100"
       },
       {
         "name": "state",
         "type": "string",
         "required": false,
-        "desc": "Milestone state (open|closed|all)"
+        "desc": "Milestone state (open|closed|all)",
+        "default": "open"
       }
     ]
   },
@@ -1118,19 +1132,22 @@
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "100"
       },
       {
         "name": "include_org_labels",
         "type": "boolean",
         "required": false,
-        "desc": "Merge org-level labels into the response when the owner is an organization. Default true."
+        "desc": "Merge org-level labels into the response when the owner is an organization. Default true.",
+        "default": "true"
       }
     ]
   },
@@ -1176,7 +1193,8 @@
         "name": "exclusive",
         "type": "boolean",
         "required": false,
-        "desc": "Whether this label is exclusive (only one label with the same scope can be applied)"
+        "desc": "Whether this label is exclusive (only one label with the same scope can be applied)",
+        "default": "false"
       }
     ]
   },
@@ -1312,7 +1330,8 @@
         "name": "state",
         "type": "string",
         "required": false,
-        "desc": "State (open|closed|all)"
+        "desc": "State (open|closed|all)",
+        "default": "open"
       },
       {
         "name": "sort",
@@ -1336,13 +1355,15 @@
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "20"
       }
     ]
   },
@@ -1480,13 +1501,15 @@
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "20"
       }
     ]
   },
@@ -1652,13 +1675,15 @@
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "50"
       }
     ]
   },
@@ -1726,13 +1751,15 @@
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "50"
       }
     ]
   },
@@ -2028,19 +2055,22 @@
         "name": "mode",
         "type": "string",
         "required": false,
-        "desc": "Search mode: exact, union, fuzzy"
+        "desc": "Search mode: exact, union, fuzzy",
+        "default": "exact"
       },
       {
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "30"
       }
     ]
   },
@@ -2062,13 +2092,15 @@
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "30"
       }
     ]
   },
@@ -2160,13 +2192,15 @@
         "name": "page",
         "type": "number",
         "required": false,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": false,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "30"
       }
     ]
   },
@@ -2290,13 +2324,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "30"
       }
     ]
   },
@@ -2386,13 +2422,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "30"
       }
     ]
   },
@@ -2538,13 +2576,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "30"
       }
     ]
   },
@@ -2616,13 +2656,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "30"
       }
     ]
   },
@@ -2750,13 +2792,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "30"
       }
     ]
   },
@@ -3074,13 +3118,15 @@
         "name": "page",
         "type": "number",
         "required": true,
-        "desc": "Page number (1-based)"
+        "desc": "Page number (1-based)",
+        "default": "1"
       },
       {
         "name": "limit",
         "type": "number",
         "required": true,
-        "desc": "Page size"
+        "desc": "Page size",
+        "default": "30"
       }
     ]
   },

@@ -120,7 +120,7 @@ func TestToolsJSONParams(t *testing.T) {
 		t.Fatal("list_repo_issues not found in tools.All")
 	}
 
-	wantParamKeys := map[string]bool{"name": true, "type": true, "required": true, "desc": true}
+	wantParamKeys := map[string]bool{"name": true, "type": true, "required": true, "desc": true, "default": true}
 	for _, p := range params {
 		raw, err := json.Marshal(p)
 		if err != nil {
@@ -129,9 +129,6 @@ func TestToolsJSONParams(t *testing.T) {
 		var m map[string]json.RawMessage
 		if err := json.Unmarshal(raw, &m); err != nil {
 			t.Fatalf("unmarshal param %q: %v", p.Name, err)
-		}
-		if len(m) != len(wantParamKeys) {
-			t.Errorf("param %q has %d keys, want %d: %v", p.Name, len(m), len(wantParamKeys), m)
 		}
 		for k := range m {
 			if !wantParamKeys[k] {
@@ -145,12 +142,12 @@ func TestToolsJSONParams(t *testing.T) {
 	want := []toolsJSONParam{
 		{Name: "owner", Type: "string", Required: true, Desc: "Repository owner"},
 		{Name: "repo", Type: "string", Required: true, Desc: "Repository name"},
-		{Name: "state", Type: "string", Required: false, Desc: "State (open|closed|all)"},
+		{Name: "state", Type: "string", Required: false, Desc: "State (open|closed|all)", Default: "open"},
 		{Name: "type", Type: "string", Required: false, Desc: "Type (issues|pulls)"},
 		{Name: "milestones", Type: "string", Required: false, Desc: "Milestone names/IDs (comma-separated)"},
 		{Name: "labels", Type: "string", Required: false, Desc: "Labels (comma-separated)"},
-		{Name: "page", Type: "number", Required: false, Desc: "Page number (1-based)"},
-		{Name: "limit", Type: "number", Required: false, Desc: "Page size"},
+		{Name: "page", Type: "number", Required: false, Desc: "Page number (1-based)", Default: "1"},
+		{Name: "limit", Type: "number", Required: false, Desc: "Page size", Default: "20"},
 	}
 
 	if len(params) != len(want) {

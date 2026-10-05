@@ -16,6 +16,7 @@ type toolsJSONParam struct {
 	Type     string `json:"type"`
 	Required bool   `json:"required"`
 	Desc     string `json:"desc"`
+	Default  string `json:"default,omitempty"`
 }
 
 // toolsJSONEntry is one entry in the generated tools.json tool reference.
@@ -80,6 +81,7 @@ func buildToolsJSONParams(td tools.ToolDef) []toolsJSONParam {
 			Type:     types[name].Type,
 			Required: f.Tag.Get("required") == "true",
 			Desc:     f.Tag.Get("desc"),
+			Default:  f.Tag.Get("default"),
 		})
 	}
 	return params
