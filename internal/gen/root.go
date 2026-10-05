@@ -14,5 +14,7 @@ func GroupCommands() []*cobra.Command {
 		NewSearchCmd(),
 		NewCICmd(),
 		NewReleaseCmd(),
+		NewWebhookCmd(),
+		NewProtectionCmd(),
 	}
 }

@@ -225,14 +225,16 @@ func exportedGroupName(name string) string {
 
 func groupDescription(name string) string {
 	descs := map[string]string{
-		"user":    "User information",
-		"repo":    "Manage repositories",
-		"issue":   "Manage issues",
-		"pr":      "Manage pull requests",
-		"search":  "Search code, repos, and issues",
-		"ci":      "Manage CI workflow runs",
-		"actions": "Manage CI workflow runs",
-		"release": "Manage releases and tags",
+		"user":       "User information",
+		"repo":       "Manage repositories",
+		"issue":      "Manage issues",
+		"pr":         "Manage pull requests",
+		"search":     "Search code, repos, and issues",
+		"ci":         "Manage CI workflow runs",
+		"actions":    "Manage CI workflow runs",
+		"release":    "Manage releases and tags",
+		"webhook":    "Manage webhooks",
+		"protection": "Manage branch protections",
 	}
 	if d, ok := descs[name]; ok {
 		return d
