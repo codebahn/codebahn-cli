@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/codebahn/codebahn-cli/tools"
+	"github.com/spf13/cobra"
 )
 
 func TestGroupCommandsCount(t *testing.T) {
@@ -71,5 +72,27 @@ func TestEmptyArgsCommand(t *testing.T) {
 	}
 	if cmd.Flags().NFlag() != 0 {
 		t.Errorf("expected no flags for get_my_user_info, got %d", cmd.Flags().NFlag())
+	}
+}
+
+func TestOrgCommandsRequireOwner(t *testing.T) {
+	for name, cmd := range map[string]*cobra.Command{
+		"list-org-secrets":    CIListOrgSecretsCmd(),
+		"set-org-secret":      CISetOrgSecretCmd(),
+		"delete-org-secret":   CIDeleteOrgSecretCmd(),
+		"list-org-variables":  CIListOrgVariablesCmd(),
+		"get-org-variable":    CIGetOrgVariableCmd(),
+		"create-org-variable": CICreateOrgVariableCmd(),
+		"update-org-variable": CIUpdateOrgVariableCmd(),
+		"delete-org-variable": CIDeleteOrgVariableCmd(),
+	} {
+		f := cmd.Flags().Lookup("owner")
+		if f == nil {
+			t.Errorf("%s: owner flag not found", name)
+			continue
+		}
+		if _, ok := f.Annotations["cobra_annotation_bash_completion_one_required_flag"]; !ok {
+			t.Errorf("%s: owner must be cobra-required; no repo field exists to infer it from git context", name)
+		}
 	}
 }

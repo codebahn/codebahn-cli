@@ -9,8 +9,8 @@ import (
 )
 
 func TestAllCount(t *testing.T) {
-	if got := len(All); got != 57 {
-		t.Errorf("len(All) = %d, want 57", got)
+	if got := len(All); got != 85 {
+		t.Errorf("len(All) = %d, want 85", got)
 	}
 }
 
@@ -42,6 +42,110 @@ func TestReviewTools(t *testing.T) {
 // Fields tagged api:"-" are consumed by the tool implementation (MCP handler
 // or CLI) and must never be sent to the REST API. They are still part of the
 // tool's schema. The tag has exactly one valid value.
+func TestCISecretsVariablesTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_secrets", "ci", "list-secrets", "GET", "/repos/{{.Owner}}/{{.Repo}}/actions/secrets"},
+		{"set_secret", "ci", "set-secret", "PUT", "/repos/{{.Owner}}/{{.Repo}}/actions/secrets/{{.SecretName}}"},
+		{"delete_secret", "ci", "delete-secret", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/actions/secrets/{{.SecretName}}"},
+		{"list_variables", "ci", "list-variables", "GET", "/repos/{{.Owner}}/{{.Repo}}/actions/variables"},
+		{"get_variable", "ci", "get-variable", "GET", "/repos/{{.Owner}}/{{.Repo}}/actions/variables/{{.VariableName}}"},
+		{"create_variable", "ci", "create-variable", "POST", "/repos/{{.Owner}}/{{.Repo}}/actions/variables/{{.VariableName}}"},
+		{"update_variable", "ci", "update-variable", "PUT", "/repos/{{.Owner}}/{{.Repo}}/actions/variables/{{.VariableName}}"},
+		{"delete_variable", "ci", "delete-variable", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/actions/variables/{{.VariableName}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+	setSecret := ByName("set_secret")
+	rt := reflect.TypeOf(setSecret.Args)
+	if _, ok := rt.FieldByName("Data"); !ok {
+		t.Error("set_secret: missing Data field for upsert body")
+	}
+}
+
+func TestCIOrgSecretsVariablesTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_org_secrets", "ci", "list-org-secrets", "GET", "/orgs/{{.Owner}}/actions/secrets"},
+		{"set_org_secret", "ci", "set-org-secret", "PUT", "/orgs/{{.Owner}}/actions/secrets/{{.SecretName}}"},
+		{"delete_org_secret", "ci", "delete-org-secret", "DELETE", "/orgs/{{.Owner}}/actions/secrets/{{.SecretName}}"},
+		{"list_org_variables", "ci", "list-org-variables", "GET", "/orgs/{{.Owner}}/actions/variables"},
+		{"get_org_variable", "ci", "get-org-variable", "GET", "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}"},
+		{"create_org_variable", "ci", "create-org-variable", "POST", "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}"},
+		{"update_org_variable", "ci", "update-org-variable", "PUT", "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}"},
+		{"delete_org_variable", "ci", "delete-org-variable", "DELETE", "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+	setOrgSecret := ByName("set_org_secret")
+	rt := reflect.TypeOf(setOrgSecret.Args)
+	if _, ok := rt.FieldByName("Data"); !ok {
+		t.Error("set_org_secret: missing Data field for upsert body")
+	}
+}
+
+func TestReleaseTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_releases", "release", "list", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases"},
+		{"create_release", "release", "create", "POST", "/repos/{{.Owner}}/{{.Repo}}/releases"},
+		{"get_release", "release", "get", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}"},
+		{"get_latest_release", "release", "get-latest", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases/latest"},
+		{"get_release_by_tag", "release", "get-by-tag", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases/tags/{{.Tag}}"},
+		{"update_release", "release", "update", "PATCH", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}"},
+		{"delete_release", "release", "delete", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}"},
+		{"list_release_attachments", "release", "list-attachments", "GET", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}/assets"},
+		{"delete_release_attachment", "release", "delete-attachment", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/releases/{{.ID}}/assets/{{.AttachmentID}}"},
+		{"list_tags", "release", "list-tags", "GET", "/repos/{{.Owner}}/{{.Repo}}/tags"},
+		{"create_tag", "release", "create-tag", "POST", "/repos/{{.Owner}}/{{.Repo}}/tags"},
+		{"delete_tag", "release", "delete-tag", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/tags/{{.Tag}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+}
+
 func TestAPITagValues(t *testing.T) {
 	for _, td := range All {
 		rt := reflect.TypeOf(td.Args)
@@ -192,14 +296,21 @@ func TestReadOnlyHint(t *testing.T) {
 
 func TestDestructiveTools(t *testing.T) {
 	want := map[string]bool{
-		"delete_file":            true,
-		"delete_branch":          true,
-		"remove_issue_labels":    true,
-		"delete_issue_comment":   true,
-		"delete_label":           true,
-		"delete_pull_review":     true,
-		"delete_review_requests": true,
-		"cancel_build":           true,
+		"delete_file":               true,
+		"delete_branch":             true,
+		"remove_issue_labels":       true,
+		"delete_issue_comment":      true,
+		"delete_label":              true,
+		"delete_pull_review":        true,
+		"delete_review_requests":    true,
+		"cancel_build":              true,
+		"delete_secret":             true,
+		"delete_variable":           true,
+		"delete_org_secret":         true,
+		"delete_org_variable":       true,
+		"delete_release":            true,
+		"delete_release_attachment": true,
+		"delete_tag":                true,
 	}
 	for _, td := range All {
 		if want[td.Name] && !td.Destructive {
@@ -215,6 +326,41 @@ func TestEveryDELETEIsDestructive(t *testing.T) {
 	for _, td := range All {
 		if td.Method == "DELETE" && !td.Destructive {
 			t.Errorf("tool %s: DELETE method but Destructive = false", td.Name)
+		}
+	}
+}
+
+func TestReleaseJSONTags(t *testing.T) {
+	wantCreate := map[string]string{
+		"Target": "target_commitish",
+		"Title":  "name",
+		"Note":   "body",
+	}
+	rt := reflect.TypeOf(CreateReleaseArgs{})
+	for field, wantTag := range wantCreate {
+		f, _ := rt.FieldByName(field)
+		if got := f.Tag.Get("json"); got != wantTag {
+			t.Errorf("CreateReleaseArgs.%s json tag = %q, want %q", field, got, wantTag)
+		}
+	}
+
+	wantUpdate := map[string]string{
+		"Target": "target_commitish",
+		"Title":  "name",
+		"Note":   "body",
+	}
+	rt = reflect.TypeOf(UpdateReleaseArgs{})
+	for field, wantTag := range wantUpdate {
+		f, _ := rt.FieldByName(field)
+		if got := f.Tag.Get("json"); got != wantTag {
+			t.Errorf("UpdateReleaseArgs.%s json tag = %q, want %q", field, got, wantTag)
+		}
+	}
+
+	for _, field := range []string{"Draft", "Prerelease"} {
+		f, _ := rt.FieldByName(field)
+		if f.Type.Kind() != reflect.Ptr || f.Type.Elem().Kind() != reflect.Bool {
+			t.Errorf("UpdateReleaseArgs.%s type = %v, want *bool", field, f.Type)
 		}
 	}
 }

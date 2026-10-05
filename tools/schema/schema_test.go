@@ -134,6 +134,27 @@ func TestForDefaultValue(t *testing.T) {
 	}
 }
 
+func TestForPointerBoolType(t *testing.T) {
+	td := tools.ByName("update_release")
+	raw := For(td)
+	var schema struct {
+		Properties map[string]map[string]any `json:"properties"`
+	}
+	if err := json.Unmarshal(raw, &schema); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	for _, field := range []string{"draft", "prerelease"} {
+		prop, ok := schema.Properties[field]
+		if !ok {
+			t.Errorf("missing property %s", field)
+			continue
+		}
+		if prop["type"] != "boolean" {
+			t.Errorf("property %s: type = %v, want boolean", field, prop["type"])
+		}
+	}
+}
+
 func TestForAllTools(t *testing.T) {
 	for _, td := range tools.All {
 		raw := For(td)
