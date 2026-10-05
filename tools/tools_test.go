@@ -42,6 +42,41 @@ func TestReviewTools(t *testing.T) {
 // Fields tagged api:"-" are consumed by the tool implementation (MCP handler
 // or CLI) and must never be sent to the REST API. They are still part of the
 // tool's schema. The tag has exactly one valid value.
+func TestCISecretsVariablesTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_secrets", "ci", "list-secrets", "GET", "/repos/{{.Owner}}/{{.Repo}}/actions/secrets"},
+		{"set_secret", "ci", "set-secret", "PUT", "/repos/{{.Owner}}/{{.Repo}}/actions/secrets/{{.SecretName}}"},
+		{"delete_secret", "ci", "delete-secret", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/actions/secrets/{{.SecretName}}"},
+		{"list_variables", "ci", "list-variables", "GET", "/repos/{{.Owner}}/{{.Repo}}/actions/variables"},
+		{"get_variable", "ci", "get-variable", "GET", "/repos/{{.Owner}}/{{.Repo}}/actions/variables/{{.VariableName}}"},
+		{"create_variable", "ci", "create-variable", "POST", "/repos/{{.Owner}}/{{.Repo}}/actions/variables/{{.VariableName}}"},
+		{"update_variable", "ci", "update-variable", "PUT", "/repos/{{.Owner}}/{{.Repo}}/actions/variables/{{.VariableName}}"},
+		{"delete_variable", "ci", "delete-variable", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/actions/variables/{{.VariableName}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+	setSecret := ByName("set_secret")
+	rt := reflect.TypeOf(setSecret.Args)
+	if _, ok := rt.FieldByName("Data"); !ok {
+		t.Error("set_secret: missing Data field for upsert body")
+	}
+}
+
 func TestAPITagValues(t *testing.T) {
 	for _, td := range All {
 		rt := reflect.TypeOf(td.Args)
