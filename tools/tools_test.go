@@ -9,8 +9,8 @@ import (
 )
 
 func TestAllCount(t *testing.T) {
-	if got := len(All); got != 57 {
-		t.Errorf("len(All) = %d, want 57", got)
+	if got := len(All); got != 85 {
+		t.Errorf("len(All) = %d, want 85", got)
 	}
 }
 
@@ -192,14 +192,21 @@ func TestReadOnlyHint(t *testing.T) {
 
 func TestDestructiveTools(t *testing.T) {
 	want := map[string]bool{
-		"delete_file":            true,
-		"delete_branch":          true,
-		"remove_issue_labels":    true,
-		"delete_issue_comment":   true,
-		"delete_label":           true,
-		"delete_pull_review":     true,
-		"delete_review_requests": true,
-		"cancel_build":           true,
+		"delete_file":               true,
+		"delete_branch":             true,
+		"remove_issue_labels":       true,
+		"delete_issue_comment":      true,
+		"delete_label":              true,
+		"delete_pull_review":        true,
+		"delete_review_requests":    true,
+		"cancel_build":              true,
+		"delete_secret":             true,
+		"delete_variable":           true,
+		"delete_org_secret":         true,
+		"delete_org_variable":       true,
+		"delete_release":            true,
+		"delete_release_attachment": true,
+		"delete_tag":                true,
 	}
 	for _, td := range All {
 		if want[td.Name] && !td.Destructive {
