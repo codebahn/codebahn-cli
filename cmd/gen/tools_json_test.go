@@ -71,3 +71,33 @@ func TestToolsJSONFields(t *testing.T) {
 		}
 	}
 }
+
+// TestToolsJSONReadOnly verifies that read_only is computed from IsReadOnly(),
+// not the raw ReadOnly struct field. get_issue_by_index has Method "GET" and
+// an unset (false) ReadOnly field, so the two diverge: using the raw field
+// would wrongly report read_only: false.
+func TestToolsJSONReadOnly(t *testing.T) {
+	entries := buildToolsJSON()
+
+	var found bool
+	for i, td := range tools.All {
+		if td.Name != "get_issue_by_index" {
+			continue
+		}
+		found = true
+
+		if td.Method != "GET" || td.ReadOnly {
+			t.Fatalf("fixture assumption broken: get_issue_by_index Method=%q ReadOnly=%v", td.Method, td.ReadOnly)
+		}
+		if !td.IsReadOnly() {
+			t.Fatalf("fixture assumption broken: get_issue_by_index IsReadOnly() = false, want true")
+		}
+
+		if entries[i].ReadOnly != true {
+			t.Errorf("entries[%d] (get_issue_by_index) ReadOnly = %v, want true (from IsReadOnly(), not raw ReadOnly field)", i, entries[i].ReadOnly)
+		}
+	}
+	if !found {
+		t.Fatal("get_issue_by_index not found in tools.All")
+	}
+}
