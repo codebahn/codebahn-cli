@@ -284,6 +284,7 @@ func CIListOrgSecretsCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
 	cmd.Flags().IntVar(&args.Limit, "limit", 30, `Page size`)
 	return cmd
@@ -300,6 +301,7 @@ func CISetOrgSecretCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.SecretName, "secret_name", "", `Secret name`)
 	_ = cmd.MarkFlagRequired("secret_name")
 	cmd.Flags().StringVar(&args.Data, "data", "", `Secret value. Write-only: there is no way to read it back once set.`)
@@ -318,6 +320,7 @@ func CIDeleteOrgSecretCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.SecretName, "secret_name", "", `Secret name`)
 	_ = cmd.MarkFlagRequired("secret_name")
 	return cmd
@@ -334,6 +337,7 @@ func CIListOrgVariablesCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
 	cmd.Flags().IntVar(&args.Limit, "limit", 30, `Page size`)
 	return cmd
@@ -350,6 +354,7 @@ func CIGetOrgVariableCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
 	_ = cmd.MarkFlagRequired("variable_name")
 	return cmd
@@ -366,6 +371,7 @@ func CICreateOrgVariableCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
 	_ = cmd.MarkFlagRequired("variable_name")
 	cmd.Flags().StringVar(&args.Value, "value", "", `Variable value`)
@@ -384,6 +390,7 @@ func CIUpdateOrgVariableCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
 	_ = cmd.MarkFlagRequired("variable_name")
 	cmd.Flags().StringVar(&args.Value, "value", "", `Variable value`)
@@ -402,6 +409,7 @@ func CIDeleteOrgVariableCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Organization name`)
+	_ = cmd.MarkFlagRequired("owner")
 	cmd.Flags().StringVar(&args.VariableName, "variable_name", "", `Variable name`)
 	_ = cmd.MarkFlagRequired("variable_name")
 	return cmd

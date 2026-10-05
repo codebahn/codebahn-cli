@@ -94,6 +94,16 @@ func generateGroup(name string, defs []tools.ToolDef) error {
 			ArgsType:    "tools." + rt.Name(),
 		}
 
+		// Context inference resolves owner+repo together from the git
+		// remote; an owner-only struct (org-scoped tool) gets nothing
+		// inferred, so its owner flag must stay required.
+		hasRepo := false
+		for i := range rt.NumField() {
+			if rt.Field(i).Tag.Get("json") == "repo" {
+				hasRepo = true
+			}
+		}
+
 		for i := range rt.NumField() {
 			f := rt.Field(i)
 			jsonName := f.Tag.Get("json")
@@ -106,7 +116,7 @@ func generateGroup(name string, defs []tools.ToolDef) error {
 				Required:     f.Tag.Get("required") == "true",
 				Default:      def,
 				HasDefault:   def != "",
-				ContextInfer: jsonName == "owner" || jsonName == "repo",
+				ContextInfer: hasRepo && (jsonName == "owner" || jsonName == "repo"),
 				IsOptBool:    isOptBool(f.Type),
 			})
 		}
