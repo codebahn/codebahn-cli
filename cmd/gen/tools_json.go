@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/json"
+	"reflect"
+
 	"github.com/codebahn/codebahn-cli/tools"
+	"github.com/codebahn/codebahn-cli/tools/schema"
 )
 
 // toolsJSONParam is one parameter of a tools.json entry.
@@ -35,8 +39,46 @@ func buildToolsJSON() []toolsJSONEntry {
 			Method:      td.Method,
 			Destructive: td.Destructive,
 			ReadOnly:    td.IsReadOnly(),
-			Params:      []toolsJSONParam{},
+			Params:      buildToolsJSONParams(td),
 		}
 	}
 	return entries
+}
+
+// buildToolsJSONParams extracts params for one tool in struct declaration
+// order. Types come from schema.For (which shares the type vocabulary), but
+// schema.For emits properties alphabetically, so field order and the
+// required/skip rules are taken from the struct tags directly.
+func buildToolsJSONParams(td tools.ToolDef) []toolsJSONParam {
+	var parsed struct {
+		Properties map[string]struct {
+			Type string `json:"type"`
+		} `json:"properties"`
+	}
+	if err := json.Unmarshal(schema.For(td), &parsed); err != nil {
+		panic(err)
+	}
+	types := parsed.Properties
+
+	rt := reflect.TypeOf(td.Args)
+	if rt.Kind() == reflect.Ptr {
+		rt = rt.Elem()
+	}
+
+	params := []toolsJSONParam{}
+	for i := range rt.NumField() {
+		f := rt.Field(i)
+		name := f.Tag.Get("json")
+		if name == "" || name == "-" {
+			continue
+		}
+
+		params = append(params, toolsJSONParam{
+			Name:     name,
+			Type:     types[name].Type,
+			Required: f.Tag.Get("required") == "true",
+			Desc:     f.Tag.Get("desc"),
+		})
+	}
+	return params
 }
