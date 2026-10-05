@@ -85,6 +85,11 @@ func TestOrgCommandsRequireOwner(t *testing.T) {
 		"create-org-variable": CICreateOrgVariableCmd(),
 		"update-org-variable": CIUpdateOrgVariableCmd(),
 		"delete-org-variable": CIDeleteOrgVariableCmd(),
+		"list-org-hooks":      WebhookListOrgCmd(),
+		"get-org-hook":        WebhookGetOrgCmd(),
+		"create-org-hook":     WebhookCreateOrgCmd(),
+		"update-org-hook":     WebhookUpdateOrgCmd(),
+		"delete-org-hook":     WebhookDeleteOrgCmd(),
 	} {
 		f := cmd.Flags().Lookup("owner")
 		if f == nil {
