@@ -92,6 +92,51 @@ type DeleteVariableArgs struct {
 	VariableName string `json:"variable_name" required:"true" desc:"Variable name"`
 }
 
+type ListOrgSecretsArgs struct {
+	Owner string `json:"owner" required:"true" desc:"Organization name"`
+	Page  int    `json:"page"  required:"true" desc:"Page number (1-based)" default:"1"`
+	Limit int    `json:"limit" required:"true" desc:"Page size"             default:"30"`
+}
+
+type SetOrgSecretArgs struct {
+	Owner      string `json:"owner"       required:"true" desc:"Organization name"`
+	SecretName string `json:"secret_name" required:"true" desc:"Secret name"`
+	Data       string `json:"data"        required:"true" desc:"Secret value. Write-only: there is no way to read it back once set."`
+}
+
+type DeleteOrgSecretArgs struct {
+	Owner      string `json:"owner"       required:"true" desc:"Organization name"`
+	SecretName string `json:"secret_name" required:"true" desc:"Secret name"`
+}
+
+type ListOrgVariablesArgs struct {
+	Owner string `json:"owner" required:"true" desc:"Organization name"`
+	Page  int    `json:"page"  required:"true" desc:"Page number (1-based)" default:"1"`
+	Limit int    `json:"limit" required:"true" desc:"Page size"             default:"30"`
+}
+
+type GetOrgVariableArgs struct {
+	Owner        string `json:"owner"         required:"true" desc:"Organization name"`
+	VariableName string `json:"variable_name" required:"true" desc:"Variable name"`
+}
+
+type CreateOrgVariableArgs struct {
+	Owner        string `json:"owner"         required:"true" desc:"Organization name"`
+	VariableName string `json:"variable_name" required:"true" desc:"Variable name"`
+	Value        string `json:"value"         required:"true" desc:"Variable value"`
+}
+
+type UpdateOrgVariableArgs struct {
+	Owner        string `json:"owner"         required:"true" desc:"Organization name"`
+	VariableName string `json:"variable_name" required:"true" desc:"Variable name"`
+	Value        string `json:"value"         required:"true" desc:"Variable value"`
+}
+
+type DeleteOrgVariableArgs struct {
+	Owner        string `json:"owner"         required:"true" desc:"Organization name"`
+	VariableName string `json:"variable_name" required:"true" desc:"Variable name"`
+}
+
 func actionsTools() []ToolDef {
 	return []ToolDef{
 		{
@@ -212,6 +257,80 @@ func actionsTools() []ToolDef {
 			Method:      "DELETE",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/actions/variables/{{.VariableName}}",
 			Args:        DeleteVariableArgs{},
+			Destructive: true,
+		},
+		{
+			Name:        "list_org_secrets",
+			Group:       "ci",
+			CLIName:     "list-org-secrets",
+			Description: "List organization Actions secret names (values are write-only and never returned)",
+			Method:      "GET",
+			PathTmpl:    "/orgs/{{.Owner}}/actions/secrets",
+			Args:        ListOrgSecretsArgs{},
+		},
+		{
+			Name:        "set_org_secret",
+			Group:       "ci",
+			CLIName:     "set-org-secret",
+			Description: "Create or update an organization Actions secret. Secrets are write-only: there is no get_org_secret tool because the value cannot be read back.",
+			Method:      "PUT",
+			PathTmpl:    "/orgs/{{.Owner}}/actions/secrets/{{.SecretName}}",
+			Args:        SetOrgSecretArgs{},
+		},
+		{
+			Name:        "delete_org_secret",
+			Group:       "ci",
+			CLIName:     "delete-org-secret",
+			Description: "Delete an organization Actions secret",
+			Method:      "DELETE",
+			PathTmpl:    "/orgs/{{.Owner}}/actions/secrets/{{.SecretName}}",
+			Args:        DeleteOrgSecretArgs{},
+			Destructive: true,
+		},
+		{
+			Name:        "list_org_variables",
+			Group:       "ci",
+			CLIName:     "list-org-variables",
+			Description: "List organization Actions variables",
+			Method:      "GET",
+			PathTmpl:    "/orgs/{{.Owner}}/actions/variables",
+			Args:        ListOrgVariablesArgs{},
+		},
+		{
+			Name:        "get_org_variable",
+			Group:       "ci",
+			CLIName:     "get-org-variable",
+			Description: "Get an organization Actions variable",
+			Method:      "GET",
+			PathTmpl:    "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}",
+			Args:        GetOrgVariableArgs{},
+		},
+		{
+			Name:        "create_org_variable",
+			Group:       "ci",
+			CLIName:     "create-org-variable",
+			Description: "Create an organization Actions variable",
+			Method:      "POST",
+			PathTmpl:    "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}",
+			Args:        CreateOrgVariableArgs{},
+		},
+		{
+			Name:        "update_org_variable",
+			Group:       "ci",
+			CLIName:     "update-org-variable",
+			Description: "Update an organization Actions variable",
+			Method:      "PUT",
+			PathTmpl:    "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}",
+			Args:        UpdateOrgVariableArgs{},
+		},
+		{
+			Name:        "delete_org_variable",
+			Group:       "ci",
+			CLIName:     "delete-org-variable",
+			Description: "Delete an organization Actions variable",
+			Method:      "DELETE",
+			PathTmpl:    "/orgs/{{.Owner}}/actions/variables/{{.VariableName}}",
+			Args:        DeleteOrgVariableArgs{},
 			Destructive: true,
 		},
 	}
