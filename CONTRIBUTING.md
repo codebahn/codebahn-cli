@@ -29,6 +29,8 @@ The cobra commands in `internal/gen/` are generated from the tool definitions in
 go run ./cmd/gen
 ```
 
+This also writes `tools.json` at the repo root; commit it alongside the Go output. CI fails if `tools.json` has drifted from the generator.
+
 ## Pull requests
 
 Keep PRs small and focused. One change per PR. Tests are expected for new functionality.
