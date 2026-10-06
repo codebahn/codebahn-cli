@@ -270,6 +270,11 @@ type MCPCIArgs struct {
 	RunID      int    `json:"run_id"      desc:"Workflow run ID. Required for cancel/get_run/get_logs"`
 	Ref        string `json:"ref"         desc:"Branch or tag to run on. For dispatch"`
 	Inputs     string `json:"inputs"      desc:"Workflow inputs as JSON object. For dispatch"`
+	Job        string `json:"job"         desc:"Filter logs to this job name. For get_logs"`
+	TailLines  int    `json:"tail_lines"  desc:"Return only the last N lines of output (max 500). For get_logs"`
+	Status     string `json:"status"      desc:"Filter by status (waiting, running, success, failure). For list_runs"`
+	Event      string `json:"event"       desc:"Filter by trigger event (push, pull_request, etc.). For list_runs"`
+	HeadSHA    string `json:"head_sha"    desc:"Filter by head commit SHA. For list_runs"`
 	Page       int    `json:"page"        desc:"Page number. For list_runs" default:"1"`
 	Limit      int    `json:"limit"       desc:"Page size. For list_runs" default:"20"`
 }
