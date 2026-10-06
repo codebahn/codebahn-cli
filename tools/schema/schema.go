@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/codebahn/codebahn-cli/tools"
 )
@@ -34,6 +35,15 @@ func For(td tools.ToolDef) json.RawMessage {
 
 		if def := f.Tag.Get("default"); def != "" {
 			prop["default"] = coerceDefault(def, f.Type)
+		}
+
+		if enum := f.Tag.Get("enum"); enum != "" {
+			vals := strings.Split(enum, ",")
+			any := make([]any, len(vals))
+			for i, v := range vals {
+				any[i] = v
+			}
+			prop["enum"] = any
 		}
 
 		properties[name] = prop
