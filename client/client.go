@@ -400,15 +400,16 @@ func buildBody(args any, inPath map[string]bool) any {
 			}
 		case "nest":
 			nest := f.Tag.Get("nest")
-			if nest != "" {
-				sub, _ := body[nest].(map[string]any)
-				if sub == nil {
-					sub = map[string]any{}
-				}
-				sub[name] = val
-				body[nest] = sub
-				continue
+			if nest == "" {
+				panic(fmt.Sprintf("field %s has body:\"nest\" but no nest tag", f.Name))
 			}
+			sub, _ := body[nest].(map[string]any)
+			if sub == nil {
+				sub = map[string]any{}
+			}
+			sub[name] = val
+			body[nest] = sub
+			continue
 		}
 
 		body[name] = val

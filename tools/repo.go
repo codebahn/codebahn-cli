@@ -37,11 +37,11 @@ type UpdateRepoArgs struct {
 	DefaultBranch                 string `json:"default_branch"                    desc:"Default branch"`
 	DefaultMergeStyle             string `json:"default_merge_style"               desc:"Default merge style (merge, rebase, rebase-merge, squash, fast-forward-only)"`
 	MirrorInterval                string `json:"mirror_interval"                   desc:"Mirror sync interval (e.g. 8h, 0 to disable)"`
-	ExternalTrackerURL            string `json:"external_tracker_url"              desc:"External issue tracker URL"`
-	ExternalTrackerFormat         string `json:"external_tracker_format"           desc:"External issue tracker URL format"`
-	ExternalTrackerStyle          string `json:"external_tracker_style"            desc:"External issue tracker numbering style"`
-	ExternalTrackerRegexpPattern  string `json:"external_tracker_regexp_pattern"   desc:"External issue tracker regexp pattern"`
-	ExternalWikiURL               string `json:"external_wiki_url"                 desc:"External wiki URL"`
+	ExternalTrackerURL            string `json:"external_tracker_url"              desc:"External issue tracker URL" body:"nest" nest:"external_tracker"`
+	ExternalTrackerFormat         string `json:"external_tracker_format"           desc:"External issue tracker URL format" body:"nest" nest:"external_tracker"`
+	ExternalTrackerStyle          string `json:"external_tracker_style"            desc:"External issue tracker numbering style" body:"nest" nest:"external_tracker"`
+	ExternalTrackerRegexpPattern  string `json:"external_tracker_regexp_pattern"   desc:"External issue tracker regexp pattern" body:"nest" nest:"external_tracker"`
+	ExternalWikiURL               string `json:"external_wiki_url"                 desc:"External wiki URL" body:"nest" nest:"external_wiki"`
 	Private                       *bool  `json:"private"                           desc:"Private repo"`
 	Template                      *bool  `json:"template"                          desc:"Template repo"`
 	Archived                      *bool  `json:"archived"                          desc:"Archived (read-only)"`

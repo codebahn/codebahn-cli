@@ -4033,7 +4033,7 @@
         "desc": "Restrict qualifying approvals to the approvals whitelist"
       },
       {
-        "name": "approvals_whitelist_usernames",
+        "name": "approvals_whitelist_username",
         "type": "string",
         "required": false,
         "desc": "Usernames whose approvals count (comma-separated)"
@@ -4187,7 +4187,7 @@
         "desc": "Restrict qualifying approvals to the approvals whitelist"
       },
       {
-        "name": "approvals_whitelist_usernames",
+        "name": "approvals_whitelist_username",
         "type": "string",
         "required": false,
         "desc": "Usernames whose approvals count (comma-separated)"
