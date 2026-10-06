@@ -169,6 +169,11 @@ type GetRepoTreeArgs struct {
 	Limit     int    `json:"limit"     required:"true" desc:"Page size"             default:"1000"`
 }
 
+type ConvertRepoArgs struct {
+	Owner string `json:"owner" required:"true" desc:"Repository owner"`
+	Repo  string `json:"repo"  required:"true" desc:"Repository name"`
+}
+
 func repoTools() []ToolDef {
 	return []ToolDef{
 		{
@@ -197,6 +202,15 @@ func repoTools() []ToolDef {
 			Method:      "PATCH",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}",
 			Args:        UpdateRepoArgs{},
+		},
+		{
+			Name:        "convert_repo",
+			Group:       "repo",
+			CLIName:     "convert",
+			Description: "Convert a mirror repository to a normal repository. Irreversible. Returns 422 if the repository is not a mirror.",
+			Method:      "POST",
+			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/convert",
+			Args:        ConvertRepoArgs{},
 		},
 		{
 			Name:        "get_file_content",

@@ -9,8 +9,8 @@ import (
 )
 
 func TestAllCount(t *testing.T) {
-	if got := len(All); got != 102 {
-		t.Errorf("len(All) = %d, want 102", got)
+	if got := len(All); got != 103 {
+		t.Errorf("len(All) = %d, want 103", got)
 	}
 }
 
@@ -176,6 +176,22 @@ func TestWebhookTools(t *testing.T) {
 		if td.PathTmpl != tc.pathTmpl {
 			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
 		}
+	}
+}
+
+func TestConvertRepoTool(t *testing.T) {
+	td := ByName("convert_repo")
+	if td.Group != "repo" {
+		t.Errorf("convert_repo: Group = %q, want %q", td.Group, "repo")
+	}
+	if td.CLIName != "convert" {
+		t.Errorf("convert_repo: CLIName = %q, want %q", td.CLIName, "convert")
+	}
+	if td.Method != "POST" {
+		t.Errorf("convert_repo: Method = %q, want %q", td.Method, "POST")
+	}
+	if td.PathTmpl != "/repos/{{.Owner}}/{{.Repo}}/convert" {
+		t.Errorf("convert_repo: PathTmpl = %q, want %q", td.PathTmpl, "/repos/{{.Owner}}/{{.Repo}}/convert")
 	}
 }
 

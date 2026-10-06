@@ -17,6 +17,7 @@ func init() {
 	Register("list_repo_contents", fmtListContents)
 	Register("get_repo_tree", fmtGetTree)
 	Register("create_repo", fmtCreateRepo)
+	Register("convert_repo", fmtConvertRepo)
 	Register("create_file", fmtCreateFile)
 	Register("update_file", fmtUpdateFile)
 	Register("delete_file", fmtDeleteFile)
@@ -272,6 +273,19 @@ func fmtCreateRepo(raw json.RawMessage, _ any, p *output.Printer) error {
 		return err
 	}
 	successf("Created repository %s", repo.FullName)
+	p.Text(repo.HTMLURL)
+	return nil
+}
+
+func fmtConvertRepo(raw json.RawMessage, _ any, p *output.Printer) error {
+	var repo struct {
+		FullName string `json:"full_name"`
+		HTMLURL  string `json:"html_url"`
+	}
+	if err := json.Unmarshal(raw, &repo); err != nil {
+		return err
+	}
+	successf("Converted %s from mirror to normal repository", repo.FullName)
 	p.Text(repo.HTMLURL)
 	return nil
 }

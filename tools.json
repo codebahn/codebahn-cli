@@ -317,6 +317,28 @@
     ]
   },
   {
+    "name": "convert_repo",
+    "group": "repo",
+    "description": "Convert a mirror repository to a normal repository. Irreversible. Returns 422 if the repository is not a mirror.",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      }
+    ]
+  },
+  {
     "name": "get_file_content",
     "group": "repo",
     "description": "Get file content as plain text by default. Set with_metadata=true for binary files, or when you need the SHA/encoding/links from the full ContentsResponse (e.g. before a follow-up update_file call). Optional start_line and end_line request a 1-indexed inclusive line range; out-of-range values clamp to the file extent. Range parameters are ignored when with_metadata=true.",
