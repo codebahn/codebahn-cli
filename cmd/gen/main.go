@@ -68,6 +68,7 @@ type fieldData struct {
 	HasDefault   bool
 	ContextInfer bool
 	IsOptBool    bool
+	IsOptInt     bool
 }
 
 func groupedTools() map[string][]tools.ToolDef {
@@ -123,6 +124,7 @@ func generateGroup(name string, defs []tools.ToolDef) error {
 				HasDefault:   def != "",
 				ContextInfer: hasRepo && (jsonName == "owner" || jsonName == "repo"),
 				IsOptBool:    isOptBool(f.Type),
+				IsOptInt:     isOptInt(f.Type),
 			})
 		}
 
@@ -188,6 +190,10 @@ func isOptBool(t reflect.Type) bool {
 	return t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Bool
 }
 
+func isOptInt(t reflect.Type) bool {
+	return t.Kind() == reflect.Ptr && (t.Elem().Kind() >= reflect.Int && t.Elem().Kind() <= reflect.Int64)
+}
+
 func toExportedName(s string) string {
 	parts := strings.FieldsFunc(s, func(r rune) bool {
 		return r == '_' || r == '-'
@@ -225,14 +231,16 @@ func exportedGroupName(name string) string {
 
 func groupDescription(name string) string {
 	descs := map[string]string{
-		"user":    "User information",
-		"repo":    "Manage repositories",
-		"issue":   "Manage issues",
-		"pr":      "Manage pull requests",
-		"search":  "Search code, repos, and issues",
-		"ci":      "Manage CI workflow runs",
-		"actions": "Manage CI workflow runs",
-		"release": "Manage releases and tags",
+		"user":       "User information",
+		"repo":       "Manage repositories",
+		"issue":      "Manage issues",
+		"pr":         "Manage pull requests",
+		"search":     "Search code, repos, and issues",
+		"ci":         "Manage CI workflow runs",
+		"actions":    "Manage CI workflow runs",
+		"release":    "Manage releases and tags",
+		"webhook":    "Manage webhooks",
+		"protection": "Manage branch protections",
 	}
 	if d, ok := descs[name]; ok {
 		return d
@@ -310,12 +318,18 @@ func {{.FuncName}}Cmd() *cobra.Command {
 	var args {{.ArgsType}}
 {{- range .Fields}}{{- if .IsOptBool}}
 	var _{{.GoName}} bool
+{{- end}}{{- if .IsOptInt}}
+	var _{{.GoName}} int
 {{- end}}{{- end}}
 	cmd := &cobra.Command{
 		Use:   "{{.CLIName}}",
 		Short: ` + "`{{.Description}}`" + `,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 {{- range .Fields}}{{- if .IsOptBool}}
+			if cmd.Flags().Changed("{{.JSONName}}") {
+				args.{{.GoName}} = &_{{.GoName}}
+			}
+{{- end}}{{- if .IsOptInt}}
 			if cmd.Flags().Changed("{{.JSONName}}") {
 				args.{{.GoName}} = &_{{.GoName}}
 			}
@@ -327,6 +341,8 @@ func {{.FuncName}}Cmd() *cobra.Command {
 {{- range .Fields}}
 {{- if .IsOptBool}}
 	cmd.Flags().BoolVar(&_{{.GoName}}, "{{.JSONName}}", false, ` + "`{{.Desc}}`" + `)
+{{- else if .IsOptInt}}
+	cmd.Flags().IntVar(&_{{.GoName}}, "{{.JSONName}}", 0, ` + "`{{.Desc}}`" + `)
 {{- else}}
 	cmd.Flags().{{.FlagType}}Var(&args.{{.GoName}}, "{{.JSONName}}", {{defaultVal .FlagType .Default}}, ` + "`{{.Desc}}`" + `)
 {{- end}}

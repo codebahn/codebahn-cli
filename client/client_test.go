@@ -463,6 +463,50 @@ func TestBuildBodySkipsAPIDash(t *testing.T) {
 	}
 }
 
+func TestBuildBodyCSVTag(t *testing.T) {
+	type args struct {
+		Owner  string `json:"owner"`
+		Events string `json:"events" body:"csv"`
+	}
+	body := buildBody(args{Owner: "acme", Events: "push, pull_request"}, nil)
+	m := body.(map[string]any)
+	got, ok := m["events"].([]string)
+	if !ok {
+		t.Fatalf("events type = %T, want []string", m["events"])
+	}
+	if len(got) != 2 || got[0] != "push" || got[1] != "pull_request" {
+		t.Errorf("events = %v, want [push pull_request]", got)
+	}
+}
+
+func TestBuildBodyNestTag(t *testing.T) {
+	type args struct {
+		Owner       string `json:"owner"`
+		URL         string `json:"url"          body:"nest" nest:"config"`
+		ContentType string `json:"content_type" body:"nest" nest:"config"`
+		Active      *bool  `json:"active"`
+	}
+	active := true
+	body := buildBody(args{Owner: "acme", URL: "https://example.com", ContentType: "json", Active: &active}, nil)
+	m := body.(map[string]any)
+	if _, ok := m["url"]; ok {
+		t.Error("url should be nested under config, not top-level")
+	}
+	cfg, ok := m["config"].(map[string]any)
+	if !ok {
+		t.Fatalf("config type = %T, want map[string]any", m["config"])
+	}
+	if cfg["url"] != "https://example.com" {
+		t.Errorf("config.url = %v", cfg["url"])
+	}
+	if cfg["content_type"] != "json" {
+		t.Errorf("config.content_type = %v", cfg["content_type"])
+	}
+	if ap, ok := m["active"].(*bool); !ok || ap == nil || !*ap {
+		t.Errorf("active = %v, want *true", m["active"])
+	}
+}
+
 func TestExecuteCompareRefs(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/v1/repos/acme/test/compare/main...feat/x" {

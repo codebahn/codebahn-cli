@@ -109,6 +109,214 @@
     ]
   },
   {
+    "name": "update_repo",
+    "group": "repo",
+    "description": "Update repository settings (common subset): name, description, website, default_branch, private, archived, has_issues, has_pull_requests, has_releases, has_packages, has_actions, allow_merge_commits, allow_rebase, allow_squash_merge, default_merge_style, default_delete_branch_after_merge. All fields optional; omitted fields are left unchanged. Accepts the full Forgejo EditRepoOption surface beyond the common subset.",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": false,
+        "desc": "New repository name"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "required": false,
+        "desc": "Description"
+      },
+      {
+        "name": "website",
+        "type": "string",
+        "required": false,
+        "desc": "Website URL"
+      },
+      {
+        "name": "default_branch",
+        "type": "string",
+        "required": false,
+        "desc": "Default branch"
+      },
+      {
+        "name": "default_merge_style",
+        "type": "string",
+        "required": false,
+        "desc": "Default merge style (merge, rebase, rebase-merge, squash, fast-forward-only)"
+      },
+      {
+        "name": "mirror_interval",
+        "type": "string",
+        "required": false,
+        "desc": "Mirror sync interval (e.g. 8h, 0 to disable)"
+      },
+      {
+        "name": "external_tracker_url",
+        "type": "string",
+        "required": false,
+        "desc": "External issue tracker URL"
+      },
+      {
+        "name": "external_tracker_format",
+        "type": "string",
+        "required": false,
+        "desc": "External issue tracker URL format"
+      },
+      {
+        "name": "external_tracker_style",
+        "type": "string",
+        "required": false,
+        "desc": "External issue tracker numbering style"
+      },
+      {
+        "name": "external_tracker_regexp_pattern",
+        "type": "string",
+        "required": false,
+        "desc": "External issue tracker regexp pattern"
+      },
+      {
+        "name": "external_wiki_url",
+        "type": "string",
+        "required": false,
+        "desc": "External wiki URL"
+      },
+      {
+        "name": "private",
+        "type": "boolean",
+        "required": false,
+        "desc": "Private repo"
+      },
+      {
+        "name": "template",
+        "type": "boolean",
+        "required": false,
+        "desc": "Template repo"
+      },
+      {
+        "name": "archived",
+        "type": "boolean",
+        "required": false,
+        "desc": "Archived (read-only)"
+      },
+      {
+        "name": "has_issues",
+        "type": "boolean",
+        "required": false,
+        "desc": "Enable issue tracker"
+      },
+      {
+        "name": "has_wiki",
+        "type": "boolean",
+        "required": false,
+        "desc": "Enable wiki"
+      },
+      {
+        "name": "has_pull_requests",
+        "type": "boolean",
+        "required": false,
+        "desc": "Enable pull requests"
+      },
+      {
+        "name": "has_projects",
+        "type": "boolean",
+        "required": false,
+        "desc": "Enable projects"
+      },
+      {
+        "name": "has_releases",
+        "type": "boolean",
+        "required": false,
+        "desc": "Enable releases"
+      },
+      {
+        "name": "has_packages",
+        "type": "boolean",
+        "required": false,
+        "desc": "Enable package registry"
+      },
+      {
+        "name": "has_actions",
+        "type": "boolean",
+        "required": false,
+        "desc": "Enable Actions CI"
+      },
+      {
+        "name": "ignore_whitespace_conflicts",
+        "type": "boolean",
+        "required": false,
+        "desc": "Ignore whitespace-only conflicts when merging"
+      },
+      {
+        "name": "allow_merge_commits",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow merge commits"
+      },
+      {
+        "name": "allow_rebase",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow rebase merging"
+      },
+      {
+        "name": "allow_rebase_explicit",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow rebase with explicit merge commit"
+      },
+      {
+        "name": "allow_rebase_update",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow rebase of PR head branch when behind base"
+      },
+      {
+        "name": "allow_squash_merge",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow squash merging"
+      },
+      {
+        "name": "allow_fast_forward_only_merge",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow fast-forward-only merging"
+      },
+      {
+        "name": "default_delete_branch_after_merge",
+        "type": "boolean",
+        "required": false,
+        "desc": "Delete head branch by default after merge"
+      },
+      {
+        "name": "default_allow_maintainer_edit",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow maintainer edits on PRs by default"
+      },
+      {
+        "name": "enable_prune",
+        "type": "boolean",
+        "required": false,
+        "desc": "Enable automatic pruning of obsolete mirror branches"
+      }
+    ]
+  },
+  {
     "name": "get_file_content",
     "group": "repo",
     "description": "Get file content as plain text by default. Set with_metadata=true for binary files, or when you need the SHA/encoding/links from the full ContentsResponse (e.g. before a follow-up update_file call). Optional start_line and end_line request a 1-indexed inclusive line range; out-of-range values clamp to the file extent. Range parameters are ignored when with_metadata=true.",
@@ -3195,6 +3403,870 @@
         "type": "string",
         "required": true,
         "desc": "Tag name"
+      }
+    ]
+  },
+  {
+    "name": "list_hooks",
+    "group": "webhook",
+    "description": "List webhooks for a repository",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "get_hook",
+    "group": "webhook",
+    "description": "Get a repository webhook by ID",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Webhook ID"
+      }
+    ]
+  },
+  {
+    "name": "create_hook",
+    "group": "webhook",
+    "description": "Create a repository webhook",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "required": true,
+        "desc": "Webhook type (e.g. gitea, slack, discord)",
+        "default": "gitea"
+      },
+      {
+        "name": "url",
+        "type": "string",
+        "required": true,
+        "desc": "Target URL the webhook payload is delivered to"
+      },
+      {
+        "name": "content_type",
+        "type": "string",
+        "required": false,
+        "desc": "Payload content type (json or form)",
+        "default": "json"
+      },
+      {
+        "name": "secret",
+        "type": "string",
+        "required": false,
+        "desc": "Secret used to sign the payload"
+      },
+      {
+        "name": "events",
+        "type": "string",
+        "required": true,
+        "desc": "Events that trigger the webhook (comma-separated, e.g. push,pull_request)"
+      },
+      {
+        "name": "active",
+        "type": "boolean",
+        "required": false,
+        "desc": "Whether the webhook is active"
+      },
+      {
+        "name": "branch_filter",
+        "type": "string",
+        "required": false,
+        "desc": "Glob pattern restricting which branches trigger the webhook"
+      },
+      {
+        "name": "authorization_header",
+        "type": "string",
+        "required": false,
+        "desc": "Authorization header value sent with each delivery"
+      }
+    ]
+  },
+  {
+    "name": "update_hook",
+    "group": "webhook",
+    "description": "Update a repository webhook",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Webhook ID"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "required": false,
+        "desc": "Webhook type (e.g. gitea, slack, discord)"
+      },
+      {
+        "name": "url",
+        "type": "string",
+        "required": false,
+        "desc": "Target URL the webhook payload is delivered to"
+      },
+      {
+        "name": "content_type",
+        "type": "string",
+        "required": false,
+        "desc": "Payload content type (json or form)"
+      },
+      {
+        "name": "secret",
+        "type": "string",
+        "required": false,
+        "desc": "Secret used to sign the payload"
+      },
+      {
+        "name": "events",
+        "type": "string",
+        "required": false,
+        "desc": "Events that trigger the webhook (comma-separated, e.g. push,pull_request)"
+      },
+      {
+        "name": "active",
+        "type": "boolean",
+        "required": false,
+        "desc": "Whether the webhook is active"
+      },
+      {
+        "name": "branch_filter",
+        "type": "string",
+        "required": false,
+        "desc": "Glob pattern restricting which branches trigger the webhook"
+      },
+      {
+        "name": "authorization_header",
+        "type": "string",
+        "required": false,
+        "desc": "Authorization header value sent with each delivery"
+      }
+    ]
+  },
+  {
+    "name": "delete_hook",
+    "group": "webhook",
+    "description": "Delete a repository webhook",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Webhook ID"
+      }
+    ]
+  },
+  {
+    "name": "test_hook",
+    "group": "webhook",
+    "description": "Send a test delivery to a repository webhook",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Webhook ID"
+      }
+    ]
+  },
+  {
+    "name": "list_org_hooks",
+    "group": "webhook",
+    "description": "List webhooks for an organization",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "page",
+        "type": "number",
+        "required": true,
+        "desc": "Page number (1-based)",
+        "default": "1"
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": true,
+        "desc": "Page size",
+        "default": "30"
+      }
+    ]
+  },
+  {
+    "name": "get_org_hook",
+    "group": "webhook",
+    "description": "Get an organization webhook by ID",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Webhook ID"
+      }
+    ]
+  },
+  {
+    "name": "create_org_hook",
+    "group": "webhook",
+    "description": "Create an organization webhook",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "required": true,
+        "desc": "Webhook type (e.g. gitea, slack, discord)",
+        "default": "gitea"
+      },
+      {
+        "name": "url",
+        "type": "string",
+        "required": true,
+        "desc": "Target URL the webhook payload is delivered to"
+      },
+      {
+        "name": "content_type",
+        "type": "string",
+        "required": false,
+        "desc": "Payload content type (json or form)",
+        "default": "json"
+      },
+      {
+        "name": "secret",
+        "type": "string",
+        "required": false,
+        "desc": "Secret used to sign the payload"
+      },
+      {
+        "name": "events",
+        "type": "string",
+        "required": true,
+        "desc": "Events that trigger the webhook (comma-separated, e.g. push,pull_request)"
+      },
+      {
+        "name": "active",
+        "type": "boolean",
+        "required": false,
+        "desc": "Whether the webhook is active"
+      },
+      {
+        "name": "branch_filter",
+        "type": "string",
+        "required": false,
+        "desc": "Glob pattern restricting which branches trigger the webhook"
+      },
+      {
+        "name": "authorization_header",
+        "type": "string",
+        "required": false,
+        "desc": "Authorization header value sent with each delivery"
+      }
+    ]
+  },
+  {
+    "name": "update_org_hook",
+    "group": "webhook",
+    "description": "Update an organization webhook",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Webhook ID"
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "required": false,
+        "desc": "Webhook type (e.g. gitea, slack, discord)"
+      },
+      {
+        "name": "url",
+        "type": "string",
+        "required": false,
+        "desc": "Target URL the webhook payload is delivered to"
+      },
+      {
+        "name": "content_type",
+        "type": "string",
+        "required": false,
+        "desc": "Payload content type (json or form)"
+      },
+      {
+        "name": "secret",
+        "type": "string",
+        "required": false,
+        "desc": "Secret used to sign the payload"
+      },
+      {
+        "name": "events",
+        "type": "string",
+        "required": false,
+        "desc": "Events that trigger the webhook (comma-separated, e.g. push,pull_request)"
+      },
+      {
+        "name": "active",
+        "type": "boolean",
+        "required": false,
+        "desc": "Whether the webhook is active"
+      },
+      {
+        "name": "branch_filter",
+        "type": "string",
+        "required": false,
+        "desc": "Glob pattern restricting which branches trigger the webhook"
+      },
+      {
+        "name": "authorization_header",
+        "type": "string",
+        "required": false,
+        "desc": "Authorization header value sent with each delivery"
+      }
+    ]
+  },
+  {
+    "name": "delete_org_hook",
+    "group": "webhook",
+    "description": "Delete an organization webhook",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Organization name"
+      },
+      {
+        "name": "id",
+        "type": "number",
+        "required": true,
+        "desc": "Webhook ID"
+      }
+    ]
+  },
+  {
+    "name": "list_branch_protections",
+    "group": "protection",
+    "description": "List branch protection rules for a repository",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      }
+    ]
+  },
+  {
+    "name": "get_branch_protection",
+    "group": "protection",
+    "description": "Get a branch protection rule by name",
+    "method": "GET",
+    "destructive": false,
+    "read_only": true,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": true,
+        "desc": "Branch protection rule name (glob pattern)"
+      }
+    ]
+  },
+  {
+    "name": "create_branch_protection",
+    "group": "protection",
+    "description": "Create a branch protection rule",
+    "method": "POST",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "rule_name",
+        "type": "string",
+        "required": true,
+        "desc": "Branch name glob pattern this rule protects"
+      },
+      {
+        "name": "enable_push",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow whitelisted users/teams to push directly"
+      },
+      {
+        "name": "enable_push_whitelist",
+        "type": "boolean",
+        "required": false,
+        "desc": "Restrict direct pushes to the push whitelist"
+      },
+      {
+        "name": "push_whitelist_usernames",
+        "type": "string",
+        "required": false,
+        "desc": "Usernames allowed to push directly (comma-separated)"
+      },
+      {
+        "name": "push_whitelist_teams",
+        "type": "string",
+        "required": false,
+        "desc": "Teams allowed to push directly (comma-separated)"
+      },
+      {
+        "name": "push_whitelist_deploy_keys",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow deploy keys to push directly"
+      },
+      {
+        "name": "enable_merge_whitelist",
+        "type": "boolean",
+        "required": false,
+        "desc": "Restrict merging to the merge whitelist"
+      },
+      {
+        "name": "merge_whitelist_usernames",
+        "type": "string",
+        "required": false,
+        "desc": "Usernames allowed to merge (comma-separated)"
+      },
+      {
+        "name": "merge_whitelist_teams",
+        "type": "string",
+        "required": false,
+        "desc": "Teams allowed to merge (comma-separated)"
+      },
+      {
+        "name": "enable_status_check",
+        "type": "boolean",
+        "required": false,
+        "desc": "Require status checks to pass before merging"
+      },
+      {
+        "name": "status_check_contexts",
+        "type": "string",
+        "required": false,
+        "desc": "Required status check contexts (comma-separated)"
+      },
+      {
+        "name": "required_approvals",
+        "type": "number",
+        "required": false,
+        "desc": "Minimum number of approving reviews required"
+      },
+      {
+        "name": "enable_approvals_whitelist",
+        "type": "boolean",
+        "required": false,
+        "desc": "Restrict qualifying approvals to the approvals whitelist"
+      },
+      {
+        "name": "approvals_whitelist_username",
+        "type": "string",
+        "required": false,
+        "desc": "Usernames whose approvals count (comma-separated)"
+      },
+      {
+        "name": "approvals_whitelist_teams",
+        "type": "string",
+        "required": false,
+        "desc": "Teams whose approvals count (comma-separated)"
+      },
+      {
+        "name": "block_on_rejected_reviews",
+        "type": "boolean",
+        "required": false,
+        "desc": "Block merging when there are pending rejected reviews"
+      },
+      {
+        "name": "block_on_official_review_requests",
+        "type": "boolean",
+        "required": false,
+        "desc": "Block merging when there are pending official review requests"
+      },
+      {
+        "name": "block_on_outdated_branch",
+        "type": "boolean",
+        "required": false,
+        "desc": "Block merging when the head branch is outdated"
+      },
+      {
+        "name": "dismiss_stale_approvals",
+        "type": "boolean",
+        "required": false,
+        "desc": "Dismiss approvals when new commits are pushed"
+      },
+      {
+        "name": "require_signed_commits",
+        "type": "boolean",
+        "required": false,
+        "desc": "Require commits to be signed"
+      },
+      {
+        "name": "protected_file_patterns",
+        "type": "string",
+        "required": false,
+        "desc": "Glob patterns of files that cannot be changed directly (semicolon-separated)"
+      },
+      {
+        "name": "unprotected_file_patterns",
+        "type": "string",
+        "required": false,
+        "desc": "Glob patterns of files exempt from protection (semicolon-separated)"
+      }
+    ]
+  },
+  {
+    "name": "update_branch_protection",
+    "group": "protection",
+    "description": "Update a branch protection rule",
+    "method": "PATCH",
+    "destructive": false,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": true,
+        "desc": "Branch protection rule name (glob pattern)"
+      },
+      {
+        "name": "enable_push",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow whitelisted users/teams to push directly"
+      },
+      {
+        "name": "enable_push_whitelist",
+        "type": "boolean",
+        "required": false,
+        "desc": "Restrict direct pushes to the push whitelist"
+      },
+      {
+        "name": "push_whitelist_usernames",
+        "type": "string",
+        "required": false,
+        "desc": "Usernames allowed to push directly (comma-separated)"
+      },
+      {
+        "name": "push_whitelist_teams",
+        "type": "string",
+        "required": false,
+        "desc": "Teams allowed to push directly (comma-separated)"
+      },
+      {
+        "name": "push_whitelist_deploy_keys",
+        "type": "boolean",
+        "required": false,
+        "desc": "Allow deploy keys to push directly"
+      },
+      {
+        "name": "enable_merge_whitelist",
+        "type": "boolean",
+        "required": false,
+        "desc": "Restrict merging to the merge whitelist"
+      },
+      {
+        "name": "merge_whitelist_usernames",
+        "type": "string",
+        "required": false,
+        "desc": "Usernames allowed to merge (comma-separated)"
+      },
+      {
+        "name": "merge_whitelist_teams",
+        "type": "string",
+        "required": false,
+        "desc": "Teams allowed to merge (comma-separated)"
+      },
+      {
+        "name": "enable_status_check",
+        "type": "boolean",
+        "required": false,
+        "desc": "Require status checks to pass before merging"
+      },
+      {
+        "name": "status_check_contexts",
+        "type": "string",
+        "required": false,
+        "desc": "Required status check contexts (comma-separated)"
+      },
+      {
+        "name": "required_approvals",
+        "type": "number",
+        "required": false,
+        "desc": "Minimum number of approving reviews required"
+      },
+      {
+        "name": "enable_approvals_whitelist",
+        "type": "boolean",
+        "required": false,
+        "desc": "Restrict qualifying approvals to the approvals whitelist"
+      },
+      {
+        "name": "approvals_whitelist_username",
+        "type": "string",
+        "required": false,
+        "desc": "Usernames whose approvals count (comma-separated)"
+      },
+      {
+        "name": "approvals_whitelist_teams",
+        "type": "string",
+        "required": false,
+        "desc": "Teams whose approvals count (comma-separated)"
+      },
+      {
+        "name": "block_on_rejected_reviews",
+        "type": "boolean",
+        "required": false,
+        "desc": "Block merging when there are pending rejected reviews"
+      },
+      {
+        "name": "block_on_official_review_requests",
+        "type": "boolean",
+        "required": false,
+        "desc": "Block merging when there are pending official review requests"
+      },
+      {
+        "name": "block_on_outdated_branch",
+        "type": "boolean",
+        "required": false,
+        "desc": "Block merging when the head branch is outdated"
+      },
+      {
+        "name": "dismiss_stale_approvals",
+        "type": "boolean",
+        "required": false,
+        "desc": "Dismiss approvals when new commits are pushed"
+      },
+      {
+        "name": "require_signed_commits",
+        "type": "boolean",
+        "required": false,
+        "desc": "Require commits to be signed"
+      },
+      {
+        "name": "protected_file_patterns",
+        "type": "string",
+        "required": false,
+        "desc": "Glob patterns of files that cannot be changed directly (semicolon-separated)"
+      },
+      {
+        "name": "unprotected_file_patterns",
+        "type": "string",
+        "required": false,
+        "desc": "Glob patterns of files exempt from protection (semicolon-separated)"
+      }
+    ]
+  },
+  {
+    "name": "delete_branch_protection",
+    "group": "protection",
+    "description": "Delete a branch protection rule",
+    "method": "DELETE",
+    "destructive": true,
+    "read_only": false,
+    "params": [
+      {
+        "name": "owner",
+        "type": "string",
+        "required": true,
+        "desc": "Repository owner"
+      },
+      {
+        "name": "repo",
+        "type": "string",
+        "required": true,
+        "desc": "Repository name"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": true,
+        "desc": "Branch protection rule name (glob pattern)"
       }
     ]
   }

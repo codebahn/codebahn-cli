@@ -9,5 +9,7 @@ func buildRegistry() []ToolDef {
 	all = append(all, searchTools()...)
 	all = append(all, actionsTools()...)
 	all = append(all, releaseTools()...)
+	all = append(all, webhookTools()...)
+	all = append(all, protectionTools()...)
 	return all
 }

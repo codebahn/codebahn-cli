@@ -9,8 +9,8 @@ import (
 )
 
 func TestAllCount(t *testing.T) {
-	if got := len(All); got != 85 {
-		t.Errorf("len(All) = %d, want 85", got)
+	if got := len(All); got != 102 {
+		t.Errorf("len(All) = %d, want 102", got)
 	}
 }
 
@@ -128,6 +128,82 @@ func TestReleaseTools(t *testing.T) {
 		{"list_tags", "release", "list-tags", "GET", "/repos/{{.Owner}}/{{.Repo}}/tags"},
 		{"create_tag", "release", "create-tag", "POST", "/repos/{{.Owner}}/{{.Repo}}/tags"},
 		{"delete_tag", "release", "delete-tag", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/tags/{{.Tag}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+}
+
+func TestWebhookTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_hooks", "webhook", "list", "GET", "/repos/{{.Owner}}/{{.Repo}}/hooks"},
+		{"get_hook", "webhook", "get", "GET", "/repos/{{.Owner}}/{{.Repo}}/hooks/{{.ID}}"},
+		{"create_hook", "webhook", "create", "POST", "/repos/{{.Owner}}/{{.Repo}}/hooks"},
+		{"update_hook", "webhook", "update", "PATCH", "/repos/{{.Owner}}/{{.Repo}}/hooks/{{.ID}}"},
+		{"delete_hook", "webhook", "delete", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/hooks/{{.ID}}"},
+		{"test_hook", "webhook", "test", "POST", "/repos/{{.Owner}}/{{.Repo}}/hooks/{{.ID}}/tests"},
+		{"list_org_hooks", "webhook", "list-org", "GET", "/orgs/{{.Owner}}/hooks"},
+		{"get_org_hook", "webhook", "get-org", "GET", "/orgs/{{.Owner}}/hooks/{{.ID}}"},
+		{"create_org_hook", "webhook", "create-org", "POST", "/orgs/{{.Owner}}/hooks"},
+		{"update_org_hook", "webhook", "update-org", "PATCH", "/orgs/{{.Owner}}/hooks/{{.ID}}"},
+		{"delete_org_hook", "webhook", "delete-org", "DELETE", "/orgs/{{.Owner}}/hooks/{{.ID}}"},
+	}
+	for _, tc := range cases {
+		td := ByName(tc.name)
+		if td.Group != tc.group {
+			t.Errorf("%s: Group = %q, want %q", tc.name, td.Group, tc.group)
+		}
+		if td.CLIName != tc.cliName {
+			t.Errorf("%s: CLIName = %q, want %q", tc.name, td.CLIName, tc.cliName)
+		}
+		if td.Method != tc.method {
+			t.Errorf("%s: Method = %q, want %q", tc.name, td.Method, tc.method)
+		}
+		if td.PathTmpl != tc.pathTmpl {
+			t.Errorf("%s: PathTmpl = %q, want %q", tc.name, td.PathTmpl, tc.pathTmpl)
+		}
+	}
+}
+
+func TestUpdateRepoTool(t *testing.T) {
+	td := ByName("update_repo")
+	if td.Group != "repo" {
+		t.Errorf("update_repo: Group = %q, want %q", td.Group, "repo")
+	}
+	if td.CLIName != "update" {
+		t.Errorf("update_repo: CLIName = %q, want %q", td.CLIName, "update")
+	}
+	if td.Method != "PATCH" {
+		t.Errorf("update_repo: Method = %q, want %q", td.Method, "PATCH")
+	}
+	if td.PathTmpl != "/repos/{{.Owner}}/{{.Repo}}" {
+		t.Errorf("update_repo: PathTmpl = %q, want %q", td.PathTmpl, "/repos/{{.Owner}}/{{.Repo}}")
+	}
+}
+
+func TestProtectionTools(t *testing.T) {
+	cases := []struct {
+		name, group, cliName, method, pathTmpl string
+	}{
+		{"list_branch_protections", "protection", "list", "GET", "/repos/{{.Owner}}/{{.Repo}}/branch_protections"},
+		{"get_branch_protection", "protection", "get", "GET", "/repos/{{.Owner}}/{{.Repo}}/branch_protections/{{.Name}}"},
+		{"create_branch_protection", "protection", "create", "POST", "/repos/{{.Owner}}/{{.Repo}}/branch_protections"},
+		{"update_branch_protection", "protection", "update", "PATCH", "/repos/{{.Owner}}/{{.Repo}}/branch_protections/{{.Name}}"},
+		{"delete_branch_protection", "protection", "delete", "DELETE", "/repos/{{.Owner}}/{{.Repo}}/branch_protections/{{.Name}}"},
 	}
 	for _, tc := range cases {
 		td := ByName(tc.name)
@@ -311,6 +387,9 @@ func TestDestructiveTools(t *testing.T) {
 		"delete_release":            true,
 		"delete_release_attachment": true,
 		"delete_tag":                true,
+		"delete_hook":               true,
+		"delete_org_hook":           true,
+		"delete_branch_protection":  true,
 	}
 	for _, td := range All {
 		if want[td.Name] && !td.Destructive {

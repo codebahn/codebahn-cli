@@ -16,6 +16,7 @@ func NewRepoCmd() *cobra.Command {
 	}
 	cmd.AddCommand(RepoCreateCmd())
 	cmd.AddCommand(RepoListCmd())
+	cmd.AddCommand(RepoUpdateCmd())
 	cmd.AddCommand(RepoCatCmd())
 	cmd.AddCommand(RepoCreateFileCmd())
 	cmd.AddCommand(RepoUpdateFileCmd())
@@ -68,6 +69,132 @@ func RepoListCmd() *cobra.Command {
 	}
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
 	cmd.Flags().IntVar(&args.Limit, "limit", 100, `Page size`)
+	return cmd
+}
+
+func RepoUpdateCmd() *cobra.Command {
+	var args tools.UpdateRepoArgs
+	var _Private bool
+	var _Template bool
+	var _Archived bool
+	var _HasIssues bool
+	var _HasWiki bool
+	var _HasPullRequests bool
+	var _HasProjects bool
+	var _HasReleases bool
+	var _HasPackages bool
+	var _HasActions bool
+	var _IgnoreWhitespaceConflicts bool
+	var _AllowMergeCommits bool
+	var _AllowRebase bool
+	var _AllowRebaseExplicit bool
+	var _AllowRebaseUpdate bool
+	var _AllowSquashMerge bool
+	var _AllowFastForwardOnlyMerge bool
+	var _DefaultDeleteBranchAfterMerge bool
+	var _DefaultAllowMaintainerEdit bool
+	var _EnablePrune bool
+	cmd := &cobra.Command{
+		Use:   "update",
+		Short: `Update repository settings (common subset): name, description, website, default_branch, private, archived, has_issues, has_pull_requests, has_releases, has_packages, has_actions, allow_merge_commits, allow_rebase, allow_squash_merge, default_merge_style, default_delete_branch_after_merge. All fields optional; omitted fields are left unchanged. Accepts the full Forgejo EditRepoOption surface beyond the common subset.`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if cmd.Flags().Changed("private") {
+				args.Private = &_Private
+			}
+			if cmd.Flags().Changed("template") {
+				args.Template = &_Template
+			}
+			if cmd.Flags().Changed("archived") {
+				args.Archived = &_Archived
+			}
+			if cmd.Flags().Changed("has_issues") {
+				args.HasIssues = &_HasIssues
+			}
+			if cmd.Flags().Changed("has_wiki") {
+				args.HasWiki = &_HasWiki
+			}
+			if cmd.Flags().Changed("has_pull_requests") {
+				args.HasPullRequests = &_HasPullRequests
+			}
+			if cmd.Flags().Changed("has_projects") {
+				args.HasProjects = &_HasProjects
+			}
+			if cmd.Flags().Changed("has_releases") {
+				args.HasReleases = &_HasReleases
+			}
+			if cmd.Flags().Changed("has_packages") {
+				args.HasPackages = &_HasPackages
+			}
+			if cmd.Flags().Changed("has_actions") {
+				args.HasActions = &_HasActions
+			}
+			if cmd.Flags().Changed("ignore_whitespace_conflicts") {
+				args.IgnoreWhitespaceConflicts = &_IgnoreWhitespaceConflicts
+			}
+			if cmd.Flags().Changed("allow_merge_commits") {
+				args.AllowMergeCommits = &_AllowMergeCommits
+			}
+			if cmd.Flags().Changed("allow_rebase") {
+				args.AllowRebase = &_AllowRebase
+			}
+			if cmd.Flags().Changed("allow_rebase_explicit") {
+				args.AllowRebaseExplicit = &_AllowRebaseExplicit
+			}
+			if cmd.Flags().Changed("allow_rebase_update") {
+				args.AllowRebaseUpdate = &_AllowRebaseUpdate
+			}
+			if cmd.Flags().Changed("allow_squash_merge") {
+				args.AllowSquashMerge = &_AllowSquashMerge
+			}
+			if cmd.Flags().Changed("allow_fast_forward_only_merge") {
+				args.AllowFastForwardOnlyMerge = &_AllowFastForwardOnlyMerge
+			}
+			if cmd.Flags().Changed("default_delete_branch_after_merge") {
+				args.DefaultDeleteBranchAfterMerge = &_DefaultDeleteBranchAfterMerge
+			}
+			if cmd.Flags().Changed("default_allow_maintainer_edit") {
+				args.DefaultAllowMaintainerEdit = &_DefaultAllowMaintainerEdit
+			}
+			if cmd.Flags().Changed("enable_prune") {
+				args.EnablePrune = &_EnablePrune
+			}
+			td := tools.ByName("update_repo")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.Name, "name", "", `New repository name`)
+	cmd.Flags().StringVar(&args.Description, "description", "", `Description`)
+	cmd.Flags().StringVar(&args.Website, "website", "", `Website URL`)
+	cmd.Flags().StringVar(&args.DefaultBranch, "default_branch", "", `Default branch`)
+	cmd.Flags().StringVar(&args.DefaultMergeStyle, "default_merge_style", "", `Default merge style (merge, rebase, rebase-merge, squash, fast-forward-only)`)
+	cmd.Flags().StringVar(&args.MirrorInterval, "mirror_interval", "", `Mirror sync interval (e.g. 8h, 0 to disable)`)
+	cmd.Flags().StringVar(&args.ExternalTrackerURL, "external_tracker_url", "", `External issue tracker URL`)
+	cmd.Flags().StringVar(&args.ExternalTrackerFormat, "external_tracker_format", "", `External issue tracker URL format`)
+	cmd.Flags().StringVar(&args.ExternalTrackerStyle, "external_tracker_style", "", `External issue tracker numbering style`)
+	cmd.Flags().StringVar(&args.ExternalTrackerRegexpPattern, "external_tracker_regexp_pattern", "", `External issue tracker regexp pattern`)
+	cmd.Flags().StringVar(&args.ExternalWikiURL, "external_wiki_url", "", `External wiki URL`)
+	cmd.Flags().BoolVar(&_Private, "private", false, `Private repo`)
+	cmd.Flags().BoolVar(&_Template, "template", false, `Template repo`)
+	cmd.Flags().BoolVar(&_Archived, "archived", false, `Archived (read-only)`)
+	cmd.Flags().BoolVar(&_HasIssues, "has_issues", false, `Enable issue tracker`)
+	cmd.Flags().BoolVar(&_HasWiki, "has_wiki", false, `Enable wiki`)
+	cmd.Flags().BoolVar(&_HasPullRequests, "has_pull_requests", false, `Enable pull requests`)
+	cmd.Flags().BoolVar(&_HasProjects, "has_projects", false, `Enable projects`)
+	cmd.Flags().BoolVar(&_HasReleases, "has_releases", false, `Enable releases`)
+	cmd.Flags().BoolVar(&_HasPackages, "has_packages", false, `Enable package registry`)
+	cmd.Flags().BoolVar(&_HasActions, "has_actions", false, `Enable Actions CI`)
+	cmd.Flags().BoolVar(&_IgnoreWhitespaceConflicts, "ignore_whitespace_conflicts", false, `Ignore whitespace-only conflicts when merging`)
+	cmd.Flags().BoolVar(&_AllowMergeCommits, "allow_merge_commits", false, `Allow merge commits`)
+	cmd.Flags().BoolVar(&_AllowRebase, "allow_rebase", false, `Allow rebase merging`)
+	cmd.Flags().BoolVar(&_AllowRebaseExplicit, "allow_rebase_explicit", false, `Allow rebase with explicit merge commit`)
+	cmd.Flags().BoolVar(&_AllowRebaseUpdate, "allow_rebase_update", false, `Allow rebase of PR head branch when behind base`)
+	cmd.Flags().BoolVar(&_AllowSquashMerge, "allow_squash_merge", false, `Allow squash merging`)
+	cmd.Flags().BoolVar(&_AllowFastForwardOnlyMerge, "allow_fast_forward_only_merge", false, `Allow fast-forward-only merging`)
+	cmd.Flags().BoolVar(&_DefaultDeleteBranchAfterMerge, "default_delete_branch_after_merge", false, `Delete head branch by default after merge`)
+	cmd.Flags().BoolVar(&_DefaultAllowMaintainerEdit, "default_allow_maintainer_edit", false, `Allow maintainer edits on PRs by default`)
+	cmd.Flags().BoolVar(&_EnablePrune, "enable_prune", false, `Enable automatic pruning of obsolete mirror branches`)
 	return cmd
 }
 
