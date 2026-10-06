@@ -155,6 +155,44 @@ func TestForPointerBoolType(t *testing.T) {
 	}
 }
 
+func TestForEnumTag(t *testing.T) {
+	td := tools.ToolDef{
+		Name: "test_enum",
+		Args: struct {
+			Action string `json:"action" required:"true" desc:"The action" enum:"list,get,create"`
+			Name   string `json:"name" desc:"A name"`
+		}{},
+	}
+	raw := For(td)
+	var schema struct {
+		Properties map[string]map[string]any `json:"properties"`
+	}
+	if err := json.Unmarshal(raw, &schema); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	action := schema.Properties["action"]
+	enumVals, ok := action["enum"]
+	if !ok {
+		t.Fatal("action property should have enum")
+	}
+	vals, ok := enumVals.([]any)
+	if !ok {
+		t.Fatalf("enum should be an array, got %T", enumVals)
+	}
+	want := []string{"list", "get", "create"}
+	if len(vals) != len(want) {
+		t.Fatalf("enum length = %d, want %d", len(vals), len(want))
+	}
+	for i, v := range vals {
+		if v != want[i] {
+			t.Errorf("enum[%d] = %v, want %s", i, v, want[i])
+		}
+	}
+	if _, ok := schema.Properties["name"]["enum"]; ok {
+		t.Error("name property should not have enum")
+	}
+}
+
 func TestForAllTools(t *testing.T) {
 	for _, td := range tools.All {
 		raw := For(td)

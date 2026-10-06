@@ -4,15 +4,25 @@ import (
 	"encoding/json"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/codebahn/codebahn-cli/tools"
 )
+
+// ForArgs generates a JSON Schema from an arbitrary args struct.
+func ForArgs(args any) json.RawMessage {
+	return forStruct(args)
+}
 
 // For generates a JSON Schema object from a ToolDef's Args struct.
 // The schema is a flat {"type":"object","properties":{...},"required":[...]}
 // derived from the struct's field tags.
 func For(td tools.ToolDef) json.RawMessage {
-	rt := reflect.TypeOf(td.Args)
+	return forStruct(td.Args)
+}
+
+func forStruct(args any) json.RawMessage {
+	rt := reflect.TypeOf(args)
 	if rt.Kind() == reflect.Ptr {
 		rt = rt.Elem()
 	}
@@ -22,7 +32,7 @@ func For(td tools.ToolDef) json.RawMessage {
 
 	for i := range rt.NumField() {
 		f := rt.Field(i)
-		name := f.Tag.Get("json")
+		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
 		if name == "" || name == "-" {
 			continue
 		}
@@ -34,6 +44,15 @@ func For(td tools.ToolDef) json.RawMessage {
 
 		if def := f.Tag.Get("default"); def != "" {
 			prop["default"] = coerceDefault(def, f.Type)
+		}
+
+		if enum := f.Tag.Get("enum"); enum != "" {
+			vals := strings.Split(enum, ",")
+			enumVals := make([]any, len(vals))
+			for i, v := range vals {
+				enumVals[i] = v
+			}
+			prop["enum"] = enumVals
 		}
 
 		properties[name] = prop
