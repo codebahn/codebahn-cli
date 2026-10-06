@@ -86,6 +86,7 @@ type MCPReposArgs struct {
 	Repo          string `json:"repo"          desc:"Repository name. Required for update"`
 	Name          string `json:"name"          desc:"New repository name. Required for create"`
 	Description   string `json:"description"   desc:"Repository description"`
+	Website       string `json:"website"       desc:"Website URL. For update"`
 	Private       *bool  `json:"private"       desc:"Whether repository is private"`
 	DefaultBranch string `json:"default_branch" desc:"Default branch name"`
 	AutoInit      bool   `json:"auto_init"     desc:"Initialize with README"`
@@ -239,7 +240,7 @@ type MCPPullRequestsArgs struct {
 	MergeWhenChecksSucceed bool   `json:"merge_when_checks_succeed"  desc:"Schedule merge for when all checks pass"`
 	Assignee               string `json:"assignee"                   desc:"Assignee username. For update"`
 	Milestone              string `json:"milestone"                  desc:"Milestone ID. For list/update"`
-	FilePath               string `json:"file_path"                  desc:"Return only this file's diff. For diff"`
+	FilePath               string `json:"path"                       desc:"Return only this file's diff. For diff"`
 	Sort                   string `json:"sort"                       desc:"Sort order. For list"`
 	Labels                 string `json:"labels"                     desc:"Label IDs filter. For list"`
 	Page                   int    `json:"page"                       desc:"Page number" default:"1"`
@@ -272,6 +273,7 @@ type MCPCIArgs struct {
 	Inputs     string `json:"inputs"      desc:"Workflow inputs as JSON object. For dispatch"`
 	Job        string `json:"job"         desc:"Filter logs to this job name. For get_logs"`
 	TailLines  int    `json:"tail_lines"  desc:"Return only the last N lines of output (max 500). For get_logs"`
+	RunNumber  int    `json:"run_number"  desc:"Filter by run number. For list_runs"`
 	Status     string `json:"status"      desc:"Filter by status (waiting, running, success, failure). For list_runs"`
 	Event      string `json:"event"       desc:"Filter by trigger event (push, pull_request, etc.). For list_runs"`
 	HeadSHA    string `json:"head_sha"    desc:"Filter by head commit SHA. For list_runs"`
