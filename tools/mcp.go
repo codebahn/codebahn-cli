@@ -185,7 +185,7 @@ type MCPIssuesArgs struct {
 	Index     int    `json:"index"     desc:"Issue index. Required for get/update"`
 	Title     string `json:"title"     desc:"Issue title. Required for create"`
 	Body      string `json:"body"      desc:"Issue content body"`
-	State     string `json:"state"     desc:"Issue state. For list: filter (open/closed/all, default open). For update: set state (open/closed); omit to leave unchanged"`
+	State     string `json:"state"     desc:"Issue state. For list: filter (open/closed/all, default open). For set_state: required (open/closed). For update: omit to leave unchanged"`
 	Assignee  string `json:"assignee"  desc:"Assignee username. For update"`
 	Assignees string `json:"assignees" desc:"Comma-separated assignee usernames. For update"`
 	Milestone string `json:"milestone" desc:"Milestone ID. For list/update"`
