@@ -321,7 +321,7 @@
     "group": "repo",
     "description": "Convert a mirror repository to a normal repository. Irreversible. Returns 422 if the repository is not a mirror.",
     "method": "POST",
-    "destructive": false,
+    "destructive": true,
     "read_only": false,
     "params": [
       {

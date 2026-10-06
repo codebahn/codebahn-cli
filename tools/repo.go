@@ -211,6 +211,7 @@ func repoTools() []ToolDef {
 			Method:      "POST",
 			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/convert",
 			Args:        ConvertRepoArgs{},
+			Destructive: true,
 		},
 		{
 			Name:        "get_file_content",
