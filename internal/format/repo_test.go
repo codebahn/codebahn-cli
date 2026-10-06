@@ -201,6 +201,28 @@ func TestDeleteBranch(t *testing.T) {
 	}
 }
 
+func TestConvertRepo(t *testing.T) {
+	raw := mustJSON(t, map[string]any{
+		"full_name": "acme/web",
+		"html_url":  "https://codebahn.net/acme/web",
+		"mirror":    false,
+	})
+	args := &tools.ConvertRepoArgs{Owner: "acme", Repo: "web"}
+
+	var buf bytes.Buffer
+	output.SetNoColor(true)
+	defer output.SetNoColor(false)
+	p := output.NewPrinter(&buf, false)
+	f, ok := Get("convert_repo")
+	if !ok {
+		t.Fatal("formatter not registered")
+	}
+	if err := f(raw, args, p); err != nil {
+		t.Fatal(err)
+	}
+	assertContains(t, buf.String(), "https://codebahn.net/acme/web")
+}
+
 func TestHumanSize(t *testing.T) {
 	tests := []struct {
 		bytes int64

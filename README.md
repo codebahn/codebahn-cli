@@ -120,7 +120,7 @@ Codebahn has a built-in, hosted MCP server that connects AI coding agents to you
 https://codebahn.net/mcp
 ```
 
-The `tools/` package in this repo is the shared source of truth for both this CLI and the MCP endpoint. 102 tools, one set of types, zero drift.
+The `tools/` package in this repo is the shared source of truth for both this CLI and the MCP endpoint. 103 tools, one set of types, zero drift.
 
 The server authenticates over OAuth, discovered via `/.well-known/oauth-protected-resource`. Add the URL to your MCP client and approve the OAuth prompt in your browser on first use.
 

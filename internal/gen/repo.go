@@ -17,6 +17,7 @@ func NewRepoCmd() *cobra.Command {
 	cmd.AddCommand(RepoCreateCmd())
 	cmd.AddCommand(RepoListCmd())
 	cmd.AddCommand(RepoUpdateCmd())
+	cmd.AddCommand(RepoConvertCmd())
 	cmd.AddCommand(RepoCatCmd())
 	cmd.AddCommand(RepoCreateFileCmd())
 	cmd.AddCommand(RepoUpdateFileCmd())
@@ -195,6 +196,21 @@ func RepoUpdateCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&_DefaultDeleteBranchAfterMerge, "default_delete_branch_after_merge", false, `Delete head branch by default after merge`)
 	cmd.Flags().BoolVar(&_DefaultAllowMaintainerEdit, "default_allow_maintainer_edit", false, `Allow maintainer edits on PRs by default`)
 	cmd.Flags().BoolVar(&_EnablePrune, "enable_prune", false, `Enable automatic pruning of obsolete mirror branches`)
+	return cmd
+}
+
+func RepoConvertCmd() *cobra.Command {
+	var args tools.ConvertRepoArgs
+	cmd := &cobra.Command{
+		Use:   "convert",
+		Short: `Convert a mirror repository to a normal repository. Irreversible. Returns 422 if the repository is not a mirror.`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			td := tools.ByName("convert_repo")
+			return ExecuteAndPrint(cmd, td, &args)
+		},
+	}
+	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
 	return cmd
 }
 
