@@ -71,13 +71,13 @@ func buildMCPRegistry() []MCPTool {
 type MCPUserInfoArgs struct{}
 
 type MCPSearchArgs struct {
+	Action   string `json:"action"   required:"true" desc:"Search scope to query" enum:"all,code,repos" default:"all"`
 	Keyword  string `json:"keyword"  required:"true" desc:"Search query"`
-	Scope    string `json:"scope"    desc:"Search scope: all (default), code, or repos" enum:"all,code,repos" default:"all"`
-	Language string `json:"language" desc:"Filter by programming language. Only for scope=code"`
-	Filename string `json:"filename" desc:"Filter by filename or path. Only for scope=code"`
-	Mode     string `json:"mode"     desc:"Search mode: exact, union, fuzzy. Only for scope=code" default:"exact"`
-	Page     int    `json:"page"     desc:"Page number (1-based). Ignored for scope=all" default:"1"`
-	Limit    int    `json:"limit"    desc:"Page size. Ignored for scope=all" default:"30"`
+	Language string `json:"language" desc:"Filter by programming language. Only for action=code"`
+	Filename string `json:"filename" desc:"Filter by filename or path. Only for action=code"`
+	Mode     string `json:"mode"     desc:"Search mode: exact, union, fuzzy. Only for action=code" default:"exact"`
+	Page     int    `json:"page"     desc:"Page number (1-based). Ignored for action=all" default:"1"`
+	Limit    int    `json:"limit"    desc:"Page size. Ignored for action=all" default:"30"`
 }
 
 type MCPReposArgs struct {
@@ -275,7 +275,7 @@ type MCPCIArgs struct {
 }
 
 type MCPCIConfigArgs struct {
-	Action string `json:"action" required:"true" desc:"Operation to perform" enum:"list,get,set,delete"`
+	Action string `json:"action" required:"true" desc:"Operation to perform. Note: get is only available for variables (secrets are write-only)" enum:"list,get,set,delete"`
 	Type   string `json:"type"   required:"true" desc:"Config type" enum:"variable,secret"`
 	Scope  string `json:"scope"  required:"true" desc:"Scope level" enum:"repo,org"`
 	Owner  string `json:"owner"  required:"true" desc:"Repository owner or organization name"`
@@ -287,7 +287,7 @@ type MCPCIConfigArgs struct {
 }
 
 type MCPWebhooksArgs struct {
-	Action              string `json:"action"               required:"true" desc:"Operation to perform" enum:"list,get,create,update,delete,test"`
+	Action              string `json:"action"               required:"true" desc:"Operation to perform. Note: test is only available for repo-scope webhooks" enum:"list,get,create,update,delete,test"`
 	Scope               string `json:"scope"                required:"true" desc:"Scope level" enum:"repo,org"`
 	Owner               string `json:"owner"                required:"true" desc:"Repository owner or organization name"`
 	Repo                string `json:"repo"                 desc:"Repository name. Required when scope=repo"`
@@ -338,7 +338,7 @@ func mcpUserInfo() MCPTool {
 func mcpSearch() MCPTool {
 	return MCPTool{
 		Name:        "search",
-		Description: "Search across repositories, code, issues, users, and organizations. Use scope to narrow results: 'all' returns hit counts across types, 'code' and 'repos' return paginated results with type-specific filters.",
+		Description: "Search across repositories, code, issues, users, and organizations. Action 'all' returns hit counts across types; 'code' and 'repos' return paginated results with type-specific filters.",
 		Args:        MCPSearchArgs{},
 		Actions: []MCPAction{
 			{Action: "all", ToolName: "search"},
