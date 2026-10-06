@@ -179,13 +179,13 @@ type MCPCommitsArgs struct {
 }
 
 type MCPIssuesArgs struct {
-	Action    string `json:"action"    required:"true" desc:"Operation to perform" enum:"list,get,create,update,list_milestones"`
+	Action    string `json:"action"    required:"true" desc:"Operation to perform" enum:"list,get,create,update,set_state,list_milestones"`
 	Owner     string `json:"owner"     required:"true" desc:"Repository owner"`
 	Repo      string `json:"repo"      required:"true" desc:"Repository name"`
 	Index     int    `json:"index"     desc:"Issue index. Required for get/update"`
 	Title     string `json:"title"     desc:"Issue title. Required for create"`
 	Body      string `json:"body"      desc:"Issue content body"`
-	State     string `json:"state"     desc:"Issue state. For list: filter (open/closed/all). For update: change state (open/closed)" default:"open"`
+	State     string `json:"state"     desc:"Issue state. For list: filter (open/closed/all, default open). For update: set state (open/closed); omit to leave unchanged"`
 	Assignee  string `json:"assignee"  desc:"Assignee username. For update"`
 	Assignees string `json:"assignees" desc:"Comma-separated assignee usernames. For update"`
 	Milestone string `json:"milestone" desc:"Milestone ID. For list/update"`
@@ -411,13 +411,14 @@ func mcpCommits() MCPTool {
 func mcpIssues() MCPTool {
 	return MCPTool{
 		Name:        "issues",
-		Description: "Manage issues and milestones. Use 'update' with the state field to open or close an issue. Use 'list_milestones' to see available milestones for filtering or assignment.",
+		Description: "Manage issues and milestones. Use 'set_state' to open or close an issue. Use 'list_milestones' to see available milestones for filtering or assignment.",
 		Args:        MCPIssuesArgs{},
 		Actions: []MCPAction{
 			{Action: "list", ToolName: "list_repo_issues"},
 			{Action: "get", ToolName: "get_issue_by_index"},
 			{Action: "create", ToolName: "create_issue"},
 			{Action: "update", ToolName: "update_issue"},
+			{Action: "set_state", ToolName: "issue_state_change"},
 			{Action: "list_milestones", ToolName: "list_repo_milestones"},
 		},
 	}

@@ -32,7 +32,7 @@ func forStruct(args any) json.RawMessage {
 
 	for i := range rt.NumField() {
 		f := rt.Field(i)
-		name := f.Tag.Get("json")
+		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
 		if name == "" || name == "-" {
 			continue
 		}

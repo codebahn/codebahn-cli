@@ -14,7 +14,6 @@ func TestMCPRegistryCoversAllTools(t *testing.T) {
 
 	skip := map[string]bool{
 		"convert_repo":        true, // CLI-only
-		"issue_state_change":  true, // absorbed into issues update (state param)
 		"update_variable":     true, // absorbed into ci_config set (upsert)
 		"update_org_variable": true, // absorbed into ci_config set (upsert)
 	}
