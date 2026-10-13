@@ -297,7 +297,17 @@ func (c *Client) Execute(ctx context.Context, td tools.ToolDef, args any) (json.
 	inPath := pathFields(td.PathTmpl)
 
 	switch td.Method {
-	case "GET", "DELETE":
+	case "GET":
+		q := buildQueryParams(args, inPath)
+		if encoded := q.Encode(); encoded != "" {
+			path += "?" + encoded
+		}
+		return c.doRaw(ctx, td.Method, path, nil)
+	case "DELETE":
+		body := buildBody(args, inPath)
+		if body != nil {
+			return c.doRaw(ctx, td.Method, path, body)
+		}
 		q := buildQueryParams(args, inPath)
 		if encoded := q.Encode(); encoded != "" {
 			path += "?" + encoded
@@ -382,13 +392,18 @@ func buildBody(args any, inPath map[string]bool) any {
 		if inPath[f.Name] || !apiField(f) {
 			continue
 		}
-		name := f.Tag.Get("json")
-		if name == "" || name == "-" {
+		jsonName := f.Tag.Get("json")
+		if jsonName == "" || jsonName == "-" {
 			continue
 		}
 		v := rv.Field(i)
 		if v.IsZero() {
 			continue
+		}
+
+		name := jsonName
+		if override := f.Tag.Get("apiname"); override != "" {
+			name = override
 		}
 
 		val := v.Interface()
@@ -397,6 +412,13 @@ func buildBody(args any, inPath map[string]bool) any {
 		case "csv":
 			if s, ok := val.(string); ok {
 				val = tools.SplitCSV(s)
+			}
+		case "json":
+			if s, ok := val.(string); ok {
+				var raw json.RawMessage
+				if json.Unmarshal([]byte(s), &raw) == nil {
+					val = raw
+				}
 			}
 		case "nest":
 			nest := f.Tag.Get("nest")

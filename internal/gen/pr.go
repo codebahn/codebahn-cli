@@ -112,7 +112,7 @@ func PRUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Body, "body", "", `Content body`)
 	cmd.Flags().StringVar(&args.Base, "base", "", `Base branch`)
 	cmd.Flags().StringVar(&args.Assignee, "assignee", "", `Assignee username`)
-	cmd.Flags().StringVar(&args.Milestone, "milestone", "", `Milestone ID`)
+	cmd.Flags().IntVar(&args.Milestone, "milestone", 0, `Milestone ID`)
 	return cmd
 }
 

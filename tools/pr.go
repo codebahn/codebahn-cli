@@ -38,7 +38,7 @@ type UpdatePullRequestArgs struct {
 	Body      string `json:"body"      desc:"Content body"`
 	Base      string `json:"base"      desc:"Base branch"`
 	Assignee  string `json:"assignee"  desc:"Assignee username"`
-	Milestone string `json:"milestone" desc:"Milestone ID"`
+	Milestone int    `json:"milestone" desc:"Milestone ID"`
 }
 
 type ListPullReviewsArgs struct {
@@ -67,9 +67,9 @@ type MergePullRequestArgs struct {
 	Owner                  string `json:"owner"                     required:"true" desc:"Repository owner"`
 	Repo                   string `json:"repo"                      required:"true" desc:"Repository name"`
 	Index                  int    `json:"index"                     required:"true" desc:"PR index"`
-	Style                  string `json:"style"                     required:"true" desc:"Merge style (merge, rebase, rebase-merge, squash)"`
-	Title                  string `json:"title"                     desc:"Merge commit title"`
-	Message                string `json:"message"                   desc:"Merge commit message"`
+	Style                  string `json:"style"                     required:"true" desc:"Merge style (merge, rebase, rebase-merge, squash)" apiname:"Do"`
+	Title                  string `json:"title"                     desc:"Merge commit title"   apiname:"MergeTitleField"`
+	Message                string `json:"message"                   desc:"Merge commit message" apiname:"MergeMessageField"`
 	DeleteBranchAfterMerge bool   `json:"delete_branch_after_merge" desc:"Delete head branch after merge"`
 	ForceMerge             bool   `json:"force_merge"               desc:"Force merge even if checks have not passed"`
 	MergeWhenChecksSucceed bool   `json:"merge_when_checks_succeed" desc:"Schedule merge for when all checks succeed"`
@@ -102,9 +102,9 @@ type CreatePullReviewArgs struct {
 	Owner    string `json:"owner"    required:"true" desc:"Repository owner"`
 	Repo     string `json:"repo"     required:"true" desc:"Repository name"`
 	Index    int    `json:"index"    required:"true" desc:"PR index"`
-	State    string `json:"state"    required:"true" desc:"Review state (APPROVED, REQUEST_CHANGES, COMMENT)"`
+	State    string `json:"state"    required:"true" desc:"Review state (APPROVED, REQUEST_CHANGES, COMMENT)" apiname:"event"`
 	Body     string `json:"body"     desc:"Review body"`
-	Comments string `json:"comments" desc:"Inline comments as JSON array, e.g. [{\"path\":\"file.go\",\"body\":\"Fix this\",\"new_position\":10}]"`
+	Comments string `json:"comments" desc:"Inline comments as JSON array, e.g. [{\"path\":\"file.go\",\"body\":\"Fix this\",\"new_position\":10}]" body:"json"`
 }
 
 type SubmitPullReviewArgs struct {
@@ -112,7 +112,7 @@ type SubmitPullReviewArgs struct {
 	Repo  string `json:"repo"  required:"true" desc:"Repository name"`
 	Index int    `json:"index" required:"true" desc:"PR index"`
 	ID    int    `json:"id"    required:"true" desc:"Review ID"`
-	State string `json:"state" required:"true" desc:"Review state (APPROVED, REQUEST_CHANGES, COMMENT)"`
+	State string `json:"state" required:"true" desc:"Review state (APPROVED, REQUEST_CHANGES, COMMENT)" apiname:"event"`
 	Body  string `json:"body"  desc:"Review body"`
 }
 
@@ -135,16 +135,16 @@ type CreateReviewRequestsArgs struct {
 	Owner         string `json:"owner"          required:"true" desc:"Repository owner"`
 	Repo          string `json:"repo"           required:"true" desc:"Repository name"`
 	Index         int    `json:"index"          required:"true" desc:"PR index"`
-	Reviewers     string `json:"reviewers"      desc:"Reviewer usernames (comma-separated)"`
-	TeamReviewers string `json:"team_reviewers" desc:"Team reviewer names (comma-separated)"`
+	Reviewers     string `json:"reviewers"      desc:"Reviewer usernames (comma-separated)" body:"csv"`
+	TeamReviewers string `json:"team_reviewers" desc:"Team reviewer names (comma-separated)" body:"csv"`
 }
 
 type DeleteReviewRequestsArgs struct {
 	Owner         string `json:"owner"          required:"true" desc:"Repository owner"`
 	Repo          string `json:"repo"           required:"true" desc:"Repository name"`
 	Index         int    `json:"index"          required:"true" desc:"PR index"`
-	Reviewers     string `json:"reviewers"      desc:"Reviewer usernames (comma-separated)"`
-	TeamReviewers string `json:"team_reviewers" desc:"Team reviewer names (comma-separated)"`
+	Reviewers     string `json:"reviewers"      desc:"Reviewer usernames (comma-separated)" body:"csv"`
+	TeamReviewers string `json:"team_reviewers" desc:"Team reviewer names (comma-separated)" body:"csv"`
 }
 
 func prTools() []ToolDef {

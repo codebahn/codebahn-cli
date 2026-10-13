@@ -463,6 +463,111 @@ func TestBuildBodySkipsAPIDash(t *testing.T) {
 	}
 }
 
+func TestBuildBodyAPINameTag(t *testing.T) {
+	type args struct {
+		Style   string `json:"style"   apiname:"Do"`
+		Title   string `json:"title"   apiname:"MergeTitleField"`
+		Message string `json:"message" apiname:"MergeMessageField"`
+		Force   bool   `json:"force_merge"`
+	}
+	body := buildBody(args{Style: "squash", Title: "feat: X", Message: "done", Force: true}, nil)
+	m := body.(map[string]any)
+
+	if _, ok := m["style"]; ok {
+		t.Error("json name 'style' should not appear when apiname is set")
+	}
+	if m["Do"] != "squash" {
+		t.Errorf("Do = %v, want squash", m["Do"])
+	}
+	if m["MergeTitleField"] != "feat: X" {
+		t.Errorf("MergeTitleField = %v, want feat: X", m["MergeTitleField"])
+	}
+	if m["MergeMessageField"] != "done" {
+		t.Errorf("MergeMessageField = %v, want done", m["MergeMessageField"])
+	}
+	if m["force_merge"] != true {
+		t.Errorf("force_merge = %v, want true", m["force_merge"])
+	}
+}
+
+func TestBuildBodyJSONTag(t *testing.T) {
+	type args struct {
+		Ref    string `json:"ref"`
+		Inputs string `json:"inputs" body:"json"`
+	}
+	body := buildBody(args{Ref: "main", Inputs: `{"key":"value"}`}, nil)
+	m := body.(map[string]any)
+
+	inputs, ok := m["inputs"].(json.RawMessage)
+	if !ok {
+		t.Fatalf("inputs type = %T, want json.RawMessage", m["inputs"])
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal(inputs, &parsed); err != nil {
+		t.Fatal(err)
+	}
+	if parsed["key"] != "value" {
+		t.Errorf("inputs.key = %v, want value", parsed["key"])
+	}
+}
+
+func TestBuildBodyJSONTagInvalidFallsBack(t *testing.T) {
+	type args struct {
+		Data string `json:"data" body:"json"`
+	}
+	body := buildBody(args{Data: "not-json"}, nil)
+	m := body.(map[string]any)
+
+	if m["data"] != "not-json" {
+		t.Errorf("invalid JSON should fall back to string, got %v (%T)", m["data"], m["data"])
+	}
+}
+
+func TestExecuteDELETEWithBody(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "DELETE" {
+			t.Errorf("method = %s, want DELETE", r.Method)
+		}
+		body, _ := io.ReadAll(r.Body)
+		var m map[string]any
+		if err := json.Unmarshal(body, &m); err != nil {
+			t.Fatalf("DELETE body should be valid JSON: %v", err)
+		}
+		reviewers, ok := m["reviewers"].([]any)
+		if !ok {
+			t.Fatalf("reviewers type = %T, want []any", m["reviewers"])
+		}
+		if len(reviewers) != 2 {
+			t.Errorf("reviewers len = %d, want 2", len(reviewers))
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	type deleteArgs struct {
+		Owner         string `json:"owner"          required:"true"`
+		Repo          string `json:"repo"           required:"true"`
+		Index         int    `json:"index"          required:"true"`
+		Reviewers     string `json:"reviewers"      body:"csv"`
+		TeamReviewers string `json:"team_reviewers" body:"csv"`
+	}
+
+	c := New(srv.URL, "tok")
+	td := tools.ToolDef{
+		Name:     "delete_review_requests",
+		Method:   "DELETE",
+		PathTmpl: "/repos/{{.Owner}}/{{.Repo}}/pulls/{{.Index}}/requested_reviewers",
+		Args:     deleteArgs{},
+	}
+	_, err := c.Execute(context.Background(), td, deleteArgs{
+		Owner: "acme", Repo: "test", Index: 5,
+		Reviewers: "alice,bob",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestBuildBodyCSVTag(t *testing.T) {
 	type args struct {
 		Owner  string `json:"owner"`

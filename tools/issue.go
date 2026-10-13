@@ -42,22 +42,22 @@ type UpdateIssueArgs struct {
 	Title     string `json:"title"     desc:"Title"`
 	Body      string `json:"body"      desc:"Content body"`
 	Assignee  string `json:"assignee"  desc:"Assignee username (convenience for a single user; equivalent to a one-element 'assignees')"`
-	Assignees string `json:"assignees" desc:"Assignee usernames (comma-separated). Overrides 'assignee' if both are set. Pass an empty string to clear all assignees."`
-	Milestone string `json:"milestone" desc:"Milestone ID"`
+	Assignees string `json:"assignees" desc:"Assignee usernames (comma-separated). Overrides 'assignee' if both are set. Pass an empty string to clear all assignees." body:"csv"`
+	Milestone int    `json:"milestone" desc:"Milestone ID"`
 }
 
 type AddIssueLabelsArgs struct {
 	Owner  string `json:"owner"  required:"true" desc:"Repository owner"`
 	Repo   string `json:"repo"   required:"true" desc:"Repository name"`
 	Index  int    `json:"index"  required:"true" desc:"Issue index"`
-	Labels string `json:"labels" required:"true" desc:"Labels to add (comma-separated)"`
+	Labels string `json:"labels" required:"true" desc:"Labels to add (comma-separated)" body:"csv"`
 }
 
 type RemoveIssueLabelsArgs struct {
-	Owner  string `json:"owner"  required:"true" desc:"Repository owner"`
-	Repo   string `json:"repo"   required:"true" desc:"Repository name"`
-	Index  int    `json:"index"  required:"true" desc:"Issue index"`
-	Labels string `json:"labels" required:"true" desc:"Labels to remove (comma-separated label IDs)"`
+	Owner string `json:"owner" required:"true" desc:"Repository owner"`
+	Repo  string `json:"repo"  required:"true" desc:"Repository name"`
+	Index int    `json:"index" required:"true" desc:"Issue index"`
+	Label string `json:"label" required:"true" desc:"Label ID or name to remove"`
 }
 
 type IssueStateChangeArgs struct {
@@ -195,9 +195,9 @@ func issueTools() []ToolDef {
 			Name:        "remove_issue_labels",
 			Group:       "issue",
 			CLIName:     "remove-labels",
-			Description: "Remove labels from issue",
+			Description: "Remove a label from an issue",
 			Method:      "DELETE",
-			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/issues/{{.Index}}/labels",
+			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/issues/{{.Index}}/labels/{{.Label}}",
 			Args:        RemoveIssueLabelsArgs{},
 			Destructive: true,
 		},

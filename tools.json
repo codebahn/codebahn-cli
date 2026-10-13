@@ -1035,7 +1035,7 @@
       },
       {
         "name": "milestone",
-        "type": "string",
+        "type": "number",
         "required": false,
         "desc": "Milestone ID"
       }
@@ -1078,7 +1078,7 @@
   {
     "name": "remove_issue_labels",
     "group": "issue",
-    "description": "Remove labels from issue",
+    "description": "Remove a label from an issue",
     "method": "DELETE",
     "destructive": true,
     "read_only": false,
@@ -1102,10 +1102,10 @@
         "desc": "Issue index"
       },
       {
-        "name": "labels",
+        "name": "label",
         "type": "string",
         "required": true,
-        "desc": "Labels to remove (comma-separated label IDs)"
+        "desc": "Label ID or name to remove"
       }
     ]
   },
@@ -1673,7 +1673,7 @@
       },
       {
         "name": "milestone",
-        "type": "string",
+        "type": "number",
         "required": false,
         "desc": "Milestone ID"
       }

@@ -127,7 +127,7 @@ func IssueUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Body, "body", "", `Content body`)
 	cmd.Flags().StringVar(&args.Assignee, "assignee", "", `Assignee username (convenience for a single user; equivalent to a one-element 'assignees')`)
 	cmd.Flags().StringVar(&args.Assignees, "assignees", "", `Assignee usernames (comma-separated). Overrides 'assignee' if both are set. Pass an empty string to clear all assignees.`)
-	cmd.Flags().StringVar(&args.Milestone, "milestone", "", `Milestone ID`)
+	cmd.Flags().IntVar(&args.Milestone, "milestone", 0, `Milestone ID`)
 	return cmd
 }
 
@@ -154,7 +154,7 @@ func IssueRemoveLabelsCmd() *cobra.Command {
 	var args tools.RemoveIssueLabelsArgs
 	cmd := &cobra.Command{
 		Use:   "remove-labels",
-		Short: `Remove labels from issue`,
+		Short: `Remove a label from an issue`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			td := tools.ByName("remove_issue_labels")
 			return ExecuteAndPrint(cmd, td, &args)
@@ -164,8 +164,8 @@ func IssueRemoveLabelsCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
 	cmd.Flags().IntVar(&args.Index, "index", 0, `Issue index`)
 	_ = cmd.MarkFlagRequired("index")
-	cmd.Flags().StringVar(&args.Labels, "labels", "", `Labels to remove (comma-separated label IDs)`)
-	_ = cmd.MarkFlagRequired("labels")
+	cmd.Flags().StringVar(&args.Label, "label", "", `Label ID or name to remove`)
+	_ = cmd.MarkFlagRequired("label")
 	return cmd
 }
 
