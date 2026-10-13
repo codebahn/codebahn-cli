@@ -5,7 +5,7 @@ type DispatchWorkflowArgs struct {
 	Repo     string `json:"repo"     required:"true" desc:"Repository name"`
 	Workflow string `json:"workflow" required:"true" desc:"Workflow file (e.g. ci.yml)"`
 	Ref      string `json:"ref"      desc:"Git ref to build (branch/tag). Defaults to repo default branch."`
-	Inputs   string `json:"inputs"   desc:"Workflow inputs as JSON object, e.g. {\"key\": \"value\"}"`
+	Inputs   string `json:"inputs"   desc:"Workflow inputs as JSON object, e.g. {\"key\": \"value\"}" body:"json"`
 }
 
 type ListWorkflowRunsArgs struct {

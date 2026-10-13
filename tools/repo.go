@@ -85,8 +85,8 @@ type CreateFileArgs struct {
 	FilePath      string `json:"filePath"        required:"true" desc:"File path"`
 	Content       string `json:"content"         required:"true" desc:"Content (plain text, base64-encoded automatically)"`
 	Message       string `json:"message"         required:"true" desc:"Commit message"`
-	BranchName    string `json:"branch_name"     required:"true" desc:"Branch name"`
-	NewBranchName string `json:"new_branch_name" desc:"New branch name"`
+	BranchName    string `json:"branch_name"     required:"true" desc:"Branch name"    apiname:"branch"`
+	NewBranchName string `json:"new_branch_name" desc:"New branch name" apiname:"new_branch"`
 }
 
 type UpdateFileArgs struct {
@@ -95,9 +95,9 @@ type UpdateFileArgs struct {
 	FilePath      string `json:"filePath"        required:"true" desc:"File path"`
 	Content       string `json:"content"         required:"true" desc:"Content (plain text, base64-encoded automatically)"`
 	Message       string `json:"message"         required:"true" desc:"Commit message"`
-	BranchName    string `json:"branch_name"     required:"true" desc:"Branch name"`
+	BranchName    string `json:"branch_name"     required:"true" desc:"Branch name"    apiname:"branch"`
 	SHA           string `json:"sha"             required:"true" desc:"File SHA"`
-	NewBranchName string `json:"new_branch_name" desc:"New branch name"`
+	NewBranchName string `json:"new_branch_name" desc:"New branch name" apiname:"new_branch"`
 }
 
 type DeleteFileArgs struct {
@@ -105,16 +105,16 @@ type DeleteFileArgs struct {
 	Repo          string `json:"repo"            required:"true" desc:"Repository name"`
 	FilePath      string `json:"filePath"        required:"true" desc:"File path"`
 	Message       string `json:"message"         required:"true" desc:"Commit message"`
-	BranchName    string `json:"branch_name"     required:"true" desc:"Branch name"`
+	BranchName    string `json:"branch_name"     required:"true" desc:"Branch name"    apiname:"branch"`
 	SHA           string `json:"sha"             required:"true" desc:"File SHA"`
-	NewBranchName string `json:"new_branch_name" desc:"New branch name"`
+	NewBranchName string `json:"new_branch_name" desc:"New branch name" apiname:"new_branch"`
 }
 
 type CreateBranchArgs struct {
 	Owner     string `json:"owner"      required:"true" desc:"Repository owner"`
 	Repo      string `json:"repo"       required:"true" desc:"Repository name"`
-	Branch    string `json:"branch"     required:"true" desc:"Branch name"`
-	OldBranch string `json:"old_branch" required:"true" desc:"Source branch"`
+	Branch    string `json:"branch"     required:"true" desc:"Branch name"  apiname:"new_branch_name"`
+	OldBranch string `json:"old_branch" required:"true" desc:"Source branch" apiname:"old_branch_name"`
 }
 
 type DeleteBranchArgs struct {
