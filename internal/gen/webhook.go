@@ -94,12 +94,20 @@ func WebhookCreateCmd() *cobra.Command {
 func WebhookUpdateCmd() *cobra.Command {
 	var args tools.UpdateHookArgs
 	var _Active bool
+	var _BranchFilter string
+	var _AuthorizationHeader string
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: `Update a repository webhook`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if cmd.Flags().Changed("active") {
 				args.Active = &_Active
+			}
+			if cmd.Flags().Changed("branch_filter") {
+				args.BranchFilter = &_BranchFilter
+			}
+			if cmd.Flags().Changed("authorization_header") {
+				args.AuthorizationHeader = &_AuthorizationHeader
 			}
 			td := tools.ByName("update_hook")
 			return ExecuteAndPrint(cmd, td, &args)
@@ -115,8 +123,8 @@ func WebhookUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Secret, "secret", "", `Secret used to sign the payload`)
 	cmd.Flags().StringVar(&args.Events, "events", "", `Events that trigger the webhook (comma-separated, e.g. push,pull_request)`)
 	cmd.Flags().BoolVar(&_Active, "active", false, `Whether the webhook is active`)
-	cmd.Flags().StringVar(&args.BranchFilter, "branch_filter", "", `Glob pattern restricting which branches trigger the webhook`)
-	cmd.Flags().StringVar(&args.AuthorizationHeader, "authorization_header", "", `Authorization header value sent with each delivery`)
+	cmd.Flags().StringVar(&_BranchFilter, "branch_filter", "", `Glob pattern restricting which branches trigger the webhook`)
+	cmd.Flags().StringVar(&_AuthorizationHeader, "authorization_header", "", `Authorization header value sent with each delivery`)
 	return cmd
 }
 
@@ -220,12 +228,20 @@ func WebhookCreateOrgCmd() *cobra.Command {
 func WebhookUpdateOrgCmd() *cobra.Command {
 	var args tools.UpdateOrgHookArgs
 	var _Active bool
+	var _BranchFilter string
+	var _AuthorizationHeader string
 	cmd := &cobra.Command{
 		Use:   "update-org",
 		Short: `Update an organization webhook`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if cmd.Flags().Changed("active") {
 				args.Active = &_Active
+			}
+			if cmd.Flags().Changed("branch_filter") {
+				args.BranchFilter = &_BranchFilter
+			}
+			if cmd.Flags().Changed("authorization_header") {
+				args.AuthorizationHeader = &_AuthorizationHeader
 			}
 			td := tools.ByName("update_org_hook")
 			return ExecuteAndPrint(cmd, td, &args)
@@ -241,8 +257,8 @@ func WebhookUpdateOrgCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Secret, "secret", "", `Secret used to sign the payload`)
 	cmd.Flags().StringVar(&args.Events, "events", "", `Events that trigger the webhook (comma-separated, e.g. push,pull_request)`)
 	cmd.Flags().BoolVar(&_Active, "active", false, `Whether the webhook is active`)
-	cmd.Flags().StringVar(&args.BranchFilter, "branch_filter", "", `Glob pattern restricting which branches trigger the webhook`)
-	cmd.Flags().StringVar(&args.AuthorizationHeader, "authorization_header", "", `Authorization header value sent with each delivery`)
+	cmd.Flags().StringVar(&_BranchFilter, "branch_filter", "", `Glob pattern restricting which branches trigger the webhook`)
+	cmd.Flags().StringVar(&_AuthorizationHeader, "authorization_header", "", `Authorization header value sent with each delivery`)
 	return cmd
 }
 

@@ -36,14 +36,14 @@ type CreateIssueCommentArgs struct {
 }
 
 type UpdateIssueArgs struct {
-	Owner     string `json:"owner"     required:"true" desc:"Repository owner"`
-	Repo      string `json:"repo"      required:"true" desc:"Repository name"`
-	Index     int    `json:"index"     required:"true" desc:"Issue index"`
-	Title     string `json:"title"     desc:"Title"`
-	Body      string `json:"body"      desc:"Content body"`
-	Assignee  string `json:"assignee"  desc:"Assignee username (convenience for a single user; equivalent to a one-element 'assignees')"`
-	Assignees string `json:"assignees" desc:"Assignee usernames (comma-separated). Overrides 'assignee' if both are set. Pass an empty string to clear all assignees." body:"csv"`
-	Milestone int    `json:"milestone" desc:"Milestone ID"`
+	Owner     string  `json:"owner"     required:"true" desc:"Repository owner"`
+	Repo      string  `json:"repo"      required:"true" desc:"Repository name"`
+	Index     int     `json:"index"     required:"true" desc:"Issue index"`
+	Title     string  `json:"title"     desc:"Title"`
+	Body      *string `json:"body"      desc:"Content body"`
+	Assignee  *string `json:"assignee"  desc:"Assignee username (convenience for a single user; equivalent to a one-element 'assignees')"`
+	Assignees string  `json:"assignees" desc:"Assignee usernames (comma-separated). Overrides 'assignee' if both are set. Pass an empty string to clear all assignees." body:"csv"`
+	Milestone int     `json:"milestone" desc:"Milestone ID"`
 }
 
 type AddIssueLabelsArgs struct {
@@ -120,13 +120,13 @@ type CreateLabelArgs struct {
 }
 
 type EditLabelArgs struct {
-	Owner       string `json:"owner"       required:"true" desc:"Repository owner or organization name"`
-	ID          int    `json:"id"          required:"true" desc:"Label ID"`
-	Repo        string `json:"repo"        desc:"Repository name. Omit to edit an org-level label."`
-	Name        string `json:"name"        desc:"New label name"`
-	Color       string `json:"color"       desc:"New label color hex code"`
-	Description string `json:"description" desc:"New label description"`
-	Exclusive   bool   `json:"exclusive"   desc:"Whether this label is exclusive"`
+	Owner       string  `json:"owner"       required:"true" desc:"Repository owner or organization name"`
+	ID          int     `json:"id"          required:"true" desc:"Label ID"`
+	Repo        string  `json:"repo"        desc:"Repository name. Omit to edit an org-level label."`
+	Name        string  `json:"name"        desc:"New label name"`
+	Color       string  `json:"color"       desc:"New label color hex code"`
+	Description *string `json:"description" desc:"New label description"`
+	Exclusive   bool    `json:"exclusive"   desc:"Whether this label is exclusive"`
 }
 
 type DeleteLabelArgs struct {

@@ -568,6 +568,27 @@ func TestExecuteDELETEWithBody(t *testing.T) {
 	}
 }
 
+func TestBuildBodyOptionalStringSendsExplicitEmpty(t *testing.T) {
+	type args struct {
+		Owner string  `json:"owner"`
+		Desc  *string `json:"description"`
+		Site  *string `json:"website"`
+	}
+
+	empty := ""
+	body := buildBody(args{Owner: "acme", Desc: &empty, Site: nil}, map[string]bool{"Owner": true})
+	m, ok := body.(map[string]any)
+	if !ok {
+		t.Fatalf("body type = %T, want map[string]any", body)
+	}
+	if _, ok := m["description"]; !ok {
+		t.Error("explicit empty *string should be included in body")
+	}
+	if _, ok := m["website"]; ok {
+		t.Error("nil *string should be excluded from body")
+	}
+}
+
 func TestBuildBodyCSVTag(t *testing.T) {
 	type args struct {
 		Owner  string `json:"owner"`

@@ -154,6 +154,8 @@ func ProtectionUpdateCmd() *cobra.Command {
 	var _BlockOnOutdatedBranch bool
 	var _DismissStaleApprovals bool
 	var _RequireSignedCommits bool
+	var _ProtectedFilePatterns string
+	var _UnprotectedFilePatterns string
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: `Update a branch protection rule`,
@@ -194,6 +196,12 @@ func ProtectionUpdateCmd() *cobra.Command {
 			if cmd.Flags().Changed("require_signed_commits") {
 				args.RequireSignedCommits = &_RequireSignedCommits
 			}
+			if cmd.Flags().Changed("protected_file_patterns") {
+				args.ProtectedFilePatterns = &_ProtectedFilePatterns
+			}
+			if cmd.Flags().Changed("unprotected_file_patterns") {
+				args.UnprotectedFilePatterns = &_UnprotectedFilePatterns
+			}
 			td := tools.ByName("update_branch_protection")
 			return ExecuteAndPrint(cmd, td, &args)
 		},
@@ -221,8 +229,8 @@ func ProtectionUpdateCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&_BlockOnOutdatedBranch, "block_on_outdated_branch", false, `Block merging when the head branch is outdated`)
 	cmd.Flags().BoolVar(&_DismissStaleApprovals, "dismiss_stale_approvals", false, `Dismiss approvals when new commits are pushed`)
 	cmd.Flags().BoolVar(&_RequireSignedCommits, "require_signed_commits", false, `Require commits to be signed`)
-	cmd.Flags().StringVar(&args.ProtectedFilePatterns, "protected_file_patterns", "", `Glob patterns of files that cannot be changed directly (semicolon-separated)`)
-	cmd.Flags().StringVar(&args.UnprotectedFilePatterns, "unprotected_file_patterns", "", `Glob patterns of files exempt from protection (semicolon-separated)`)
+	cmd.Flags().StringVar(&_ProtectedFilePatterns, "protected_file_patterns", "", `Glob patterns of files that cannot be changed directly (semicolon-separated)`)
+	cmd.Flags().StringVar(&_UnprotectedFilePatterns, "unprotected_file_patterns", "", `Glob patterns of files exempt from protection (semicolon-separated)`)
 	return cmd
 }
 

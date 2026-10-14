@@ -75,6 +75,8 @@ func RepoListCmd() *cobra.Command {
 
 func RepoUpdateCmd() *cobra.Command {
 	var args tools.UpdateRepoArgs
+	var _Description string
+	var _Website string
 	var _Private bool
 	var _Template bool
 	var _Archived bool
@@ -99,6 +101,12 @@ func RepoUpdateCmd() *cobra.Command {
 		Use:   "update",
 		Short: `Update repository settings (common subset): name, description, website, default_branch, private, archived, has_issues, has_pull_requests, has_releases, has_packages, has_actions, allow_merge_commits, allow_rebase, allow_squash_merge, default_merge_style, default_delete_branch_after_merge. All fields optional; omitted fields are left unchanged. Accepts the full Forgejo EditRepoOption surface beyond the common subset.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if cmd.Flags().Changed("description") {
+				args.Description = &_Description
+			}
+			if cmd.Flags().Changed("website") {
+				args.Website = &_Website
+			}
 			if cmd.Flags().Changed("private") {
 				args.Private = &_Private
 			}
@@ -166,8 +174,8 @@ func RepoUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
 	cmd.Flags().StringVar(&args.Name, "name", "", `New repository name`)
-	cmd.Flags().StringVar(&args.Description, "description", "", `Description`)
-	cmd.Flags().StringVar(&args.Website, "website", "", `Website URL`)
+	cmd.Flags().StringVar(&_Description, "description", "", `Description`)
+	cmd.Flags().StringVar(&_Website, "website", "", `Website URL`)
 	cmd.Flags().StringVar(&args.DefaultBranch, "default_branch", "", `Default branch`)
 	cmd.Flags().StringVar(&args.DefaultMergeStyle, "default_merge_style", "", `Default merge style (merge, rebase, rebase-merge, squash, fast-forward-only)`)
 	cmd.Flags().StringVar(&args.MirrorInterval, "mirror_interval", "", `Mirror sync interval (e.g. 8h, 0 to disable)`)

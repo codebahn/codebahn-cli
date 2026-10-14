@@ -69,6 +69,7 @@ type fieldData struct {
 	ContextInfer bool
 	IsOptBool    bool
 	IsOptInt     bool
+	IsOptString  bool
 }
 
 func groupedTools() map[string][]tools.ToolDef {
@@ -125,6 +126,7 @@ func generateGroup(name string, defs []tools.ToolDef) error {
 				ContextInfer: hasRepo && (jsonName == "owner" || jsonName == "repo"),
 				IsOptBool:    isOptBool(f.Type),
 				IsOptInt:     isOptInt(f.Type),
+				IsOptString:  isOptString(f.Type),
 			})
 		}
 
@@ -192,6 +194,10 @@ func isOptBool(t reflect.Type) bool {
 
 func isOptInt(t reflect.Type) bool {
 	return t.Kind() == reflect.Ptr && (t.Elem().Kind() >= reflect.Int && t.Elem().Kind() <= reflect.Int64)
+}
+
+func isOptString(t reflect.Type) bool {
+	return t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.String
 }
 
 func toExportedName(s string) string {
@@ -320,6 +326,8 @@ func {{.FuncName}}Cmd() *cobra.Command {
 	var _{{.GoName}} bool
 {{- end}}{{- if .IsOptInt}}
 	var _{{.GoName}} int
+{{- end}}{{- if .IsOptString}}
+	var _{{.GoName}} string
 {{- end}}{{- end}}
 	cmd := &cobra.Command{
 		Use:   "{{.CLIName}}",
@@ -333,6 +341,10 @@ func {{.FuncName}}Cmd() *cobra.Command {
 			if cmd.Flags().Changed("{{.JSONName}}") {
 				args.{{.GoName}} = &_{{.GoName}}
 			}
+{{- end}}{{- if .IsOptString}}
+			if cmd.Flags().Changed("{{.JSONName}}") {
+				args.{{.GoName}} = &_{{.GoName}}
+			}
 {{- end}}{{- end}}
 			td := tools.ByName("{{.ToolName}}")
 			return ExecuteAndPrint(cmd, td, &args)
@@ -343,6 +355,8 @@ func {{.FuncName}}Cmd() *cobra.Command {
 	cmd.Flags().BoolVar(&_{{.GoName}}, "{{.JSONName}}", false, ` + "`{{.Desc}}`" + `)
 {{- else if .IsOptInt}}
 	cmd.Flags().IntVar(&_{{.GoName}}, "{{.JSONName}}", 0, ` + "`{{.Desc}}`" + `)
+{{- else if .IsOptString}}
+	cmd.Flags().StringVar(&_{{.GoName}}, "{{.JSONName}}", "", ` + "`{{.Desc}}`" + `)
 {{- else}}
 	cmd.Flags().{{.FlagType}}Var(&args.{{.GoName}}, "{{.JSONName}}", {{defaultVal .FlagType .Default}}, ` + "`{{.Desc}}`" + `)
 {{- end}}
