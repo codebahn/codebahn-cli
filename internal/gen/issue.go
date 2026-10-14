@@ -289,7 +289,7 @@ func IssueLabelsCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&args.Owner, "owner", "", `Repository owner`)
-	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name`)
+	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name. Omit for org-level labels`)
 	cmd.Flags().IntVar(&args.Page, "page", 1, `Page number (1-based)`)
 	cmd.Flags().IntVar(&args.Limit, "limit", 100, `Page size`)
 	cmd.Flags().BoolVar(&args.IncludeOrgLabels, "include_org_labels", true, `Merge org-level labels into the response when the owner is an organization. Default true.`)

@@ -1355,8 +1355,8 @@
       {
         "name": "repo",
         "type": "string",
-        "required": true,
-        "desc": "Repository name"
+        "required": false,
+        "desc": "Repository name. Omit for org-level labels"
       },
       {
         "name": "page",
