@@ -31,14 +31,14 @@ type CreatePullRequestArgs struct {
 }
 
 type UpdatePullRequestArgs struct {
-	Owner     string `json:"owner"     required:"true" desc:"Repository owner"`
-	Repo      string `json:"repo"      required:"true" desc:"Repository name"`
-	Index     int    `json:"index"     required:"true" desc:"PR index"`
-	Title     string `json:"title"     desc:"Title"`
-	Body      string `json:"body"      desc:"Content body"`
-	Base      string `json:"base"      desc:"Base branch"`
-	Assignee  string `json:"assignee"  desc:"Assignee username"`
-	Milestone int    `json:"milestone" desc:"Milestone ID"`
+	Owner     string  `json:"owner"     required:"true" desc:"Repository owner"`
+	Repo      string  `json:"repo"      required:"true" desc:"Repository name"`
+	Index     int     `json:"index"     required:"true" desc:"PR index"`
+	Title     string  `json:"title"     desc:"Title"`
+	Body      *string `json:"body"      desc:"Content body"`
+	Base      string  `json:"base"      desc:"Base branch"`
+	Assignee  *string `json:"assignee"  desc:"Assignee username"`
+	Milestone int     `json:"milestone" desc:"Milestone ID"`
 }
 
 type ListPullReviewsArgs struct {

@@ -111,10 +111,18 @@ func IssueCommentCmd() *cobra.Command {
 
 func IssueUpdateCmd() *cobra.Command {
 	var args tools.UpdateIssueArgs
+	var _Body string
+	var _Assignee string
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: `Update issue`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if cmd.Flags().Changed("body") {
+				args.Body = &_Body
+			}
+			if cmd.Flags().Changed("assignee") {
+				args.Assignee = &_Assignee
+			}
 			td := tools.ByName("update_issue")
 			return ExecuteAndPrint(cmd, td, &args)
 		},
@@ -124,8 +132,8 @@ func IssueUpdateCmd() *cobra.Command {
 	cmd.Flags().IntVar(&args.Index, "index", 0, `Issue index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Title, "title", "", `Title`)
-	cmd.Flags().StringVar(&args.Body, "body", "", `Content body`)
-	cmd.Flags().StringVar(&args.Assignee, "assignee", "", `Assignee username (convenience for a single user; equivalent to a one-element 'assignees')`)
+	cmd.Flags().StringVar(&_Body, "body", "", `Content body`)
+	cmd.Flags().StringVar(&_Assignee, "assignee", "", `Assignee username (convenience for a single user; equivalent to a one-element 'assignees')`)
 	cmd.Flags().StringVar(&args.Assignees, "assignees", "", `Assignee usernames (comma-separated). Overrides 'assignee' if both are set. Pass an empty string to clear all assignees.`)
 	cmd.Flags().IntVar(&args.Milestone, "milestone", 0, `Milestone ID`)
 	return cmd
@@ -319,10 +327,14 @@ func IssueCreateLabelCmd() *cobra.Command {
 
 func IssueEditLabelCmd() *cobra.Command {
 	var args tools.EditLabelArgs
+	var _Description string
 	cmd := &cobra.Command{
 		Use:   "edit-label",
 		Short: `Edit a label on a repository or organization`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if cmd.Flags().Changed("description") {
+				args.Description = &_Description
+			}
 			td := tools.ByName("edit_label")
 			return ExecuteAndPrint(cmd, td, &args)
 		},
@@ -333,7 +345,7 @@ func IssueEditLabelCmd() *cobra.Command {
 	cmd.Flags().StringVar(&args.Repo, "repo", "", `Repository name. Omit to edit an org-level label.`)
 	cmd.Flags().StringVar(&args.Name, "name", "", `New label name`)
 	cmd.Flags().StringVar(&args.Color, "color", "", `New label color hex code`)
-	cmd.Flags().StringVar(&args.Description, "description", "", `New label description`)
+	cmd.Flags().StringVar(&_Description, "description", "", `New label description`)
 	cmd.Flags().BoolVar(&args.Exclusive, "exclusive", false, `Whether this label is exclusive`)
 	return cmd
 }

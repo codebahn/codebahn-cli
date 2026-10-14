@@ -96,10 +96,18 @@ func PRCreateCmd() *cobra.Command {
 
 func PRUpdateCmd() *cobra.Command {
 	var args tools.UpdatePullRequestArgs
+	var _Body string
+	var _Assignee string
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: `Update pull request`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if cmd.Flags().Changed("body") {
+				args.Body = &_Body
+			}
+			if cmd.Flags().Changed("assignee") {
+				args.Assignee = &_Assignee
+			}
 			td := tools.ByName("update_pull_request")
 			return ExecuteAndPrint(cmd, td, &args)
 		},
@@ -109,9 +117,9 @@ func PRUpdateCmd() *cobra.Command {
 	cmd.Flags().IntVar(&args.Index, "index", 0, `PR index`)
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVar(&args.Title, "title", "", `Title`)
-	cmd.Flags().StringVar(&args.Body, "body", "", `Content body`)
+	cmd.Flags().StringVar(&_Body, "body", "", `Content body`)
 	cmd.Flags().StringVar(&args.Base, "base", "", `Base branch`)
-	cmd.Flags().StringVar(&args.Assignee, "assignee", "", `Assignee username`)
+	cmd.Flags().StringVar(&_Assignee, "assignee", "", `Assignee username`)
 	cmd.Flags().IntVar(&args.Milestone, "milestone", 0, `Milestone ID`)
 	return cmd
 }

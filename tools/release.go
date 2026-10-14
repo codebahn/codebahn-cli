@@ -36,15 +36,15 @@ type GetReleaseByTagArgs struct {
 }
 
 type UpdateReleaseArgs struct {
-	Owner      string `json:"owner"      required:"true" desc:"Repository owner"`
-	Repo       string `json:"repo"       required:"true" desc:"Repository name"`
-	ID         int    `json:"id"         required:"true" desc:"Release ID"`
-	TagName    string `json:"tag_name"   desc:"Tag name for the release"`
-	Target     string `json:"target_commitish" desc:"Target branch or commit SHA"`
-	Title      string `json:"name"            desc:"Release title"`
-	Note       string `json:"body"            desc:"Release notes body"`
-	Draft      *bool  `json:"draft"           desc:"Mark as a draft release"`
-	Prerelease *bool  `json:"prerelease"      desc:"Mark as a prerelease"`
+	Owner      string  `json:"owner"      required:"true" desc:"Repository owner"`
+	Repo       string  `json:"repo"       required:"true" desc:"Repository name"`
+	ID         int     `json:"id"         required:"true" desc:"Release ID"`
+	TagName    string  `json:"tag_name"   desc:"Tag name for the release"`
+	Target     string  `json:"target_commitish" desc:"Target branch or commit SHA"`
+	Title      *string `json:"name"            desc:"Release title"`
+	Note       *string `json:"body"            desc:"Release notes body"`
+	Draft      *bool   `json:"draft"           desc:"Mark as a draft release"`
+	Prerelease *bool   `json:"prerelease"      desc:"Mark as a prerelease"`
 }
 
 type DeleteReleaseArgs struct {
