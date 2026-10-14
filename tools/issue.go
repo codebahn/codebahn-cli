@@ -104,7 +104,7 @@ type ListRepoMilestonesArgs struct {
 
 type ListRepoLabelsArgs struct {
 	Owner            string `json:"owner"              required:"true" desc:"Repository owner"`
-	Repo             string `json:"repo"               required:"true" desc:"Repository name"`
+	Repo             string `json:"repo"               desc:"Repository name. Omit for org-level labels"`
 	Page             int    `json:"page"               desc:"Page number (1-based)" default:"1"`
 	Limit            int    `json:"limit"              desc:"Page size"             default:"100"`
 	IncludeOrgLabels bool   `json:"include_org_labels" desc:"Merge org-level labels into the response when the owner is an organization. Default true." default:"true"`
@@ -262,7 +262,7 @@ func issueTools() []ToolDef {
 			CLIName:     "labels",
 			Description: listRepoLabelsDesc,
 			Method:      "GET",
-			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/labels",
+			PathTmpl:    "{{if .Repo}}/repos/{{.Owner}}/{{.Repo}}/labels{{else}}/orgs/{{.Owner}}/labels{{end}}",
 			Args:        ListRepoLabelsArgs{},
 		},
 		{
@@ -271,7 +271,7 @@ func issueTools() []ToolDef {
 			CLIName:     "create-label",
 			Description: "Create a label on a repository or organization",
 			Method:      "POST",
-			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/labels",
+			PathTmpl:    "{{if .Repo}}/repos/{{.Owner}}/{{.Repo}}/labels{{else}}/orgs/{{.Owner}}/labels{{end}}",
 			Args:        CreateLabelArgs{},
 		},
 		{
@@ -280,7 +280,7 @@ func issueTools() []ToolDef {
 			CLIName:     "edit-label",
 			Description: "Edit a label on a repository or organization",
 			Method:      "PATCH",
-			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/labels/{{.ID}}",
+			PathTmpl:    "{{if .Repo}}/repos/{{.Owner}}/{{.Repo}}/labels/{{.ID}}{{else}}/orgs/{{.Owner}}/labels/{{.ID}}{{end}}",
 			Args:        EditLabelArgs{},
 		},
 		{
@@ -289,7 +289,7 @@ func issueTools() []ToolDef {
 			CLIName:     "delete-label",
 			Description: "Delete a label from a repository or organization",
 			Method:      "DELETE",
-			PathTmpl:    "/repos/{{.Owner}}/{{.Repo}}/labels/{{.ID}}",
+			PathTmpl:    "{{if .Repo}}/repos/{{.Owner}}/{{.Repo}}/labels/{{.ID}}{{else}}/orgs/{{.Owner}}/labels/{{.ID}}{{end}}",
 			Args:        DeleteLabelArgs{},
 			Destructive: true,
 		},
