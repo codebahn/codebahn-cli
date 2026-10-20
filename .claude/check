@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# CI parity check: green here means green on the pull request.
+#
+# Mirrors the `build` job of .github/workflows/ci.yml step for step: build, race tests, vet,
+# the generated-files check (`go run ./cmd/gen` must leave the tree unchanged), and tests
+# and vet of the separate tools/ module.
+#
+# Not reproduced: CI runs on a clean ubuntu-latest checkout with Go from go.mod. On a clean
+# working tree the generated-files check is exact; with uncommitted changes it compares the
+# tree before and after `go run ./cmd/gen`, so a generated file you never committed still
+# passes here and fails there. The pre-push gate requires a clean tree, which closes that.
+#
+# usage: .claude/check [--quick]
+#   --quick  same as the full check (it takes well under a minute).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+export CI=true
+step() { printf '\n==> %s\n' "$*"; }
+tree_state() { git status --porcelain=v1 --untracked-files=all; git diff --binary | sha256sum; }
+
+step "Build (go build ./...)"
+go build ./...
+step "Test (go test -race ./...)"
+go test -race ./...
+step "Vet (go vet ./...)"
+go vet ./...
+step "Check generated files are up to date (go run ./cmd/gen)"
+before=$(tree_state)
+go run ./cmd/gen
+if [ "$(tree_state)" != "$before" ]; then
+  echo "check: go run ./cmd/gen changed the tree; commit the regenerated files:" >&2
+  git status --short >&2
+  exit 1
+fi
+step "Test tools module (cd tools && go test -race ./... && go vet ./...)"
+(cd tools && go test -race ./... && go vet ./...)
