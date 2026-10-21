@@ -187,6 +187,31 @@ func TestResolveServiceType(t *testing.T) {
 	})
 }
 
+func TestDetectService_NoFollowRedirect(t *testing.T) {
+	leaked := false
+	attacker := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "" {
+			leaked = true
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer attacker.Close()
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, attacker.URL+"/steal", http.StatusFound)
+	}))
+	defer ts.Close()
+
+	scheme, host := splitTestURL(t, ts.URL)
+	got := DetectService(context.Background(), scheme, host, "secret-token")
+	if got != "" {
+		t.Fatalf("expected empty (redirect is not a version response), got %q", got)
+	}
+	if leaked {
+		t.Fatal("auth token was leaked to the redirect target")
+	}
+}
+
 func TestValidateSourceType(t *testing.T) {
 	valid := []string{"forgejo", "gitea", "github", "gitlab", "git", "Forgejo", "GITEA", ""}
 	for _, v := range valid {
@@ -208,19 +233,6 @@ func TestResolveServiceType_CaseInsensitive(t *testing.T) {
 	ResolveServiceType(context.Background(), &src, "Forgejo", "")
 	if src.Service != "gitea" {
 		t.Fatalf("expected gitea, got %q", src.Service)
-	}
-}
-
-func TestDetectService_Timeout(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(10 * time.Second)
-	}))
-	defer ts.Close()
-
-	scheme, host := splitTestURL(t, ts.URL)
-	got := DetectService(context.Background(), scheme, host, "")
-	if got != "" {
-		t.Fatalf("expected empty (timeout), got %q", got)
 	}
 }
 

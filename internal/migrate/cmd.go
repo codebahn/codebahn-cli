@@ -210,14 +210,14 @@ func ImportCmd() *cobra.Command {
 				return err
 			}
 
-			ctx := cmd.Context()
-
-			ResolveServiceType(ctx, &src, sourceType, token)
-
 			c := gen.ClientFrom(cmd.Context())
 			if c == nil {
 				return fmt.Errorf("not logged in; run 'codebahn auth login' first")
 			}
+
+			ctx := cmd.Context()
+
+			ResolveServiceType(ctx, &src, sourceType, token)
 
 			destOwner, err := ResolveDestOwner(ctx, c, owner)
 			if err != nil {

@@ -50,11 +50,8 @@ func ResolveServiceType(ctx context.Context, src *Source, sourceType, tokenFlag 
 const detectTimeout = 5 * time.Second
 
 func DetectService(ctx context.Context, scheme, host, token string) string {
-	probeCtx, cancel := context.WithTimeout(ctx, detectTimeout)
-	defer cancel()
-
 	url := fmt.Sprintf("%s://%s/api/v1/version", scheme, host)
-	req, err := http.NewRequestWithContext(probeCtx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return ""
 	}
@@ -62,7 +59,13 @@ func DetectService(ctx context.Context, scheme, host, token string) string {
 		req.Header.Set("Authorization", "token "+token)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	noRedirect := &http.Client{
+		Timeout: detectTimeout,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := noRedirect.Do(req)
 	if err != nil {
 		return ""
 	}
