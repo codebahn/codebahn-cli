@@ -43,8 +43,6 @@ func ParseSource(input string) (Source, error) {
 		raw = "https://" + raw
 	}
 
-	scheme := raw[:strings.Index(raw, "://")]
-
 	u, err := url.Parse(raw)
 	if err != nil {
 		return Source{}, fmt.Errorf("could not parse source: %q", input)
@@ -76,7 +74,7 @@ func ParseSource(input string) (Source, error) {
 
 	s := Source{
 		Service: service,
-		Scheme:  scheme,
+		Scheme:  u.Scheme,
 		Host:    host,
 		Owner:   parts[0],
 	}
