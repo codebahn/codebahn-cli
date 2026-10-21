@@ -208,17 +208,7 @@ func ImportCmd() *cobra.Command {
 
 			ctx := cmd.Context()
 
-			if sourceType != "" {
-				normalized := sourceType
-				if normalized == "forgejo" {
-					normalized = "gitea"
-				}
-				src.Service = normalized
-			} else if src.Service == "git" {
-				if detected := DetectService(ctx, src.Scheme, src.Host, token); detected != "" {
-					src.Service = detected
-				}
-			}
+			ResolveServiceType(ctx, &src, sourceType, token)
 
 			c := gen.ClientFrom(cmd.Context())
 			if c == nil {

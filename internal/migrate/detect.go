@@ -8,10 +8,23 @@ import (
 	"net/http"
 )
 
-// DetectService probes <scheme>://<host>/api/v1/version to identify a
-// self-hosted Forgejo/Gitea instance. It returns "gitea" on a successful
-// probe (Forgejo and Gitea share this API), or "" if the instance can't be
-// identified.
+func ResolveServiceType(ctx context.Context, src *Source, sourceType, tokenFlag string) {
+	if sourceType != "" {
+		normalized := sourceType
+		if normalized == "forgejo" {
+			normalized = "gitea"
+		}
+		src.Service = normalized
+		return
+	}
+	if src.Service == "git" {
+		token := ResolveSourceToken(tokenFlag)
+		if detected := DetectService(ctx, src.Scheme, src.Host, token); detected != "" {
+			src.Service = detected
+		}
+	}
+}
+
 func DetectService(ctx context.Context, scheme, host, token string) string {
 	url := fmt.Sprintf("%s://%s/api/v1/version", scheme, host)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

@@ -121,6 +121,72 @@ func TestDetectService(t *testing.T) {
 	})
 }
 
+func TestResolveServiceType(t *testing.T) {
+	t.Run("resolves GITHUB_TOKEN for probe on auth-required instance", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Authorization") != "token env-tok" {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"version":"1.21.0"}`)
+		}))
+		defer ts.Close()
+
+		t.Setenv("GITHUB_TOKEN", "env-tok")
+		scheme, host := splitTestURL(t, ts.URL)
+		src := Source{Service: "git", Scheme: scheme, Host: host, Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "", "")
+		if src.Service != "gitea" {
+			t.Fatalf("expected gitea (GITHUB_TOKEN should be used for probe), got %q", src.Service)
+		}
+	})
+
+	t.Run("flag token takes precedence over env", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Authorization") != "token flag-tok" {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"version":"1.21.0"}`)
+		}))
+		defer ts.Close()
+
+		t.Setenv("GITHUB_TOKEN", "wrong-env-tok")
+		scheme, host := splitTestURL(t, ts.URL)
+		src := Source{Service: "git", Scheme: scheme, Host: host, Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "", "flag-tok")
+		if src.Service != "gitea" {
+			t.Fatalf("expected gitea, got %q", src.Service)
+		}
+	})
+
+	t.Run("source-type flag skips probe", func(t *testing.T) {
+		src := Source{Service: "git", Scheme: "https", Host: "unreachable.invalid", Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "gitea", "")
+		if src.Service != "gitea" {
+			t.Fatalf("expected gitea, got %q", src.Service)
+		}
+	})
+
+	t.Run("forgejo alias normalizes to gitea", func(t *testing.T) {
+		src := Source{Service: "git", Scheme: "https", Host: "unreachable.invalid", Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "forgejo", "")
+		if src.Service != "gitea" {
+			t.Fatalf("expected gitea, got %q", src.Service)
+		}
+	})
+
+	t.Run("probe only runs when service is git", func(t *testing.T) {
+		src := Source{Service: "github", Scheme: "https", Host: "github.com", Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "", "")
+		if src.Service != "github" {
+			t.Fatalf("expected github unchanged, got %q", src.Service)
+		}
+	})
+}
+
 func splitTestURL(t *testing.T, rawURL string) (scheme, host string) {
 	t.Helper()
 	const httpPrefix = "http://"
