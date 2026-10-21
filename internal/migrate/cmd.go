@@ -178,6 +178,7 @@ func ImportCmd() *cobra.Command {
 		private      bool
 		public       bool
 		token        string
+		sourceType   string
 		yes          bool
 		noIssues     bool
 		noPRs        bool
@@ -205,12 +206,25 @@ func ImportCmd() *cobra.Command {
 				return err
 			}
 
+			ctx := cmd.Context()
+
+			if sourceType != "" {
+				normalized := sourceType
+				if normalized == "forgejo" {
+					normalized = "gitea"
+				}
+				src.Service = normalized
+			} else if src.Service == "git" {
+				if detected := DetectService(ctx, src.Scheme, src.Host, token); detected != "" {
+					src.Service = detected
+				}
+			}
+
 			c := gen.ClientFrom(cmd.Context())
 			if c == nil {
 				return fmt.Errorf("not logged in; run 'codebahn auth login' first")
 			}
 
-			ctx := cmd.Context()
 			destOwner, err := ResolveDestOwner(ctx, c, owner)
 			if err != nil {
 				return err
@@ -251,6 +265,7 @@ func ImportCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&private, "private", false, "Make imported repo private")
 	cmd.Flags().BoolVar(&public, "public", false, "Make imported repo public")
 	cmd.Flags().StringVar(&token, "source-token", "", "Source PAT (or set GITHUB_TOKEN)")
+	cmd.Flags().StringVar(&sourceType, "source-type", "", "Force source service type (gitea, forgejo) instead of auto-detecting")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Skip confirmation in org mode")
 	cmd.Flags().BoolVar(&noIssues, "no-issues", false, "Do not import issues")
 	cmd.Flags().BoolVar(&noPRs, "no-prs", false, "Do not import pull requests")
