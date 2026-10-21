@@ -132,15 +132,13 @@ func ListSourceRepos(ctx context.Context, src Source, token string) ([]SourceRep
 	}
 }
 
-const giteaOrgReposPageSize = 50
-
 func listGiteaOrgRepos(ctx context.Context, src Source, token string) ([]SourceRepo, error) {
 	var all []SourceRepo
 
-	for page := 1; ; page++ {
-		url := fmt.Sprintf("%s://%s/api/v1/orgs/%s/repos?limit=%d&page=%d", src.Scheme, src.Host, src.Owner, giteaOrgReposPageSize, page)
+	nextURL := fmt.Sprintf("%s://%s/api/v1/orgs/%s/repos?limit=50&page=1", src.Scheme, src.Host, src.Owner)
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	for nextURL != "" {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, nextURL, nil)
 		if err != nil {
 			return nil, fmt.Errorf("building request: %w", err)
 		}
@@ -170,9 +168,7 @@ func listGiteaOrgRepos(ctx context.Context, src Source, token string) ([]SourceR
 
 		all = append(all, repos...)
 
-		if len(repos) < giteaOrgReposPageSize {
-			break
-		}
+		nextURL = parseNextLink(resp.Header.Get("Link"))
 	}
 
 	return all, nil

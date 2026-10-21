@@ -88,7 +88,8 @@ func TestResolveSourceToken(t *testing.T) {
 }
 
 func TestListGiteaOrgRepos(t *testing.T) {
-	t.Run("paginates until a short page", func(t *testing.T) {
+	t.Run("paginates across multiple pages", func(t *testing.T) {
+		var tsURL string
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path != "/api/v1/orgs/acme/repos" {
 				t.Errorf("unexpected path: %s", r.URL.Path)
@@ -96,11 +97,12 @@ func TestListGiteaOrgRepos(t *testing.T) {
 			page := r.URL.Query().Get("page")
 			w.Header().Set("Content-Type", "application/json")
 			switch page {
-			case "1":
+			case "", "1":
 				repos := make([]string, 0, 50)
 				for i := 0; i < 50; i++ {
 					repos = append(repos, fmt.Sprintf(`{"name":"repo%d","full_name":"acme/repo%d","clone_url":"https://example.com/acme/repo%d.git"}`, i, i, i))
 				}
+				w.Header().Set("Link", fmt.Sprintf(`<%s/api/v1/orgs/acme/repos?limit=50&page=2>; rel="next"`, tsURL))
 				_, _ = fmt.Fprintf(w, `[%s]`, joinJSON(repos))
 			case "2":
 				_, _ = fmt.Fprint(w, `[{"name":"repo50","full_name":"acme/repo50","clone_url":"https://example.com/acme/repo50.git"}]`)
@@ -109,6 +111,7 @@ func TestListGiteaOrgRepos(t *testing.T) {
 			}
 		}))
 		defer ts.Close()
+		tsURL = ts.URL
 
 		scheme, host := splitTestURL(t, ts.URL)
 		src := Source{Scheme: scheme, Host: host, Owner: "acme"}
@@ -121,6 +124,43 @@ func TestListGiteaOrgRepos(t *testing.T) {
 		}
 		if repos[0].Name != "repo0" || repos[50].Name != "repo50" {
 			t.Errorf("unexpected repo order: first=%q last=%q", repos[0].Name, repos[50].Name)
+		}
+	})
+
+	t.Run("paginates with server page size smaller than requested", func(t *testing.T) {
+		var tsURL string
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			page := r.URL.Query().Get("page")
+			w.Header().Set("Content-Type", "application/json")
+			switch page {
+			case "", "1":
+				repos := make([]string, 0, 20)
+				for i := 0; i < 20; i++ {
+					repos = append(repos, fmt.Sprintf(`{"name":"repo%d","full_name":"acme/repo%d","clone_url":"https://example.com/acme/repo%d.git"}`, i, i, i))
+				}
+				w.Header().Set("Link", fmt.Sprintf(`<%s/api/v1/orgs/acme/repos?limit=50&page=2>; rel="next"`, tsURL))
+				_, _ = fmt.Fprintf(w, `[%s]`, joinJSON(repos))
+			case "2":
+				repos := make([]string, 0, 10)
+				for i := 20; i < 30; i++ {
+					repos = append(repos, fmt.Sprintf(`{"name":"repo%d","full_name":"acme/repo%d","clone_url":"https://example.com/acme/repo%d.git"}`, i, i, i))
+				}
+				_, _ = fmt.Fprintf(w, `[%s]`, joinJSON(repos))
+			default:
+				_, _ = fmt.Fprint(w, `[]`)
+			}
+		}))
+		defer ts.Close()
+		tsURL = ts.URL
+
+		scheme, host := splitTestURL(t, ts.URL)
+		src := Source{Scheme: scheme, Host: host, Owner: "acme"}
+		repos, err := listGiteaOrgRepos(context.Background(), src, "")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(repos) != 30 {
+			t.Fatalf("expected 30 repos (server returns 20 per page), got %d", len(repos))
 		}
 	})
 
