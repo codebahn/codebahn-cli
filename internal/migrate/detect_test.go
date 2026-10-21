@@ -187,6 +187,43 @@ func TestResolveServiceType(t *testing.T) {
 	})
 }
 
+func TestValidateSourceType(t *testing.T) {
+	valid := []string{"forgejo", "gitea", "github", "gitlab", "git", "Forgejo", "GITEA", ""}
+	for _, v := range valid {
+		if err := ValidateSourceType(v); err != nil {
+			t.Errorf("ValidateSourceType(%q) = %v, want nil", v, err)
+		}
+	}
+
+	invalid := []string{"gtiea", "forgeo", "bitbucket", "svn"}
+	for _, v := range invalid {
+		if err := ValidateSourceType(v); err == nil {
+			t.Errorf("ValidateSourceType(%q) = nil, want error", v)
+		}
+	}
+}
+
+func TestResolveServiceType_CaseInsensitive(t *testing.T) {
+	src := Source{Service: "git", Scheme: "https", Host: "unreachable.invalid", Owner: "acme", Repo: "app"}
+	ResolveServiceType(context.Background(), &src, "Forgejo", "")
+	if src.Service != "gitea" {
+		t.Fatalf("expected gitea, got %q", src.Service)
+	}
+}
+
+func TestDetectService_Timeout(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(10 * time.Second)
+	}))
+	defer ts.Close()
+
+	scheme, host := splitTestURL(t, ts.URL)
+	got := DetectService(context.Background(), scheme, host, "")
+	if got != "" {
+		t.Fatalf("expected empty (timeout), got %q", got)
+	}
+}
+
 func splitTestURL(t *testing.T, rawURL string) (scheme, host string) {
 	t.Helper()
 	const httpPrefix = "http://"

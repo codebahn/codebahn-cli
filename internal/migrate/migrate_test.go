@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -183,13 +184,37 @@ func TestListGiteaOrgRepos(t *testing.T) {
 	})
 }
 
-func joinJSON(items []string) string {
-	result := ""
-	for i, item := range items {
-		if i > 0 {
-			result += ","
+func TestListGiteaOrgRepos_FallsBackToUsers(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Path == "/api/v1/orgs/alice/repos" {
+			w.WriteHeader(http.StatusNotFound)
+			_, _ = fmt.Fprint(w, `{"message":"Not found"}`)
+			return
 		}
-		result += item
+		if r.URL.Path == "/api/v1/users/alice/repos" {
+			_, _ = fmt.Fprint(w, `[{"name":"personal-repo","full_name":"alice/personal-repo","clone_url":"https://example.com/alice/personal-repo.git"}]`)
+			return
+		}
+		t.Errorf("unexpected path: %s", r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer ts.Close()
+
+	scheme, host := splitTestURL(t, ts.URL)
+	src := Source{Scheme: scheme, Host: host, Owner: "alice"}
+	repos, err := listGiteaOrgRepos(context.Background(), src, "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-	return result
+	if len(repos) != 1 {
+		t.Fatalf("expected 1 repo, got %d", len(repos))
+	}
+	if repos[0].Name != "personal-repo" {
+		t.Errorf("expected personal-repo, got %s", repos[0].Name)
+	}
+}
+
+func joinJSON(items []string) string {
+	return strings.Join(items, ",")
 }

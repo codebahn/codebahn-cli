@@ -6,15 +6,37 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
+	"time"
 )
+
+var validSourceTypes = map[string]string{
+	"forgejo": "gitea",
+	"gitea":   "gitea",
+	"github":  "github",
+	"gitlab":  "gitlab",
+	"git":     "git",
+}
+
+func ValidateSourceType(sourceType string) error {
+	if sourceType == "" {
+		return nil
+	}
+	lower := strings.ToLower(sourceType)
+	if _, ok := validSourceTypes[lower]; !ok {
+		return fmt.Errorf("unknown --source-type %q; valid values: forgejo, gitea, github, gitlab, git", sourceType)
+	}
+	return nil
+}
 
 func ResolveServiceType(ctx context.Context, src *Source, sourceType, tokenFlag string) {
 	if sourceType != "" {
-		normalized := sourceType
-		if normalized == "forgejo" {
-			normalized = "gitea"
+		lower := strings.ToLower(sourceType)
+		if mapped, ok := validSourceTypes[lower]; ok {
+			src.Service = mapped
+		} else {
+			src.Service = lower
 		}
-		src.Service = normalized
 		return
 	}
 	if src.Service == "git" {
@@ -25,9 +47,14 @@ func ResolveServiceType(ctx context.Context, src *Source, sourceType, tokenFlag 
 	}
 }
 
+const detectTimeout = 5 * time.Second
+
 func DetectService(ctx context.Context, scheme, host, token string) string {
+	probeCtx, cancel := context.WithTimeout(ctx, detectTimeout)
+	defer cancel()
+
 	url := fmt.Sprintf("%s://%s/api/v1/version", scheme, host)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(probeCtx, http.MethodGet, url, nil)
 	if err != nil {
 		return ""
 	}

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path"
@@ -133,43 +132,23 @@ func ListSourceRepos(ctx context.Context, src Source, token string) ([]SourceRep
 }
 
 func listGiteaOrgRepos(ctx context.Context, src Source, token string) ([]SourceRepo, error) {
-	var all []SourceRepo
-
-	nextURL := fmt.Sprintf("%s://%s/api/v1/orgs/%s/repos?limit=50&page=1", src.Scheme, src.Host, src.Owner)
-
-	for nextURL != "" {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, nextURL, nil)
-		if err != nil {
-			return nil, fmt.Errorf("building request: %w", err)
+	orgURL := sourceRepoURL(src.Scheme, src.Host, "/api/v1/orgs/%s/repos?limit=50&page=1", src.Owner)
+	repos, err := fetchPages[SourceRepo](ctx, fetchOpts{
+		startURL: orgURL,
+		token:    token,
+		label:    "Gitea",
+	})
+	if err != nil {
+		var he *httpError
+		if isHTTPError(err, &he) && he.StatusCode == http.StatusNotFound {
+			userURL := sourceRepoURL(src.Scheme, src.Host, "/api/v1/users/%s/repos?limit=50&page=1", src.Owner)
+			return fetchPages[SourceRepo](ctx, fetchOpts{
+				startURL: userURL,
+				token:    token,
+				label:    "Gitea",
+			})
 		}
-		if token != "" {
-			req.Header.Set("Authorization", "token "+token)
-		}
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return nil, fmt.Errorf("Gitea API request: %w", err)
-		}
-
-		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
-		_ = resp.Body.Close()
-		if readErr != nil {
-			return nil, fmt.Errorf("reading Gitea response: %w", readErr)
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("Gitea API: HTTP %d: %s", resp.StatusCode, body)
-		}
-
-		var repos []SourceRepo
-		if err := json.Unmarshal(body, &repos); err != nil {
-			return nil, fmt.Errorf("decoding Gitea response: %w", err)
-		}
-
-		all = append(all, repos...)
-
-		nextURL = parseNextLink(resp.Header.Get("Link"))
+		return nil, err
 	}
-
-	return all, nil
+	return repos, nil
 }

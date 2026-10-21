@@ -201,6 +201,10 @@ func ImportCmd() *cobra.Command {
 				return fmt.Errorf("--private and --public are mutually exclusive")
 			}
 
+			if err := ValidateSourceType(sourceType); err != nil {
+				return err
+			}
+
 			src, err := ParseSource(args[0])
 			if err != nil {
 				return err
