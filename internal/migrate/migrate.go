@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -123,7 +125,55 @@ func ListSourceRepos(ctx context.Context, src Source, token string) ([]SourceRep
 	switch src.Service {
 	case "github":
 		return ListGitHubRepos(ctx, src.Owner, token)
+	case "gitea":
+		return listGiteaOrgRepos(ctx, src, token)
 	default:
 		return nil, fmt.Errorf("org-level import not supported for %s; specify a full repository URL", src.Service)
 	}
+}
+
+const giteaOrgReposPageSize = 50
+
+func listGiteaOrgRepos(ctx context.Context, src Source, token string) ([]SourceRepo, error) {
+	var all []SourceRepo
+
+	for page := 1; ; page++ {
+		url := fmt.Sprintf("%s://%s/api/v1/orgs/%s/repos?limit=%d&page=%d", src.Scheme, src.Host, src.Owner, giteaOrgReposPageSize, page)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("building request: %w", err)
+		}
+		if token != "" {
+			req.Header.Set("Authorization", "token "+token)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("Gitea API request: %w", err)
+		}
+
+		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
+		_ = resp.Body.Close()
+		if readErr != nil {
+			return nil, fmt.Errorf("reading Gitea response: %w", readErr)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("Gitea API: HTTP %d: %s", resp.StatusCode, body)
+		}
+
+		var repos []SourceRepo
+		if err := json.Unmarshal(body, &repos); err != nil {
+			return nil, fmt.Errorf("decoding Gitea response: %w", err)
+		}
+
+		all = append(all, repos...)
+
+		if len(repos) < giteaOrgReposPageSize {
+			break
+		}
+	}
+
+	return all, nil
 }
