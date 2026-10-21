@@ -17,11 +17,33 @@ type fetchOpts struct {
 	label     string // for error messages, e.g. "GitHub" or "Gitea"
 }
 
+var noRedirectClient = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
+
+func sameOrigin(a, b string) bool {
+	ua, err := url.Parse(a)
+	if err != nil {
+		return false
+	}
+	ub, err := url.Parse(b)
+	if err != nil {
+		return false
+	}
+	return ua.Scheme == ub.Scheme && ua.Host == ub.Host
+}
+
 func fetchPages[T any](ctx context.Context, opts fetchOpts) ([]T, error) {
 	var all []T
 	nextURL := opts.startURL
 
 	for nextURL != "" {
+		if nextURL != opts.startURL && !sameOrigin(opts.startURL, nextURL) {
+			return nil, fmt.Errorf("%s API: pagination URL has different origin", opts.label)
+		}
+
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, nextURL, nil)
 		if err != nil {
 			return nil, fmt.Errorf("building request: %w", err)
@@ -42,9 +64,13 @@ func fetchPages[T any](ctx context.Context, opts fetchOpts) ([]T, error) {
 			}
 		}
 
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := noRedirectClient.Do(req)
 		if err != nil {
 			return nil, fmt.Errorf("%s API request: %w", opts.label, err)
+		}
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			_ = resp.Body.Close()
+			return nil, fmt.Errorf("%s API: unexpected redirect (HTTP %d)", opts.label, resp.StatusCode)
 		}
 
 		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
