@@ -27,7 +27,7 @@ func ListGitHubRepos(ctx context.Context, owner, token string) ([]SourceRepo, er
 	repos, err := fetchGitHubRepos(ctx, fmt.Sprintf("%s/orgs/%s/repos?per_page=100", githubAPIBase, escaped), token)
 	if err != nil {
 		var he *httpError
-		if isHTTPError(err, &he) && he.StatusCode == http.StatusNotFound {
+		if errors.As(err, &he) && he.StatusCode == http.StatusNotFound {
 			return fetchGitHubRepos(ctx, fmt.Sprintf("%s/users/%s/repos?per_page=100&type=all", githubAPIBase, escaped), token)
 		}
 		return nil, err
@@ -45,7 +45,7 @@ func fetchGitHubRepos(ctx context.Context, startURL, token string) ([]SourceRepo
 	})
 	if err != nil {
 		var he *httpError
-		if isHTTPError(err, &he) && he.StatusCode == http.StatusForbidden {
+		if errors.As(err, &he) && he.StatusCode == http.StatusForbidden {
 			if he.Headers.Get("X-RateLimit-Remaining") == "0" {
 				return nil, fmt.Errorf("GitHub API rate limit exceeded; authenticate with --token or GITHUB_TOKEN")
 			}
@@ -53,10 +53,6 @@ func fetchGitHubRepos(ctx context.Context, startURL, token string) ([]SourceRepo
 		return nil, err
 	}
 	return repos, nil
-}
-
-func isHTTPError(err error, target **httpError) bool {
-	return errors.As(err, target)
 }
 
 var linkNextRe = regexp.MustCompile(`<([^>]+)>;\s*rel="next"`)

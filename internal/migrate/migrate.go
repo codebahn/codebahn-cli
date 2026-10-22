@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -140,7 +141,7 @@ func listGiteaOrgRepos(ctx context.Context, src Source, token string) ([]SourceR
 	})
 	if err != nil {
 		var he *httpError
-		if isHTTPError(err, &he) && he.StatusCode == http.StatusNotFound {
+		if errors.As(err, &he) && he.StatusCode == http.StatusNotFound {
 			userURL := sourceRepoURL(src.Scheme, src.Host, "/api/v1/users/%s/repos?limit=50&page=1", src.Owner)
 			return fetchPages[SourceRepo](ctx, fetchOpts{
 				startURL: userURL,

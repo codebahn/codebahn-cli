@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -117,13 +118,13 @@ func TestListGitHubRepos_URLEscapesOwner(t *testing.T) {
 	}
 }
 
-func TestIsHTTPError_WrappedError(t *testing.T) {
+func TestHTTPError_ErrorsAs(t *testing.T) {
 	orig := &httpError{StatusCode: 404, Body: "not found", Label: "test"}
 	wrapped := fmt.Errorf("fetch failed: %w", orig)
 
 	var target *httpError
-	if !isHTTPError(wrapped, &target) {
-		t.Fatal("isHTTPError should unwrap wrapped errors")
+	if !errors.As(wrapped, &target) {
+		t.Fatal("errors.As should unwrap wrapped httpError")
 	}
 	if target.StatusCode != 404 {
 		t.Fatalf("expected 404, got %d", target.StatusCode)

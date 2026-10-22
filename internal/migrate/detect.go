@@ -42,7 +42,12 @@ func ResolveServiceType(ctx context.Context, src *Source, sourceType, tokenFlag 
 	}
 }
 
-const detectTimeout = 5 * time.Second
+var detectClient = &http.Client{
+	Timeout: 5 * time.Second,
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
 
 func DetectService(ctx context.Context, scheme, host, token string) string {
 	endpoint := fmt.Sprintf("%s://%s/api/v1/version", scheme, host)
@@ -54,13 +59,7 @@ func DetectService(ctx context.Context, scheme, host, token string) string {
 		req.Header.Set("Authorization", "token "+token)
 	}
 
-	noRedirect := &http.Client{
-		Timeout: detectTimeout,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-	resp, err := noRedirect.Do(req)
+	resp, err := detectClient.Do(req)
 	if err != nil {
 		return ""
 	}

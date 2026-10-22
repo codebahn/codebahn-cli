@@ -94,6 +94,31 @@ func TestFetchPages_FollowsSameOriginRedirect(t *testing.T) {
 	}
 }
 
+func TestFetchPages_MaxPagesExceeded(t *testing.T) {
+	page := 0
+	var tsURL string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		page++
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Link", fmt.Sprintf(`<%s/repos?page=%d>; rel="next"`, tsURL, page+1))
+		_, _ = fmt.Fprintf(w, `[{"name":"repo%d","full_name":"o/repo%d","clone_url":"https://x.com/o/repo%d.git"}]`, page, page, page)
+	}))
+	defer ts.Close()
+	tsURL = ts.URL
+
+	_, err := fetchPages[SourceRepo](context.Background(), fetchOpts{
+		startURL: ts.URL + "/repos?page=1",
+		token:    "tok",
+		label:    "test",
+	})
+	if err == nil {
+		t.Fatal("expected error when pagination exceeds max pages")
+	}
+	if page > maxPages+1 {
+		t.Fatalf("fetched %d pages, expected at most %d", page, maxPages)
+	}
+}
+
 func TestFetchPages_SameOriginLinkAllowed(t *testing.T) {
 	var tsURL string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

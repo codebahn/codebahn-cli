@@ -21,15 +21,14 @@ type fetchOpts struct {
 var noRedirectClient = &http.Client{
 	Timeout: 30 * time.Second,
 	CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		if len(via) == 0 {
-			return http.ErrUseLastResponse
-		}
 		if !sameOrigin(via[0].URL.String(), req.URL.String()) {
 			return http.ErrUseLastResponse
 		}
 		return nil
 	},
 }
+
+const maxPages = 200
 
 func sameOrigin(a, b string) bool {
 	ua, err := url.Parse(a)
@@ -47,7 +46,10 @@ func fetchPages[T any](ctx context.Context, opts fetchOpts) ([]T, error) {
 	var all []T
 	nextURL := opts.startURL
 
-	for nextURL != "" {
+	for pages := 0; nextURL != ""; pages++ {
+		if pages >= maxPages {
+			return nil, fmt.Errorf("%s API: exceeded %d pages of results", opts.label, maxPages)
+		}
 		if nextURL != opts.startURL && !sameOrigin(opts.startURL, nextURL) {
 			return nil, fmt.Errorf("%s API: pagination URL has different origin", opts.label)
 		}
