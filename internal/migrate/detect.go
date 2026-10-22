@@ -31,7 +31,9 @@ func ValidateSourceType(sourceType string) error {
 
 func ResolveServiceType(ctx context.Context, src *Source, sourceType, tokenFlag string) {
 	if sourceType != "" {
-		src.Service = validSourceTypes[strings.ToLower(sourceType)]
+		if mapped, ok := validSourceTypes[strings.ToLower(sourceType)]; ok {
+			src.Service = mapped
+		}
 		return
 	}
 	if src.Service == "git" {
