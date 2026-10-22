@@ -22,13 +22,14 @@ type migrateResult struct {
 
 func MirrorCmd() *cobra.Command {
 	var (
-		owner   string
-		private bool
-		public  bool
-		token   string
-		yes     bool
-		include StringSlice
-		exclude StringSlice
+		owner      string
+		private    bool
+		public     bool
+		token      string
+		sourceType string
+		yes        bool
+		include    StringSlice
+		exclude    StringSlice
 	)
 
 	cmd := &cobra.Command{
@@ -39,6 +40,10 @@ func MirrorCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if private && public {
 				return fmt.Errorf("--private and --public are mutually exclusive")
+			}
+
+			if err := ValidateSourceType(sourceType); err != nil {
+				return err
 			}
 
 			src, err := ParseSource(args[0])
@@ -52,6 +57,9 @@ func MirrorCmd() *cobra.Command {
 			}
 
 			ctx := cmd.Context()
+
+			ResolveServiceType(ctx, &src, sourceType, token)
+
 			destOwner, err := ResolveDestOwner(ctx, c, owner)
 			if err != nil {
 				return err
@@ -76,6 +84,7 @@ func MirrorCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&private, "private", false, "Make mirror private")
 	cmd.Flags().BoolVar(&public, "public", false, "Make mirror public")
 	cmd.Flags().StringVar(&token, "source-token", "", "Source PAT (or set GITHUB_TOKEN)")
+	cmd.Flags().StringVar(&sourceType, "source-type", "", "Force source service type (gitea, forgejo) instead of auto-detecting")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Skip confirmation in org mode")
 	cmd.Flags().Var(&include, "include", "Glob pattern to select repos (repeatable)")
 	cmd.Flags().Var(&exclude, "exclude", "Glob pattern to skip repos (repeatable)")
@@ -178,6 +187,7 @@ func ImportCmd() *cobra.Command {
 		private      bool
 		public       bool
 		token        string
+		sourceType   string
 		yes          bool
 		noIssues     bool
 		noPRs        bool
@@ -200,6 +210,10 @@ func ImportCmd() *cobra.Command {
 				return fmt.Errorf("--private and --public are mutually exclusive")
 			}
 
+			if err := ValidateSourceType(sourceType); err != nil {
+				return err
+			}
+
 			src, err := ParseSource(args[0])
 			if err != nil {
 				return err
@@ -211,6 +225,9 @@ func ImportCmd() *cobra.Command {
 			}
 
 			ctx := cmd.Context()
+
+			ResolveServiceType(ctx, &src, sourceType, token)
+
 			destOwner, err := ResolveDestOwner(ctx, c, owner)
 			if err != nil {
 				return err
@@ -251,6 +268,7 @@ func ImportCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&private, "private", false, "Make imported repo private")
 	cmd.Flags().BoolVar(&public, "public", false, "Make imported repo public")
 	cmd.Flags().StringVar(&token, "source-token", "", "Source PAT (or set GITHUB_TOKEN)")
+	cmd.Flags().StringVar(&sourceType, "source-type", "", "Force source service type (gitea, forgejo) instead of auto-detecting")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Skip confirmation in org mode")
 	cmd.Flags().BoolVar(&noIssues, "no-issues", false, "Do not import issues")
 	cmd.Flags().BoolVar(&noPRs, "no-prs", false, "Do not import pull requests")

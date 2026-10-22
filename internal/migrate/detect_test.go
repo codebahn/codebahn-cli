@@ -1,0 +1,246 @@
+package migrate
+
+import (
+	"context"
+	"fmt"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+)
+
+func TestDetectService(t *testing.T) {
+	t.Run("forgejo", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/api/v1/version" {
+				t.Errorf("unexpected path: %s", r.URL.Path)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"version":"1.20.0+gitea-1.20.0"}`)
+		}))
+		defer ts.Close()
+
+		scheme, host := splitTestURL(t, ts.URL)
+		got := DetectService(context.Background(), scheme, host, "")
+		if got != "gitea" {
+			t.Fatalf("expected gitea, got %q", got)
+		}
+	})
+
+	t.Run("gitea", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"version":"1.21.0"}`)
+		}))
+		defer ts.Close()
+
+		scheme, host := splitTestURL(t, ts.URL)
+		got := DetectService(context.Background(), scheme, host, "")
+		if got != "gitea" {
+			t.Fatalf("expected gitea, got %q", got)
+		}
+	})
+
+	t.Run("sends token", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Authorization") != "token test-token" {
+				t.Errorf("missing or wrong auth header: %q", r.Header.Get("Authorization"))
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"version":"1.21.0"}`)
+		}))
+		defer ts.Close()
+
+		scheme, host := splitTestURL(t, ts.URL)
+		got := DetectService(context.Background(), scheme, host, "test-token")
+		if got != "gitea" {
+			t.Fatalf("expected gitea, got %q", got)
+		}
+	})
+
+	t.Run("non-forgejo 200 missing version key", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"status":"ok"}`)
+		}))
+		defer ts.Close()
+
+		scheme, host := splitTestURL(t, ts.URL)
+		got := DetectService(context.Background(), scheme, host, "")
+		if got != "" {
+			t.Fatalf("expected empty string, got %q", got)
+		}
+	})
+
+	t.Run("404", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNotFound)
+		}))
+		defer ts.Close()
+
+		scheme, host := splitTestURL(t, ts.URL)
+		got := DetectService(context.Background(), scheme, host, "")
+		if got != "" {
+			t.Fatalf("expected empty string, got %q", got)
+		}
+	})
+
+	t.Run("connection refused", func(t *testing.T) {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatalf("failed to allocate port: %v", err)
+		}
+		addr := ln.Addr().String()
+		if err := ln.Close(); err != nil {
+			t.Fatalf("failed to close listener: %v", err)
+		}
+
+		got := DetectService(context.Background(), "http", addr, "")
+		if got != "" {
+			t.Fatalf("expected empty string, got %q", got)
+		}
+	})
+
+	t.Run("timeout", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			time.Sleep(100 * time.Millisecond)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"version":"1.21.0"}`)
+		}))
+		defer ts.Close()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+		defer cancel()
+
+		scheme, host := splitTestURL(t, ts.URL)
+		got := DetectService(ctx, scheme, host, "")
+		if got != "" {
+			t.Fatalf("expected empty string, got %q", got)
+		}
+	})
+}
+
+func TestResolveServiceType(t *testing.T) {
+	t.Run("resolves GITHUB_TOKEN for probe on auth-required instance", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Authorization") != "token env-tok" {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"version":"1.21.0"}`)
+		}))
+		defer ts.Close()
+
+		t.Setenv("GITHUB_TOKEN", "env-tok")
+		scheme, host := splitTestURL(t, ts.URL)
+		src := Source{Service: "git", Scheme: scheme, Host: host, Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "", "")
+		if src.Service != "gitea" {
+			t.Fatalf("expected gitea (GITHUB_TOKEN should be used for probe), got %q", src.Service)
+		}
+	})
+
+	t.Run("flag token takes precedence over env", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Authorization") != "token flag-tok" {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"version":"1.21.0"}`)
+		}))
+		defer ts.Close()
+
+		t.Setenv("GITHUB_TOKEN", "wrong-env-tok")
+		scheme, host := splitTestURL(t, ts.URL)
+		src := Source{Service: "git", Scheme: scheme, Host: host, Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "", "flag-tok")
+		if src.Service != "gitea" {
+			t.Fatalf("expected gitea, got %q", src.Service)
+		}
+	})
+
+	t.Run("source-type flag skips probe", func(t *testing.T) {
+		src := Source{Service: "git", Scheme: "https", Host: "unreachable.invalid", Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "gitea", "")
+		if src.Service != "gitea" {
+			t.Fatalf("expected gitea, got %q", src.Service)
+		}
+	})
+
+	t.Run("forgejo alias normalizes to gitea", func(t *testing.T) {
+		src := Source{Service: "git", Scheme: "https", Host: "unreachable.invalid", Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "forgejo", "")
+		if src.Service != "gitea" {
+			t.Fatalf("expected gitea, got %q", src.Service)
+		}
+	})
+
+	t.Run("probe only runs when service is git", func(t *testing.T) {
+		src := Source{Service: "github", Scheme: "https", Host: "github.com", Owner: "acme", Repo: "app"}
+		ResolveServiceType(context.Background(), &src, "", "")
+		if src.Service != "github" {
+			t.Fatalf("expected github unchanged, got %q", src.Service)
+		}
+	})
+}
+
+func TestDetectService_NoFollowRedirect(t *testing.T) {
+	leaked := false
+	attacker := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "" {
+			leaked = true
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer attacker.Close()
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, attacker.URL+"/steal", http.StatusFound)
+	}))
+	defer ts.Close()
+
+	scheme, host := splitTestURL(t, ts.URL)
+	got := DetectService(context.Background(), scheme, host, "secret-token")
+	if got != "" {
+		t.Fatalf("expected empty (redirect is not a version response), got %q", got)
+	}
+	if leaked {
+		t.Fatal("auth token was leaked to the redirect target")
+	}
+}
+
+func TestValidateSourceType(t *testing.T) {
+	valid := []string{"forgejo", "gitea", "github", "gitlab", "git", "Forgejo", "GITEA", ""}
+	for _, v := range valid {
+		if err := ValidateSourceType(v); err != nil {
+			t.Errorf("ValidateSourceType(%q) = %v, want nil", v, err)
+		}
+	}
+
+	invalid := []string{"gtiea", "forgeo", "bitbucket", "svn"}
+	for _, v := range invalid {
+		if err := ValidateSourceType(v); err == nil {
+			t.Errorf("ValidateSourceType(%q) = nil, want error", v)
+		}
+	}
+}
+
+func TestResolveServiceType_CaseInsensitive(t *testing.T) {
+	src := Source{Service: "git", Scheme: "https", Host: "unreachable.invalid", Owner: "acme", Repo: "app"}
+	ResolveServiceType(context.Background(), &src, "Forgejo", "")
+	if src.Service != "gitea" {
+		t.Fatalf("expected gitea, got %q", src.Service)
+	}
+}
+
+func splitTestURL(t *testing.T, rawURL string) (scheme, host string) {
+	t.Helper()
+	const httpPrefix = "http://"
+	if len(rawURL) <= len(httpPrefix) || rawURL[:len(httpPrefix)] != httpPrefix {
+		t.Fatalf("unexpected test server URL: %q", rawURL)
+	}
+	return "http", rawURL[len(httpPrefix):]
+}

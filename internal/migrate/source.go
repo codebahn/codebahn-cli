@@ -8,6 +8,7 @@ import (
 
 type Source struct {
 	Service  string
+	Scheme   string
 	Host     string
 	Owner    string
 	Repo     string
@@ -73,13 +74,14 @@ func ParseSource(input string) (Source, error) {
 
 	s := Source{
 		Service: service,
+		Scheme:  u.Scheme,
 		Host:    host,
 		Owner:   parts[0],
 	}
 
 	if len(parts) == 2 && parts[1] != "" {
 		s.Repo = parts[1]
-		s.CloneURL = fmt.Sprintf("https://%s/%s/%s.git", host, s.Owner, s.Repo)
+		s.CloneURL = fmt.Sprintf("%s://%s/%s/%s.git", s.Scheme, host, s.Owner, s.Repo)
 	}
 
 	return s, nil

@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -123,7 +125,31 @@ func ListSourceRepos(ctx context.Context, src Source, token string) ([]SourceRep
 	switch src.Service {
 	case "github":
 		return ListGitHubRepos(ctx, src.Owner, token)
+	case "gitea":
+		return listGiteaOrgRepos(ctx, src, token)
 	default:
 		return nil, fmt.Errorf("org-level import not supported for %s; specify a full repository URL", src.Service)
 	}
+}
+
+func listGiteaOrgRepos(ctx context.Context, src Source, token string) ([]SourceRepo, error) {
+	orgURL := sourceRepoURL(src.Scheme, src.Host, "/api/v1/orgs/%s/repos?limit=50&page=1", src.Owner)
+	repos, err := fetchPages[SourceRepo](ctx, fetchOpts{
+		startURL: orgURL,
+		token:    token,
+		label:    "Gitea",
+	})
+	if err != nil {
+		var he *httpError
+		if errors.As(err, &he) && he.StatusCode == http.StatusNotFound {
+			userURL := sourceRepoURL(src.Scheme, src.Host, "/api/v1/users/%s/repos?limit=50&page=1", src.Owner)
+			return fetchPages[SourceRepo](ctx, fetchOpts{
+				startURL: userURL,
+				token:    token,
+				label:    "Gitea",
+			})
+		}
+		return nil, err
+	}
+	return repos, nil
 }

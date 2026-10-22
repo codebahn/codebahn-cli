@@ -6,6 +6,7 @@ func TestParseSource(t *testing.T) {
 	tests := []struct {
 		input       string
 		wantService string
+		wantScheme  string
 		wantHost    string
 		wantOwner   string
 		wantRepo    string
@@ -15,57 +16,75 @@ func TestParseSource(t *testing.T) {
 	}{
 		{
 			input:       "github.com/acme/api",
-			wantService: "github", wantHost: "github.com",
+			wantService: "github", wantScheme: "https", wantHost: "github.com",
 			wantOwner: "acme", wantRepo: "api",
 			wantClone: "https://github.com/acme/api.git",
 		},
 		{
 			input:       "https://github.com/acme/api",
-			wantService: "github", wantHost: "github.com",
+			wantService: "github", wantScheme: "https", wantHost: "github.com",
 			wantOwner: "acme", wantRepo: "api",
 			wantClone: "https://github.com/acme/api.git",
 		},
 		{
 			input:       "https://github.com/acme/api.git",
-			wantService: "github", wantHost: "github.com",
+			wantService: "github", wantScheme: "https", wantHost: "github.com",
 			wantOwner: "acme", wantRepo: "api",
 			wantClone: "https://github.com/acme/api.git",
 		},
 		{
 			input:       "github.com/acme",
-			wantService: "github", wantHost: "github.com",
+			wantService: "github", wantScheme: "https", wantHost: "github.com",
 			wantOwner: "acme",
 			wantOrg:   true,
 		},
 		{
 			input:       "gitlab.com/acme/api",
-			wantService: "gitlab", wantHost: "gitlab.com",
+			wantService: "gitlab", wantScheme: "https", wantHost: "gitlab.com",
 			wantOwner: "acme", wantRepo: "api",
 			wantClone: "https://gitlab.com/acme/api.git",
 		},
 		{
 			input:       "codeberg.org/acme/api",
-			wantService: "gitea", wantHost: "codeberg.org",
+			wantService: "gitea", wantScheme: "https", wantHost: "codeberg.org",
 			wantOwner: "acme", wantRepo: "api",
 			wantClone: "https://codeberg.org/acme/api.git",
 		},
 		{
 			input:       "git.example.com/foo/bar",
-			wantService: "git", wantHost: "git.example.com",
+			wantService: "git", wantScheme: "https", wantHost: "git.example.com",
 			wantOwner: "foo", wantRepo: "bar",
 			wantClone: "https://git.example.com/foo/bar.git",
 		},
 		{
 			input:       "GITHUB.COM/Acme/API",
-			wantService: "github", wantHost: "github.com",
+			wantService: "github", wantScheme: "https", wantHost: "github.com",
 			wantOwner: "Acme", wantRepo: "API",
 			wantClone: "https://github.com/Acme/API.git",
 		},
 		{
 			input:       "github.com/acme/api/",
-			wantService: "github", wantHost: "github.com",
+			wantService: "github", wantScheme: "https", wantHost: "github.com",
 			wantOwner: "acme", wantRepo: "api",
 			wantClone: "https://github.com/acme/api.git",
+		},
+		{
+			input:       "http://localhost:3000/org/repo",
+			wantService: "git", wantScheme: "http", wantHost: "localhost:3000",
+			wantOwner: "org", wantRepo: "repo",
+			wantClone: "http://localhost:3000/org/repo.git",
+		},
+		{
+			input:       "https://forge.example.com/org/repo",
+			wantService: "git", wantScheme: "https", wantHost: "forge.example.com",
+			wantOwner: "org", wantRepo: "repo",
+			wantClone: "https://forge.example.com/org/repo.git",
+		},
+		{
+			input:       "forge.example.com/org/repo",
+			wantService: "git", wantScheme: "https", wantHost: "forge.example.com",
+			wantOwner: "org", wantRepo: "repo",
+			wantClone: "https://forge.example.com/org/repo.git",
 		},
 		{input: "", wantErr: true},
 		{input: "not-a-url", wantErr: true},
@@ -83,6 +102,9 @@ func TestParseSource(t *testing.T) {
 			}
 			if src.Service != tt.wantService {
 				t.Errorf("Service = %q, want %q", src.Service, tt.wantService)
+			}
+			if src.Scheme != tt.wantScheme {
+				t.Errorf("Scheme = %q, want %q", src.Scheme, tt.wantScheme)
 			}
 			if src.Host != tt.wantHost {
 				t.Errorf("Host = %q, want %q", src.Host, tt.wantHost)
