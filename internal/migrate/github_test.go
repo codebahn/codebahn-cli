@@ -94,6 +94,42 @@ func TestListGitHubReposPagination(t *testing.T) {
 	}
 }
 
+func TestListGitHubRepos_URLEscapesOwner(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.RawPath != "" && r.URL.RawPath != r.URL.Path {
+			// Owner was correctly escaped
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `[{"name":"repo","full_name":"a%2Fb/repo","clone_url":"https://github.com/a/repo.git"}]`)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `[{"name":"repo","full_name":"acme/repo","clone_url":"https://github.com/acme/repo.git"}]`)
+	}))
+	defer ts.Close()
+
+	orig := githubAPIBase
+	SetGitHubAPIBase(ts.URL)
+	defer SetGitHubAPIBase(orig)
+
+	_, err := ListGitHubRepos(context.Background(), "acme", "tok")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestIsHTTPError_WrappedError(t *testing.T) {
+	orig := &httpError{StatusCode: 404, Body: "not found", Label: "test"}
+	wrapped := fmt.Errorf("fetch failed: %w", orig)
+
+	var target *httpError
+	if !isHTTPError(wrapped, &target) {
+		t.Fatal("isHTTPError should unwrap wrapped errors")
+	}
+	if target.StatusCode != 404 {
+		t.Fatalf("expected 404, got %d", target.StatusCode)
+	}
+}
+
 func TestListGitHubReposRateLimit(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-RateLimit-Remaining", "0")

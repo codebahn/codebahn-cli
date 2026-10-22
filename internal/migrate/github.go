@@ -2,8 +2,10 @@ package migrate
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -21,11 +23,12 @@ type SourceRepo struct {
 }
 
 func ListGitHubRepos(ctx context.Context, owner, token string) ([]SourceRepo, error) {
-	repos, err := fetchGitHubRepos(ctx, fmt.Sprintf("%s/orgs/%s/repos?per_page=100", githubAPIBase, owner), token)
+	escaped := url.PathEscape(owner)
+	repos, err := fetchGitHubRepos(ctx, fmt.Sprintf("%s/orgs/%s/repos?per_page=100", githubAPIBase, escaped), token)
 	if err != nil {
 		var he *httpError
 		if isHTTPError(err, &he) && he.StatusCode == http.StatusNotFound {
-			return fetchGitHubRepos(ctx, fmt.Sprintf("%s/users/%s/repos?per_page=100&type=all", githubAPIBase, owner), token)
+			return fetchGitHubRepos(ctx, fmt.Sprintf("%s/users/%s/repos?per_page=100&type=all", githubAPIBase, escaped), token)
 		}
 		return nil, err
 	}
@@ -53,11 +56,7 @@ func fetchGitHubRepos(ctx context.Context, startURL, token string) ([]SourceRepo
 }
 
 func isHTTPError(err error, target **httpError) bool {
-	if e, ok := err.(*httpError); ok {
-		*target = e
-		return true
-	}
-	return false
+	return errors.As(err, target)
 }
 
 var linkNextRe = regexp.MustCompile(`<([^>]+)>;\s*rel="next"`)

@@ -39,7 +39,7 @@ func TestFetchPages_RejectsCrossOriginLinkHeader(t *testing.T) {
 	}
 }
 
-func TestFetchPages_NoFollowRedirect(t *testing.T) {
+func TestFetchPages_NoFollowCrossOriginRedirect(t *testing.T) {
 	leaked := false
 	attacker := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "" {
@@ -61,10 +61,36 @@ func TestFetchPages_NoFollowRedirect(t *testing.T) {
 		label:    "test",
 	})
 	if err == nil {
-		t.Fatal("expected error when server redirects, got nil")
+		t.Fatal("expected error when server redirects cross-origin, got nil")
 	}
 	if leaked {
-		t.Fatal("auth token was leaked via redirect")
+		t.Fatal("auth token was leaked via cross-origin redirect")
+	}
+}
+
+func TestFetchPages_FollowsSameOriginRedirect(t *testing.T) {
+	var tsURL string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/old" {
+			http.Redirect(w, r, tsURL+"/new", http.StatusMovedPermanently)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `[{"name":"repo1","full_name":"o/repo1","clone_url":"https://x.com/o/repo1.git"}]`)
+	}))
+	defer ts.Close()
+	tsURL = ts.URL
+
+	repos, err := fetchPages[SourceRepo](context.Background(), fetchOpts{
+		startURL: ts.URL + "/old",
+		token:    "tok",
+		label:    "test",
+	})
+	if err != nil {
+		t.Fatalf("same-origin redirect should be followed, got error: %v", err)
+	}
+	if len(repos) != 1 {
+		t.Fatalf("expected 1 repo, got %d", len(repos))
 	}
 }
 

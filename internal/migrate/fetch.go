@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type fetchOpts struct {
@@ -18,8 +19,15 @@ type fetchOpts struct {
 }
 
 var noRedirectClient = &http.Client{
+	Timeout: 30 * time.Second,
 	CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
+		if len(via) == 0 {
+			return http.ErrUseLastResponse
+		}
+		if !sameOrigin(via[0].URL.String(), req.URL.String()) {
+			return http.ErrUseLastResponse
+		}
+		return nil
 	},
 }
 
@@ -67,10 +75,6 @@ func fetchPages[T any](ctx context.Context, opts fetchOpts) ([]T, error) {
 		resp, err := noRedirectClient.Do(req)
 		if err != nil {
 			return nil, fmt.Errorf("%s API request: %w", opts.label, err)
-		}
-		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-			_ = resp.Body.Close()
-			return nil, fmt.Errorf("%s API: unexpected redirect (HTTP %d)", opts.label, resp.StatusCode)
 		}
 
 		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 10<<20))

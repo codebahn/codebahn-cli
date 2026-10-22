@@ -31,12 +31,7 @@ func ValidateSourceType(sourceType string) error {
 
 func ResolveServiceType(ctx context.Context, src *Source, sourceType, tokenFlag string) {
 	if sourceType != "" {
-		lower := strings.ToLower(sourceType)
-		if mapped, ok := validSourceTypes[lower]; ok {
-			src.Service = mapped
-		} else {
-			src.Service = lower
-		}
+		src.Service = validSourceTypes[strings.ToLower(sourceType)]
 		return
 	}
 	if src.Service == "git" {
@@ -50,8 +45,8 @@ func ResolveServiceType(ctx context.Context, src *Source, sourceType, tokenFlag 
 const detectTimeout = 5 * time.Second
 
 func DetectService(ctx context.Context, scheme, host, token string) string {
-	url := fmt.Sprintf("%s://%s/api/v1/version", scheme, host)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	endpoint := fmt.Sprintf("%s://%s/api/v1/version", scheme, host)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return ""
 	}
