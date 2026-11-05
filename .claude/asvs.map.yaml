@@ -1,0 +1,23 @@
+# Which OWASP ASVS 5.0 chapters apply to which paths in this repo. Rendered into
+# .claude/rules/security/ by .claude/render-rules (kb render-asvs in the knowledge repo).
+# Levels 1 and 2: a CLI that holds OAuth tokens and fronts an MCP endpoint. V1 to V3, V5 to V8,
+# V10 and V14 are server concerns; V17 (WebRTC) is irrelevant. Documentation-only section V11.1
+# is skipped; it belongs in the review checklist.
+version: v5.0.0
+levels: [1, 2]
+chapters:
+  - id: V4 # API and Web Service: the API client and the tool definitions that shape every request
+    paths: ["client/**", "tools/**", "internal/gen/**", "cmd/gen/**", "cmd/gen-mcp-tools/**"]
+  - id: V9 # Self-contained Tokens: OAuth access and refresh tokens, GitHub session token
+    paths: ["internal/oauth/**", "internal/config/**", "internal/migrate/device_flow.go", "internal/migrate/github_session.go", "internal/migrate/githubapp.go"]
+  - id: V11 # Cryptography: credential storage on disk, signature verification of updates
+    skip: [V11.1]
+    paths: ["internal/config/**", "internal/migrate/github_session.go", "internal/update/**", "scripts/install.*", "scripts/upload-release.sh"]
+  - id: V12 # Secure Communication: TLS and HTTP clients, download and update transport
+    paths: ["client/**", "internal/oauth/**", "internal/update/**", "internal/migrate/fetch.go", "internal/migrate/github.go", "internal/migrate/preflight.go", "scripts/install.*"]
+  - id: V13 # Configuration: config file, release and CI configuration, registry manifest
+    paths: ["internal/config/**", ".github/workflows/**", ".goreleaser.yaml", "server.json", "scripts/**", ".claude/settings.json"]
+  - id: V15 # Secure Coding and Architecture: dependencies and entry points
+    paths: ["go.mod", "go.sum", "tools/go.mod", "cmd/**", "tools/**"]
+  - id: V16 # Security Logging and Error Handling: what the CLI prints and how it fails
+    paths: ["client/**", "cmd/**", "internal/output/**", "internal/format/**", "internal/migrate/cmd.go"]
