@@ -35,7 +35,7 @@ The `codebahn` command-line client for Codebahn (Go, cobra). The `tools/` module
 
 Path-scoped OWASP ASVS 5.0 rules are generated into `.claude/rules/security/` from `.claude/asvs.map.yaml`; regenerate them with `.claude/render-rules`. The constraints below apply everywhere. For MCP-specific guidance see the OWASP MCP Security cheat sheet: https://cheatsheetseries.owasp.org/cheatsheets/MCP_Security_Cheat_Sheet.html
 
-Derived from the OpenSSF Security-Focused Guide for AI Code Assistant Instructions (2025-08-01, https://best.openssf.org/Security-Focused-Guide-for-AI-Code-Assistant-Instructions) and from securityblog.omegapoint.se (CC BY-SA 4.0); the reasoning is in research/agent-context-and-memory-tooling-2026-11.
+Derived from the OpenSSF Security-Focused Guide for AI Code Assistant Instructions (2025-08-01, https://best.openssf.org/Security-Focused-Guide-for-AI-Code-Assistant-Instructions) and from securityblog.omegapoint.se (CC BY-SA 4.0).
 
 - Never put secrets, tokens or credentials in code, config, tests, fixtures, logs or commit history. Read them from the environment or a vault reference.
 - Never disable a security feature to make something work: TLS verification, CSRF, CSP, audience or signature checks, type checks in deserialization, lint or scanner rules. Ask instead.
