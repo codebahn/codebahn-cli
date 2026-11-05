@@ -1,0 +1,13 @@
+{
+  "autoMemoryDirectory": "~/code/agent-knowledge/inbox/codebahn-cli",
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./.envrc)",
+      "Read(~/.config/codebahn/**)",
+      "Read(//**/codebahn/config.json)",
+      "Read(//**/codebahn/github-session.json)"
+    ]
+  }
+}
