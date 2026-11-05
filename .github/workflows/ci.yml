@@ -27,6 +27,10 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      # gosec only, see .golangci.yml. Bump the pinned version here; .claude/check reads it.
+      - name: Lint (gosec)
+        run: go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.4 run ./...
+
       - name: Check generated files are up to date
         run: |
           go run ./cmd/gen
@@ -36,4 +40,6 @@ jobs:
       # tools/ is its own module, so ./... from the root does not reach it.
       - name: Test tools module
         working-directory: tools
-        run: go test -race ./... && go vet ./...
+        run: |
+          go test -race ./... && go vet ./...
+          go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.4 run -c ../.golangci.yml ./...

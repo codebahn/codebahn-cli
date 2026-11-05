@@ -1,0 +1,17 @@
+version: "2"
+linters:
+  # gosec only: the security scanner is the point of this file. The other standard linters
+  # (errcheck, staticcheck) have older findings that are not part of this change.
+  default: none
+  enable:
+    - gosec
+  exclusions:
+    rules:
+      # Tests write and read fixtures under t.TempDir() and build paths freely.
+      - linters:
+          - gosec
+        path: _test\.go
+issues:
+  # Show every finding; the defaults cut identical ones off after three.
+  max-issues-per-linter: 0
+  max-same-issues: 0

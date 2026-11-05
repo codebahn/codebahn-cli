@@ -2,8 +2,9 @@
 # CI parity check: green here means green on the pull request.
 #
 # Mirrors the `build` job of .github/workflows/ci.yml step for step: build, race tests, vet,
-# the generated-files check (`go run ./cmd/gen` must leave the tree unchanged), and tests
-# and vet of the separate tools/ module.
+# the gosec lint (golangci-lint, version read from the workflow so the two never drift), the
+# generated-files check (`go run ./cmd/gen` must leave the tree unchanged), and tests, vet
+# and lint of the separate tools/ module.
 #
 # Not reproduced: CI runs on a clean ubuntu-latest checkout with Go from go.mod. On a clean
 # working tree the generated-files check is exact; with uncommitted changes it compares the
@@ -16,6 +17,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 export CI=true
+lint_version=$(sed -n 's|.*golangci-lint/v2/cmd/golangci-lint@\(v[0-9.]*\) .*|\1|p' .github/workflows/ci.yml | head -1)
+[ -n "$lint_version" ] || { echo "check: no golangci-lint version in .github/workflows/ci.yml" >&2; exit 1; }
+# --allow-parallel-runners: golangci-lint takes a machine-wide lock otherwise, which breaks when
+# several worktrees run the check at once. CI runs a single instance and does not need it.
+lint() { go run "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$lint_version" run --allow-parallel-runners "$@"; }
 step() { printf '\n==> %s\n' "$*"; }
 tree_state() { git status --porcelain=v1 --untracked-files=all; git diff --binary | sha256sum; }
 
@@ -25,6 +31,8 @@ step "Test (go test -race ./...)"
 go test -race ./...
 step "Vet (go vet ./...)"
 go vet ./...
+step "Lint (gosec, golangci-lint $lint_version)"
+lint ./...
 step "Check generated files are up to date (go run ./cmd/gen)"
 before=$(tree_state)
 go run ./cmd/gen
@@ -33,5 +41,5 @@ if [ "$(tree_state)" != "$before" ]; then
   git status --short >&2
   exit 1
 fi
-step "Test tools module (cd tools && go test -race ./... && go vet ./...)"
-(cd tools && go test -race ./... && go vet ./...)
+step "Test and lint tools module (cd tools && go test -race ./... && go vet ./... && lint)"
+(cd tools && go test -race ./... && go vet ./... && lint -c ../.golangci.yml ./...)

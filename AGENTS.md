@@ -7,9 +7,10 @@ The `codebahn` command-line client for Codebahn (Go, cobra). The `tools/` module
 - Build: `go build -o codebahn ./cmd/codebahn` (the binary is gitignored).
 - Test: `go test -race ./...`. `tools/` is its own module, so also `cd tools && go test -race ./... && go vet ./...`.
 - Vet: `go vet ./...`.
+- Lint: `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.4 run ./...` runs gosec only (`.golangci.yml`); the version is pinned in `.github/workflows/ci.yml`. Add `-c ../.golangci.yml` when running inside `tools/`.
 - Regenerate: `go run ./cmd/gen` rewrites `internal/gen/*.go` and `tools.json` from `tools.All`.
 - Consolidated MCP registry as JSON: `go run ./cmd/gen-mcp-tools`.
-- `.claude/check` runs exactly what CI runs (build, race tests, vet, generated-file drift, tools module). `--quick` is the same, it takes about a minute.
+- `.claude/check` runs exactly what CI runs (build, race tests, vet, lint, generated-file drift, tools module). `--quick` is the same, it takes about a minute.
 
 ## Layout
 
