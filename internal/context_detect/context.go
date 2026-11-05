@@ -27,7 +27,7 @@ func gitRemoteURLs() []string {
 	}
 	var urls []string
 	for _, name := range strings.Fields(string(out)) {
-		u, err := exec.Command("git", "remote", "get-url", name).Output()
+		u, err := exec.Command("git", "remote", "get-url", name).Output() // #nosec G204 -- argument array, no shell; name comes from `git remote` of the local repository
 		if err == nil {
 			urls = append(urls, strings.TrimSpace(string(u)))
 		}

@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 const ClientID = "2499dc67-192d-412e-827a-d319288ca085"
@@ -118,8 +119,9 @@ func startCallbackServer() (*http.Server, chan callbackResult, chan error, error
 		return nil, nil, nil, fmt.Errorf("starting callback server: %w", err)
 	}
 	srv := &http.Server{
-		Addr:    listener.Addr().String(),
-		Handler: mux,
+		Addr:              listener.Addr().String(),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 	go func() { _ = srv.Serve(listener) }()
 

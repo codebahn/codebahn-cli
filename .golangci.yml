@@ -1,0 +1,20 @@
+version: "2"
+linters:
+  # gosec only: the security scanner is the point of this file. The other standard linters
+  # (errcheck, staticcheck) have older findings that are not part of this change.
+  default: none
+  enable:
+    - gosec
+  exclusions:
+    rules:
+      # Tests write and read fixtures under t.TempDir() and build paths freely (G301, G302, G304, G306), and
+      # their setup calls (WriteFile, Write on a handler) leave errors to the assertions that follow (G104).
+      # Other rules, such as G101 (hardcoded credentials) and G402 (TLS verification off), still apply.
+      - linters:
+          - gosec
+        text: "G104|G30[1246]"
+        path: _test\.go
+issues:
+  # Show every finding; the defaults cut identical ones off after three.
+  max-issues-per-linter: 0
+  max-same-issues: 0

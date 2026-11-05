@@ -74,7 +74,7 @@ func ShouldCheck(currentVersion string, checkUpdates *bool) bool {
 	}
 
 	cacheFile := filepath.Join(CacheDir(), "last-update-check")
-	data, err := os.ReadFile(cacheFile)
+	data, err := os.ReadFile(cacheFile) // #nosec G304 -- fixed file name inside CacheDir(), no user input
 	if err != nil {
 		return true
 	}
@@ -87,9 +87,10 @@ func ShouldCheck(currentVersion string, checkUpdates *bool) bool {
 
 func RecordCheck() {
 	dir := CacheDir()
-	os.MkdirAll(dir, 0700)
+	// Best effort: if the cache cannot be written the next run just checks again.
+	_ = os.MkdirAll(dir, 0700)
 	ts := strconv.FormatInt(time.Now().Unix(), 10)
-	os.WriteFile(filepath.Join(dir, "last-update-check"), []byte(ts), 0600)
+	_ = os.WriteFile(filepath.Join(dir, "last-update-check"), []byte(ts), 0600)
 }
 
 func PrintUpdateNotice(w io.Writer, current, latest string) {

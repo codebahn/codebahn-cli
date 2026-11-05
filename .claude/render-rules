@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Regenerates .claude/rules/security/*.md from .claude/asvs.map.yaml with the kb tool in the
+# knowledge repo. Usage: .claude/render-rules [-check]. KNOWLEDGE_DIR overrides ~/code/agent-knowledge.
+set -euo pipefail
+repo="$(cd "$(dirname "$0")/.." && pwd)"
+kb="${KNOWLEDGE_DIR:-$HOME/code/agent-knowledge}"
+if [ ! -f "$kb/cmd/kb/main.go" ]; then
+  echo "render-rules: kb tool not found in $kb (set KNOWLEDGE_DIR to a knowledge checkout)" >&2
+  exit 1
+fi
+cd "$kb"
+exec go run ./cmd/kb render-asvs -csv standards/asvs/asvs-5.0.0-en.csv -map "$repo/.claude/asvs.map.yaml" -out "$repo/.claude/rules/security" "$@"
