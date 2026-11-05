@@ -37,7 +37,7 @@ func Update(rel *Release, execPath string) error {
 	}
 
 	// Clean up leftover .old file from a previous Windows update.
-	os.Remove(execPath + ".old")
+	_ = os.Remove(execPath + ".old") // best effort; the file usually does not exist
 
 	tag := "v" + rel.Version
 	base := releasesURL()
@@ -143,15 +143,18 @@ func replaceBinary(execPath string, data []byte) error {
 	tmpPath := tmp.Name()
 
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		os.Remove(tmpPath)
+		_ = tmp.Close()
+		_ = os.Remove(tmpPath)
 		return fmt.Errorf("writing temp file: %w", err)
 	}
-	tmp.Close()
+	if err := tmp.Close(); err != nil {
+		_ = os.Remove(tmpPath)
+		return fmt.Errorf("closing temp file: %w", err)
+	}
 
 	if runtime.GOOS != "windows" {
 		if err := os.Chmod(tmpPath, info.Mode()); err != nil {
-			os.Remove(tmpPath)
+			_ = os.Remove(tmpPath)
 			return fmt.Errorf("setting permissions: %w", err)
 		}
 	}
@@ -160,15 +163,15 @@ func replaceBinary(execPath string, data []byte) error {
 	// Rename it aside first (Windows allows renaming a locked file).
 	if runtime.GOOS == "windows" {
 		oldPath := execPath + ".old"
-		os.Remove(oldPath) // clean up from previous update
+		_ = os.Remove(oldPath) // clean up from previous update
 		if err := os.Rename(execPath, oldPath); err != nil {
-			os.Remove(tmpPath)
+			_ = os.Remove(tmpPath)
 			return fmt.Errorf("moving old binary aside: %w", err)
 		}
 	}
 
 	if err := os.Rename(tmpPath, execPath); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		if runtime.GOOS == "windows" {
 			if rbErr := os.Rename(execPath+".old", execPath); rbErr != nil {
 				return fmt.Errorf("replacing binary: %w (rollback failed: %v; recover manually: rename %s.old to %s)", err, rbErr, execPath, execPath)
@@ -178,7 +181,7 @@ func replaceBinary(execPath string, data []byte) error {
 	}
 
 	if runtime.GOOS == "windows" {
-		os.Remove(execPath + ".old")
+		_ = os.Remove(execPath + ".old") // the update succeeded; a leftover .old is cleaned up next run
 	}
 
 	return nil
