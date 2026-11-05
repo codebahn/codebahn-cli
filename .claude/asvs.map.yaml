@@ -1,8 +1,8 @@
 # Which OWASP ASVS 5.0 chapters apply to which paths in this repo. Rendered into
 # .claude/rules/security/ by .claude/render-rules (kb render-asvs in the knowledge repo).
 # Levels 1 and 2: a CLI that holds OAuth tokens and fronts an MCP endpoint. V1 to V3, V5 to V8,
-# V10 and V14 are server concerns; V17 (WebRTC) is irrelevant. Documentation-only section V11.1
-# is skipped; it belongs in the review checklist.
+# V10 and V14 are server concerns; V17 (WebRTC) is irrelevant. Documentation-only sections
+# (V11.1, V13.1, V15.1, V16.1) are skipped; they belong in the review checklist.
 version: v5.0.0
 levels: [1, 2]
 chapters:
@@ -16,8 +16,11 @@ chapters:
   - id: V12 # Secure Communication: TLS and HTTP clients, download and update transport
     paths: ["client/**", "internal/oauth/**", "internal/update/**", "internal/migrate/fetch.go", "internal/migrate/github.go", "internal/migrate/preflight.go", "scripts/install.*"]
   - id: V13 # Configuration: config file, release and CI configuration, registry manifest
+    skip: [V13.1]
     paths: ["internal/config/**", ".github/workflows/**", ".goreleaser.yaml", "server.json", "scripts/**", ".claude/settings.json"]
   - id: V15 # Secure Coding and Architecture: dependencies and entry points
+    skip: [V15.1]
     paths: ["go.mod", "go.sum", "tools/go.mod", "cmd/**", "tools/**"]
   - id: V16 # Security Logging and Error Handling: what the CLI prints and how it fails
+    skip: [V16.1]
     paths: ["client/**", "cmd/**", "internal/output/**", "internal/format/**", "internal/migrate/cmd.go"]
