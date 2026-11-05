@@ -20,7 +20,7 @@ func init() {
 func SetNoColor(v bool) { noColor = v }
 
 func IsTTY() bool {
-	return term.IsTerminal(int(os.Stdout.Fd()))
+	return term.IsTerminal(int(os.Stdout.Fd())) // #nosec G115 -- file descriptors are small non-negative integers
 }
 
 func colorize(code, s string) string {

@@ -52,7 +52,7 @@ func saveGitHubSession(token string, expiresIn int) error {
 		AccessToken: token,
 		ExpiresAt:   time.Now().Add(ttl),
 	}
-	data, err := json.Marshal(s)
+	data, err := json.Marshal(s) // #nosec G117 -- this is the session credential file itself; written 0600 in a 0700 directory below
 	if err != nil {
 		return err
 	}

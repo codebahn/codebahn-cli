@@ -160,7 +160,7 @@ func writeTemplate(path, tmplText string, data any) error {
 		return fmt.Errorf("parse template: %w", err)
 	}
 
-	f, err := os.Create(path)
+	f, err := os.Create(path) // #nosec G304 -- developer-run generator; path is built from the fixed outDir and tool names in this repo
 	if err != nil {
 		return fmt.Errorf("create file: %w", err)
 	}

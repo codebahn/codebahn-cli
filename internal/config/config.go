@@ -59,7 +59,7 @@ func SaveConfig(cfg Config) error {
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
-	data, err := json.MarshalIndent(cfg, "", "  ")
+	data, err := json.MarshalIndent(cfg, "", "  ") // #nosec G117 -- this is the credential file itself; written 0600 in a 0700 directory below
 	if err != nil {
 		return err
 	}
