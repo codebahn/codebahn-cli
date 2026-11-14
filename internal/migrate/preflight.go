@@ -116,7 +116,10 @@ func checkSourceRepo(ctx context.Context, src Source, token string) error {
 	}
 	_ = resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
+	// A 3xx here is a cross-origin redirect (e.g. http -> https) that
+	// noRedirectClient refuses to follow with the token attached. The check
+	// cannot answer, so leave the verdict to the server's import.
+	if resp.StatusCode == http.StatusOK || (resp.StatusCode >= 300 && resp.StatusCode < 400) {
 		return nil
 	}
 	return sourceStatusError(resp.StatusCode, src, token, label, "provide --source-token with read access")

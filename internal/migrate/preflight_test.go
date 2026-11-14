@@ -259,3 +259,48 @@ func assertPreflight(t *testing.T, err error, wantCheck, wantMsg string) {
 		t.Errorf("Message = %q, want %q", pe.Message, wantMsg)
 	}
 }
+
+func TestCheckSourceRepo_PlainGitSkipped(t *testing.T) {
+	hit := false
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hit = true
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer ts.Close()
+
+	err := checkSourceRepo(context.Background(), sourceFromServer(t, ts, "git", "acme", "repo"), "tok")
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if hit {
+		t.Error("plain git source should not be probed")
+	}
+}
+
+// A cross-origin redirect (http -> https, or another host) cannot be
+// followed safely with a token attached, so the check is skipped and the
+// token never reaches the redirect target.
+func TestCheckSourceRepo_CrossOriginRedirect(t *testing.T) {
+	for _, service := range []string{"gitea", "gitlab"} {
+		t.Run(service, func(t *testing.T) {
+			var leaked http.Header
+			target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				leaked = r.Header.Clone()
+				w.WriteHeader(http.StatusNotFound)
+			}))
+			defer target.Close()
+			origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				http.Redirect(w, r, target.URL+r.URL.RequestURI(), http.StatusFound)
+			}))
+			defer origin.Close()
+
+			err := checkSourceRepo(context.Background(), sourceFromServer(t, origin, service, "acme", "repo"), "secret")
+			if err != nil {
+				t.Fatalf("expected the check to be skipped, got: %v", err)
+			}
+			if leaked != nil {
+				t.Errorf("redirect target was contacted with headers %v", leaked)
+			}
+		})
+	}
+}
