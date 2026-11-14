@@ -122,14 +122,11 @@ func TestDetectService(t *testing.T) {
 }
 
 func TestResolveServiceType(t *testing.T) {
-	t.Run("resolves GITHUB_TOKEN for probe on auth-required instance", func(t *testing.T) {
+	t.Run("does not send GITHUB_TOKEN to an unknown host", func(t *testing.T) {
+		var gotAuth string
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Header.Get("Authorization") != "token env-tok" {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			_, _ = fmt.Fprint(w, `{"version":"1.21.0"}`)
+			gotAuth = r.Header.Get("Authorization")
+			w.WriteHeader(http.StatusUnauthorized)
 		}))
 		defer ts.Close()
 
@@ -137,8 +134,11 @@ func TestResolveServiceType(t *testing.T) {
 		scheme, host := splitTestURL(t, ts.URL)
 		src := Source{Service: "git", Scheme: scheme, Host: host, Owner: "acme", Repo: "app"}
 		ResolveServiceType(context.Background(), &src, "", "")
-		if src.Service != "gitea" {
-			t.Fatalf("expected gitea (GITHUB_TOKEN should be used for probe), got %q", src.Service)
+		if gotAuth != "" {
+			t.Errorf("probe sent Authorization %q, want none", gotAuth)
+		}
+		if src.Service != "git" {
+			t.Errorf("expected git, got %q", src.Service)
 		}
 	})
 

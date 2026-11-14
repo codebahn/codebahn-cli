@@ -37,7 +37,7 @@ func ResolveServiceType(ctx context.Context, src *Source, sourceType, tokenFlag 
 		return
 	}
 	if src.Service == "git" {
-		token := ResolveSourceToken(tokenFlag)
+		token := ResolveSourceToken(tokenFlag, src.Service)
 		if detected := DetectService(ctx, src.Scheme, src.Host, token); detected != "" {
 			src.Service = detected
 		}

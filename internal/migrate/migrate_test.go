@@ -65,24 +65,33 @@ func TestFilterRepos(t *testing.T) {
 func TestResolveSourceToken(t *testing.T) {
 	t.Run("flag takes precedence", func(t *testing.T) {
 		t.Setenv("GITHUB_TOKEN", "env-token")
-		got := ResolveSourceToken("flag-token")
-		if got != "flag-token" {
-			t.Errorf("got %q, want %q", got, "flag-token")
+		for _, service := range []string{"github", "gitea", "gitlab", "git"} {
+			if got := ResolveSourceToken("flag-token", service); got != "flag-token" {
+				t.Errorf("%s: got %q, want %q", service, got, "flag-token")
+			}
 		}
 	})
 
-	t.Run("falls back to env", func(t *testing.T) {
+	t.Run("github falls back to env", func(t *testing.T) {
 		t.Setenv("GITHUB_TOKEN", "env-token")
-		got := ResolveSourceToken("")
-		if got != "env-token" {
+		if got := ResolveSourceToken("", "github"); got != "env-token" {
 			t.Errorf("got %q, want %q", got, "env-token")
+		}
+	})
+
+	// GITHUB_TOKEN is a GitHub credential; it must never reach another host.
+	t.Run("other services ignore env", func(t *testing.T) {
+		t.Setenv("GITHUB_TOKEN", "env-token")
+		for _, service := range []string{"gitea", "gitlab", "git"} {
+			if got := ResolveSourceToken("", service); got != "" {
+				t.Errorf("%s: got %q, want empty", service, got)
+			}
 		}
 	})
 
 	t.Run("empty when neither set", func(t *testing.T) {
 		t.Setenv("GITHUB_TOKEN", "")
-		got := ResolveSourceToken("")
-		if got != "" {
+		if got := ResolveSourceToken("", "github"); got != "" {
 			t.Errorf("got %q, want empty", got)
 		}
 	})
@@ -217,4 +226,31 @@ func TestListGiteaOrgRepos_FallsBackToUsers(t *testing.T) {
 
 func joinJSON(items []string) string {
 	return strings.Join(items, ",")
+}
+
+func TestOrgModeRequiresToken(t *testing.T) {
+	tests := []struct {
+		service string
+		want    string
+	}{
+		{"github", "--source-token or GITHUB_TOKEN required to list repos from github.com/acme"},
+		{"gitea", "--source-token required to list repos from codeberg.org/acme"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.service, func(t *testing.T) {
+			host := "github.com"
+			if tt.service != "github" {
+				host = "codeberg.org"
+			}
+			src := Source{Service: tt.service, Host: host, Owner: "acme"}
+			for name, err := range map[string]error{
+				"mirror": mirrorOrg(context.Background(), nil, src, "me", "", false, false, nil, nil, true, nil),
+				"import": importOrg(context.Background(), nil, src, "me", "", false, metadataFlags{}, nil, nil, true, nil),
+			} {
+				if err == nil || err.Error() != tt.want {
+					t.Errorf("%s: got %v, want %q", name, err, tt.want)
+				}
+			}
+		})
+	}
 }
