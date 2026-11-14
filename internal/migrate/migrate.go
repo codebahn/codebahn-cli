@@ -59,11 +59,25 @@ func ResolveDestOwner(ctx context.Context, c *client.Client, ownerFlag string) (
 	return user.Login, nil
 }
 
-func ResolveSourceToken(tokenFlag string) string {
+// ResolveSourceToken returns the --source-token flag, or GITHUB_TOKEN for
+// GitHub sources. GITHUB_TOKEN is a GitHub credential, so it is never sent
+// to any other host.
+func ResolveSourceToken(tokenFlag, service string) string {
 	if tokenFlag != "" {
 		return tokenFlag
 	}
-	return os.Getenv("GITHUB_TOKEN")
+	if service == "github" {
+		return os.Getenv("GITHUB_TOKEN")
+	}
+	return ""
+}
+
+// tokenOptions names the ways to supply a source token for service.
+func tokenOptions(service string) string {
+	if service == "github" {
+		return "--source-token or GITHUB_TOKEN"
+	}
+	return "--source-token"
 }
 
 func FilterRepos(repos []SourceRepo, include, exclude []string) []SourceRepo {
