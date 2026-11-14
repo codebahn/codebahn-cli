@@ -35,8 +35,20 @@ type StatusCodeError struct {
 	Body string
 }
 
+// Error reports the server's JSON "message" when the body has one, the raw
+// body otherwise, and a fixed phrase when the server gave no detail at all.
 func (e *StatusCodeError) Error() string {
-	return fmt.Sprintf("HTTP %d: %s", e.Code, e.Body)
+	detail := strings.TrimSpace(e.Body)
+	var payload struct {
+		Message *string `json:"message"`
+	}
+	if json.Unmarshal([]byte(detail), &payload) == nil && payload.Message != nil {
+		detail = strings.TrimSpace(*payload.Message)
+	}
+	if detail == "" {
+		detail = "no detail from server"
+	}
+	return fmt.Sprintf("HTTP %d: %s", e.Code, detail)
 }
 
 func New(baseURL, accessToken string) *Client {

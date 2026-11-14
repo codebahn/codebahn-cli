@@ -216,6 +216,31 @@ func TestStatusCodeError(t *testing.T) {
 	}
 }
 
+func TestStatusCodeErrorMessage(t *testing.T) {
+	tests := []struct {
+		name string
+		code int
+		body string
+		want string
+	}{
+		{"json message", 422, `{"message":"The source repository could not be found.","url":"https://codebahn.net/api/swagger"}`,
+			"HTTP 422: The source repository could not be found."},
+		{"empty json message", 500, `{"message":"","url":"https://codebahn.net/api/swagger"}`,
+			"HTTP 500: no detail from server"},
+		{"empty body", 502, "", "HTTP 502: no detail from server"},
+		{"plain text body", 404, "not found\n", "HTTP 404: not found"},
+		{"json without message", 400, `{"errors":["bad"]}`, `HTTP 400: {"errors":["bad"]}`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := &StatusCodeError{Code: tt.code, Body: tt.body}
+			if got := err.Error(); got != tt.want {
+				t.Errorf("Error() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestExecuteGET(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/v1/repos/acme/test/issues" {
