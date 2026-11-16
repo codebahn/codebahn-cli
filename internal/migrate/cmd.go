@@ -14,10 +14,53 @@ import (
 )
 
 type migrateResult struct {
-	Repo   string `json:"repo"`
-	Status string `json:"status,omitempty"`
-	URL    string `json:"url,omitempty"`
-	Error  string `json:"error,omitempty"`
+	Repo    string        `json:"repo"`
+	Status  string        `json:"status,omitempty"`
+	URL     string        `json:"url,omitempty"`
+	Error   string        `json:"error,omitempty"`
+	Skipped []skippedData `json:"skipped,omitempty"`
+}
+
+// skippedData is one kind of data the source refused; Codebahn imported the
+// rest and lists these in import_skipped.
+type skippedData struct {
+	What   string `json:"what"`
+	Reason string `json:"reason"`
+}
+
+// migratedRepo is the part of Codebahn's migrate response the CLI reports.
+type migratedRepo struct {
+	FullName string        `json:"full_name"`
+	HTMLURL  string        `json:"html_url"`
+	Skipped  []skippedData `json:"import_skipped"`
+}
+
+func skippedLines(skipped []skippedData) []string {
+	lines := make([]string, 0, len(skipped))
+	for _, s := range skipped {
+		lines = append(lines, fmt.Sprintf("skipped %s: %s", s.What, s.Reason))
+	}
+	return lines
+}
+
+func printSkipped(skipped []skippedData) {
+	for _, line := range skippedLines(skipped) {
+		fmt.Printf("     %s %s\n", output.Yellow("!"), line)
+	}
+}
+
+// summary is the closing line of a bulk run.
+func summary(results []migrateResult, succeeded, failed int) string {
+	partial := 0
+	for _, r := range results {
+		if r.Error == "" && len(r.Skipped) > 0 {
+			partial++
+		}
+	}
+	if partial == 0 {
+		return fmt.Sprintf("%d succeeded, %d failed", succeeded, failed)
+	}
+	return fmt.Sprintf("%d succeeded (%d with skipped data), %d failed", succeeded, partial, failed)
 }
 
 func MirrorCmd() *cobra.Command {
@@ -167,9 +210,10 @@ func mirrorOrg(ctx context.Context, c *client.Client, src Source, destOwner, tok
 		res := collectResult(raw, r.FullName)
 		results = append(results, res)
 		fmt.Printf("  %s %s -> %s (mirror)\n", output.Green("OK"), r.FullName, res.URL)
+		printSkipped(res.Skipped)
 	}
 
-	fmt.Printf("\n%d succeeded, %d failed\n", succeeded, failed)
+	fmt.Printf("\n%s\n", summary(results, succeeded, failed))
 
 	if p.IsJSON() {
 		p.JSON(results)
@@ -370,9 +414,10 @@ func importOrg(ctx context.Context, c *client.Client, src Source, destOwner, tok
 		res := collectResult(raw, r.FullName)
 		results = append(results, res)
 		fmt.Printf("  %s %s -> %s\n", output.Green("OK"), r.FullName, res.URL)
+		printSkipped(res.Skipped)
 	}
 
-	fmt.Printf("\n%d succeeded, %d failed\n", succeeded, failed)
+	fmt.Printf("\n%s\n", summary(results, succeeded, failed))
 
 	if p.IsJSON() {
 		p.JSON(results)
@@ -390,10 +435,7 @@ func printResult(raw json.RawMessage, isMirror bool, p *output.Printer) error {
 		return nil
 	}
 
-	var created struct {
-		FullName string `json:"full_name"`
-		HTMLURL  string `json:"html_url"`
-	}
+	var created migratedRepo
 	if err := json.Unmarshal(raw, &created); err != nil {
 		return fmt.Errorf("could not parse response: %w", err)
 	}
@@ -403,15 +445,14 @@ func printResult(raw json.RawMessage, isMirror bool, p *output.Printer) error {
 		mode = "mirror"
 	}
 	fmt.Printf("Queued: %s -> %s (%s)\n", created.FullName, created.HTMLURL, mode)
+	printSkipped(created.Skipped)
 	return nil
 }
 
 func collectResult(raw []byte, fullName string) migrateResult {
-	var created struct {
-		HTMLURL string `json:"html_url"`
-	}
+	var created migratedRepo
 	_ = json.Unmarshal(raw, &created)
-	return migrateResult{Repo: fullName, Status: "queued", URL: created.HTMLURL}
+	return migrateResult{Repo: fullName, Status: "queued", URL: created.HTMLURL, Skipped: created.Skipped}
 }
 
 func mirrorViaGitHubApp(ctx context.Context, c *client.Client, src Source, destOwner string, public bool, include, exclude []string, yes bool, p *output.Printer) error {
