@@ -69,7 +69,8 @@ func helperValues(t *testing.T, host string) []string {
 func TestSetupGit(t *testing.T) {
 	host := setupSetupGitTest(t, "https://codebahn.net")
 
-	if _, err := runSetupGitCmd(t); err != nil {
+	stdout, err := runSetupGitCmd(t)
+	if err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
@@ -80,8 +81,51 @@ func TestSetupGit(t *testing.T) {
 	if values[0] != "" {
 		t.Errorf("first helper entry = %q, want empty (resets the chain)", values[0])
 	}
+	if !strings.HasPrefix(values[1], "!") {
+		t.Errorf("second helper entry = %q, want ! prefix (shell command)", values[1])
+	}
 	if !strings.Contains(values[1], "auth git-credential") {
 		t.Errorf("second helper entry = %q, want it to invoke auth git-credential", values[1])
+	}
+
+	// stdout must report what was configured.
+	wantKey := "credential.https://" + host + ".helper"
+	if !strings.Contains(stdout, wantKey+"=!") {
+		t.Errorf("stdout = %q, want it to contain %s=!...", stdout, wantKey)
+	}
+}
+
+// TestSetupGitPathWithSpace verifies that an executable path containing
+// spaces is shell-quoted in the git config value.
+func TestSetupGitPathWithSpace(t *testing.T) {
+	host := setupSetupGitTest(t, "https://codebahn.net")
+
+	// Override the exe path to include a space.
+	spaceDir := filepath.Join(t.TempDir(), "my path")
+	if err := os.MkdirAll(spaceDir, 0700); err != nil {
+		t.Fatalf("MkdirAll: %v", err)
+	}
+	exe := filepath.Join(spaceDir, "codebahn")
+	executablePath = func() (string, error) { return exe, nil }
+
+	stdout, err := runSetupGitCmd(t)
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	values := helperValues(t, host)
+	if len(values) != 2 {
+		t.Fatalf("helper values = %v, want 2 entries", values)
+	}
+
+	// The quoted path must appear in the helper value, keeping the space
+	// inside single quotes so git's shell evaluation treats it as one word.
+	wantQuoted := shellQuote(exe)
+	if !strings.Contains(values[1], wantQuoted) {
+		t.Errorf("helper entry = %q, want it to contain shell-quoted path %q", values[1], wantQuoted)
+	}
+	if !strings.Contains(stdout, wantQuoted) {
+		t.Errorf("stdout = %q, want it to contain shell-quoted path %q", stdout, wantQuoted)
 	}
 }
 
