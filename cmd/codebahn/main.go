@@ -135,6 +135,7 @@ func authCmd() *cobra.Command {
 	cmd.AddCommand(authLoginCmd())
 	cmd.AddCommand(authLogoutCmd())
 	cmd.AddCommand(authStatusCmd())
+	cmd.AddCommand(gitCredentialCmd())
 	return cmd
 }
 
