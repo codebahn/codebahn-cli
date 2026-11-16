@@ -16,10 +16,10 @@ import (
 func setupSetupGitTest(t *testing.T, instanceURL string) (host string) {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	t.Setenv("GIT_CONFIG_GLOBAL", "")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	t.Setenv("CODEBAHN_TOKEN", "")
 	t.Setenv("CODEBAHN_URL", instanceURL)
+	unsetEnv(t, "GIT_CONFIG_GLOBAL") // don't let the real global gitconfig leak in
 
 	exe := filepath.Join(t.TempDir(), "codebahn")
 	executablePath = func() (string, error) { return exe, nil }
@@ -28,7 +28,24 @@ func setupSetupGitTest(t *testing.T, instanceURL string) (host string) {
 	return mustHost(t, instanceURL)
 }
 
-func runSetupGit(t *testing.T) (stdout string, err error) {
+// unsetEnv unsets an environment variable for the duration of the test,
+// restoring its prior value (or absence) afterwards. Unlike t.Setenv("", ""),
+// this leaves the variable genuinely absent rather than set to an empty
+// string, which some programs (including git) treat differently.
+func unsetEnv(t *testing.T, key string) {
+	t.Helper()
+	prev, ok := os.LookupEnv(key)
+	if err := os.Unsetenv(key); err != nil {
+		t.Fatalf("Unsetenv(%q) error = %v", key, err)
+	}
+	t.Cleanup(func() {
+		if ok {
+			os.Setenv(key, prev)
+		}
+	})
+}
+
+func runSetupGitCmd(t *testing.T) (stdout string, err error) {
 	t.Helper()
 	cmd := setupGitCmd()
 	var buf bytes.Buffer
@@ -52,7 +69,7 @@ func helperValues(t *testing.T, host string) []string {
 func TestSetupGit(t *testing.T) {
 	host := setupSetupGitTest(t, "https://codebahn.net")
 
-	if _, err := runSetupGit(t); err != nil {
+	if _, err := runSetupGitCmd(t); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
@@ -71,12 +88,12 @@ func TestSetupGit(t *testing.T) {
 func TestSetupGitIdempotent(t *testing.T) {
 	host := setupSetupGitTest(t, "https://codebahn.net")
 
-	if _, err := runSetupGit(t); err != nil {
+	if _, err := runSetupGitCmd(t); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 	first := helperValues(t, host)
 
-	if _, err := runSetupGit(t); err != nil {
+	if _, err := runSetupGitCmd(t); err != nil {
 		t.Fatalf("Execute() (second run) error = %v", err)
 	}
 	second := helperValues(t, host)
@@ -96,7 +113,7 @@ func TestSetupGitWithExistingHelper(t *testing.T) {
 		t.Fatalf("pre-configuring generic credential.helper: %v", err)
 	}
 
-	if _, err := runSetupGit(t); err != nil {
+	if _, err := runSetupGitCmd(t); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 

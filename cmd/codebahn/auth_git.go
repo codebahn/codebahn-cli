@@ -152,9 +152,22 @@ func hostMatches(host, configuredURL string) bool {
 	if host == "" || configuredURL == "" {
 		return false
 	}
-	u, err := url.Parse(configuredURL)
+	configuredHost, err := authHost(configuredURL)
 	if err != nil {
 		return false
 	}
-	return strings.EqualFold(u.Host, host)
+	return strings.EqualFold(configuredHost, host)
+}
+
+// authHost extracts the host (e.g. "codebahn.net") from a Codebahn instance
+// URL.
+func authHost(rawURL string) (string, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", fmt.Errorf("parsing instance URL %q: %w", rawURL, err)
+	}
+	if u.Host == "" {
+		return "", fmt.Errorf("instance URL %q has no host", rawURL)
+	}
+	return u.Host, nil
 }
