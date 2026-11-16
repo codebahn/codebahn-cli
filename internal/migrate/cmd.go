@@ -34,7 +34,7 @@ func MirrorCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "mirror <source>",
-		Short: "Mirror a repository from GitHub/GitLab",
+		Short: "Mirror a repository from GitHub, GitLab, Forgejo, Gitea/Codeberg or any git URL",
 		Long:  "Create a pull mirror on Codebahn that stays in sync with the source repository.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -80,12 +80,12 @@ func MirrorCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&owner, "owner", "", "Destination org on Codebahn (default: your username)")
+	cmd.Flags().StringVar(&owner, "owner", "", "Destination user or org on Codebahn (default: your account)")
 	cmd.Flags().BoolVar(&private, "private", false, "Make mirror private")
 	cmd.Flags().BoolVar(&public, "public", false, "Make mirror public")
 	cmd.Flags().StringVar(&token, "source-token", "", "Source PAT (GitHub sources also read GITHUB_TOKEN)")
 	cmd.Flags().StringVar(&sourceType, "source-type", "", "Force source service type (gitea, forgejo) instead of auto-detecting")
-	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Skip confirmation in org mode")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Skip confirmation when importing all repos of an owner")
 	cmd.Flags().Var(&include, "include", "Glob pattern to select repos (repeatable)")
 	cmd.Flags().Var(&exclude, "exclude", "Glob pattern to skip repos (repeatable)")
 
@@ -202,7 +202,7 @@ func ImportCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "import <source>",
-		Short: "Import a repository from GitHub/GitLab",
+		Short: "Import a repository from GitHub, GitLab, Forgejo, Gitea/Codeberg or any git URL",
 		Long:  "One-time import that copies code and metadata. The Codebahn repo is independent after import.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -264,12 +264,12 @@ func ImportCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&owner, "owner", "", "Destination org on Codebahn (default: your username)")
+	cmd.Flags().StringVar(&owner, "owner", "", "Destination user or org on Codebahn (default: your account)")
 	cmd.Flags().BoolVar(&private, "private", false, "Make imported repo private")
 	cmd.Flags().BoolVar(&public, "public", false, "Make imported repo public")
 	cmd.Flags().StringVar(&token, "source-token", "", "Source PAT (GitHub sources also read GITHUB_TOKEN)")
 	cmd.Flags().StringVar(&sourceType, "source-type", "", "Force source service type (gitea, forgejo) instead of auto-detecting")
-	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Skip confirmation in org mode")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "Skip confirmation when importing all repos of an owner")
 	cmd.Flags().BoolVar(&noIssues, "no-issues", false, "Do not import issues")
 	cmd.Flags().BoolVar(&noPRs, "no-prs", false, "Do not import pull requests")
 	cmd.Flags().BoolVar(&noLabels, "no-labels", false, "Do not import labels")

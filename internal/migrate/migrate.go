@@ -142,7 +142,7 @@ func ListSourceRepos(ctx context.Context, src Source, token string) ([]SourceRep
 	case "gitea":
 		return listGiteaOrgRepos(ctx, src, token)
 	default:
-		return nil, fmt.Errorf("org-level import not supported for %s; specify a full repository URL", src.Service)
+		return nil, fmt.Errorf("importing all repos of an owner is not supported for %s; specify a full repository URL", src.Service)
 	}
 }
 
