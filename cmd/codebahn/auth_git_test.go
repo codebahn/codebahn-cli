@@ -384,6 +384,117 @@ func TestClientRefreshReadsConfig(t *testing.T) {
 	}
 }
 
+// TestEnsureValidTokenUpdatesState verifies that after a successful refresh
+// the client uses the NEW access token for the API call (not the original) and
+// that the in-memory expiry is updated so a second call does not trigger
+// another refresh.
+func TestEnsureValidTokenUpdatesState(t *testing.T) {
+	refreshCalls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		auth := r.Header.Get("Authorization")
+		if auth != "Bearer refreshed-access" {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprint(w, `{"message":"bad token"}`)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"login":"test"}`)
+	}))
+	defer srv.Close()
+
+	c := client.New(srv.URL, "old-access")
+	c.SetOAuth(time.Now().Add(1*time.Second), func(_ context.Context) (string, time.Time, error) {
+		refreshCalls++
+		return "refreshed-access", time.Now().Add(time.Hour), nil
+	})
+
+	// First call: token is expiring, triggers refresh; client must use the
+	// refreshed token for the API call, not the original "old-access".
+	if _, err := c.GetRaw(context.Background(), "/user"); err != nil {
+		t.Fatalf("first API call failed: %v", err)
+	}
+	if refreshCalls != 1 {
+		t.Fatalf("refresh calls = %d after first request, want 1", refreshCalls)
+	}
+
+	// Second call: the in-memory expiry was updated to ~1h, so
+	// ensureValidToken should skip the refresh entirely.
+	if _, err := c.GetRaw(context.Background(), "/user"); err != nil {
+		t.Fatalf("second API call failed: %v", err)
+	}
+	if refreshCalls != 1 {
+		t.Fatalf("refresh calls = %d after second request, want 1 (expiry should be updated)", refreshCalls)
+	}
+}
+
+// TestAuthStatusRefreshesExpiredToken runs "auth status" through the real
+// command tree and verifies that PersistentPreRunE wires up OAuth refresh so
+// an expiring token is rotated before the API call.
+func TestAuthStatusRefreshesExpiredToken(t *testing.T) {
+	refreshCalls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/login/oauth/access_token" {
+			refreshCalls++
+			if err := r.ParseForm(); err != nil {
+				t.Fatalf("ParseForm() error = %v", err)
+			}
+			if got := r.FormValue("refresh_token"); got != "refresh-tok" {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, `{"error":"invalid_grant"}`)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `{"access_token":"new-access","refresh_token":"new-refresh","expires_in":3600}`)
+			return
+		}
+		// API endpoints: reject the stale token, accept the refreshed one.
+		auth := r.Header.Get("Authorization")
+		if auth != "Bearer new-access" {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprint(w, `{"message":"bad credentials"}`)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"login":"test","full_name":"Test User","email":"test@example.com"}`)
+	}))
+	defer srv.Close()
+
+	setupGitCredentialTest(t, config.Config{
+		URL:          srv.URL,
+		AccessToken:  "old-access",
+		RefreshToken: "refresh-tok",
+		TokenExpiry:  time.Now().Add(1 * time.Second).Unix(),
+	})
+
+	cmd := newRootCmd()
+	var outBuf, errBuf bytes.Buffer
+	cmd.SetOut(&outBuf)
+	cmd.SetErr(&errBuf)
+	cmd.SetArgs([]string{"auth", "status"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("auth status failed: %v\nstderr: %s", err, errBuf.String())
+	}
+	if refreshCalls != 1 {
+		t.Errorf("refresh calls = %d, want 1", refreshCalls)
+	}
+}
+
+// TestAuthCommandSubcommands verifies that git-credential and setup-git are
+// registered as auth subcommands.
+func TestAuthCommandSubcommands(t *testing.T) {
+	cmd := authCmd()
+	names := make(map[string]bool)
+	for _, sub := range cmd.Commands() {
+		names[sub.Name()] = true
+	}
+	for _, want := range []string{"git-credential", "setup-git"} {
+		if !names[want] {
+			t.Errorf("auth command missing subcommand %q", want)
+		}
+	}
+}
+
 func mustHost(t *testing.T, rawURL string) string {
 	t.Helper()
 	u, err := url.Parse(rawURL)

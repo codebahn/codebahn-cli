@@ -27,13 +27,7 @@ var (
 	noColor  bool
 )
 
-func main() {
-	if version == "dev" {
-		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
-			version = info.Main.Version
-		}
-	}
-
+func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     "codebahn",
 		Short:   "Codebahn CLI",
@@ -79,6 +73,18 @@ func main() {
 	}
 	rootCmd.AddCommand(authCmd())
 	rootCmd.AddCommand(updateCmd())
+
+	return rootCmd
+}
+
+func main() {
+	if version == "dev" {
+		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+			version = info.Main.Version
+		}
+	}
+
+	rootCmd := newRootCmd()
 
 	notice := checkUpdateInBackground(rootCmd)
 
