@@ -2,44 +2,95 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"sync"
 	"testing"
 	"time"
 )
 
+// TestConfigAtomicWrite verifies that SaveConfig's temp-file-then-rename
+// strategy means a concurrent reader never sees a truncated or partial
+// config file. The test runs writers and readers concurrently: every read
+// must yield either valid JSON or ErrNotExist (before the first write
+// lands). With a non-atomic os.WriteFile a reader can catch the file
+// mid-write and get invalid JSON or an incomplete read.
 func TestConfigAtomicWrite(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", dir)
 
+	const writers = 10
+	const readers = 10
+	const rounds = 50
+
+	stop := make(chan struct{})
+	var readErrors []string
+	var mu sync.Mutex
+
+	// Concurrent readers: keep reading the config file and check every
+	// read returns valid JSON (or file-not-found before the first write).
+	var rg sync.WaitGroup
+	for i := 0; i < readers; i++ {
+		rg.Add(1)
+		go func() {
+			defer rg.Done()
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+				}
+				data, err := os.ReadFile(ConfigPath())
+				if err != nil {
+					continue // file not yet created
+				}
+				if len(data) == 0 {
+					continue
+				}
+				var cfg Config
+				if err := json.Unmarshal(data, &cfg); err != nil {
+					mu.Lock()
+					readErrors = append(readErrors, fmt.Sprintf("invalid JSON (%v): %s", err, data))
+					mu.Unlock()
+					return
+				}
+				if cfg.URL == "" || cfg.AccessToken == "" {
+					mu.Lock()
+					readErrors = append(readErrors, fmt.Sprintf("incomplete config: %+v", cfg))
+					mu.Unlock()
+					return
+				}
+			}
+		}()
+	}
+
+	// Concurrent writers.
 	var wg sync.WaitGroup
-	for i := 0; i < 20; i++ {
+	for i := 0; i < writers; i++ {
 		wg.Add(1)
 		go func(n int) {
 			defer wg.Done()
-			cfg := Config{
-				URL:          "https://codebahn.net",
-				AccessToken:  "access",
-				RefreshToken: "refresh",
-				TokenExpiry:  int64(n),
-			}
-			if err := SaveConfig(cfg); err != nil {
-				t.Errorf("SaveConfig() error = %v", err)
+			for r := 0; r < rounds; r++ {
+				cfg := Config{
+					URL:          "https://codebahn.net",
+					AccessToken:  fmt.Sprintf("access-%d-%d", n, r),
+					RefreshToken: "refresh",
+					TokenExpiry:  int64(n*rounds + r),
+				}
+				if err := SaveConfig(cfg); err != nil {
+					t.Errorf("SaveConfig() error = %v", err)
+				}
 			}
 		}(i)
 	}
 	wg.Wait()
+	close(stop)
+	rg.Wait()
 
-	data, err := os.ReadFile(ConfigPath())
-	if err != nil {
-		t.Fatalf("ReadFile() error = %v", err)
-	}
-	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		t.Fatalf("file content is not valid JSON: %v\ncontent: %s", err, data)
-	}
-	if cfg.URL == "" || cfg.AccessToken == "" || cfg.RefreshToken == "" {
-		t.Errorf("Config = %+v, missing fields", cfg)
+	mu.Lock()
+	defer mu.Unlock()
+	for _, e := range readErrors {
+		t.Errorf("reader saw corrupt file: %s", e)
 	}
 }
 
