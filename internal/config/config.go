@@ -64,7 +64,32 @@ func SaveConfig(cfg Config) error {
 		return err
 	}
 	data = append(data, '\n')
-	return os.WriteFile(ConfigPath(), data, 0600)
+
+	// Write to a temp file in the same directory, then rename into place,
+	// so a crash mid-write never leaves a truncated or partial config file.
+	tmp, err := os.CreateTemp(dir, ".config-*.tmp")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Chmod(0600); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Sync(); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpPath, ConfigPath())
 }
 
 func ClearTokens() error {
