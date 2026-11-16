@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -50,7 +51,15 @@ func runGitCredentialGet(cmd *cobra.Command) error {
 	if auth.AccessToken == "" {
 		return nil
 	}
+	// A zero TokenExpiry means the token doesn't expire (e.g. a static
+	// token from CODEBAHN_TOKEN or --token). A refresh for a token that is
+	// expired or expiring soon is handled separately; until then, fall
+	// through silently rather than hand git a stale credential.
+	if auth.TokenExpiry != 0 && auth.TokenExpiry <= time.Now().Unix() {
+		return nil
+	}
 
+	fmt.Fprintf(cmd.OutOrStdout(), "username=oauth2\npassword=%s\n", auth.AccessToken)
 	return nil
 }
 
