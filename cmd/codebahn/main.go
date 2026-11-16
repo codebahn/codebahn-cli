@@ -54,26 +54,7 @@ func main() {
 
 			c := client.New(auth.URL, auth.AccessToken)
 			if auth.RefreshToken != "" {
-				c.SetOAuth(auth.RefreshToken, oauth.ClientID, time.Unix(auth.TokenExpiry, 0), func(access, refresh string, expiry time.Time) {
-					lock, err := config.LockConfig()
-					if err != nil {
-						fmt.Fprintln(os.Stderr, "codebahn: failed to lock config:", err)
-						return
-					}
-					defer config.UnlockConfig(lock)
-
-					cfg, err := config.LoadConfig()
-					if err != nil {
-						fmt.Fprintln(os.Stderr, "codebahn: failed to load config:", err)
-						return
-					}
-					cfg.AccessToken = access
-					cfg.RefreshToken = refresh
-					cfg.TokenExpiry = expiry.Unix()
-					if err := config.SaveConfig(cfg); err != nil {
-						fmt.Fprintln(os.Stderr, "codebahn: failed to save config:", err)
-					}
-				})
+				c.SetOAuth(time.Unix(auth.TokenExpiry, 0), lockedRefresh(auth.URL))
 			}
 
 			cmd.SetContext(gen.WithClient(cmd.Context(), c))

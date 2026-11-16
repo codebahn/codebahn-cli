@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/codebahn/codebahn-cli/client"
 	"github.com/codebahn/codebahn-cli/internal/config"
 )
 
@@ -309,6 +311,76 @@ func TestGitCredentialConcurrentRefresh(t *testing.T) {
 	mu.Unlock()
 	if gotCalls != 1 {
 		t.Errorf("server called %d times, want 1", gotCalls)
+	}
+}
+
+// TestClientRefreshReadsConfig verifies that a CLI client whose in-memory
+// refresh token was rotated by a concurrent credential helper process still
+// succeeds by re-reading the config file instead of sending the stale token.
+func TestClientRefreshReadsConfig(t *testing.T) {
+	// Server that accepts each refresh token only once (rotation).
+	var mu sync.Mutex
+	validRefreshToken := "refresh-tok"
+	refreshCalls := 0
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/access_token") {
+			if err := r.ParseForm(); err != nil {
+				t.Fatalf("ParseForm() error = %v", err)
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			refreshCalls++
+			if got := r.FormValue("refresh_token"); got != validRefreshToken {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, `{"error":"invalid_grant","error_description":"token already used"}`)
+				return
+			}
+			validRefreshToken = "rotated-refresh"
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `{"access_token":"rotated-access","refresh_token":"rotated-refresh","expires_in":3600}`)
+			return
+		}
+		// API endpoints
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"login":"test"}`)
+	}))
+	defer srv.Close()
+
+	host := mustHost(t, srv.URL)
+	setupGitCredentialTest(t, config.Config{
+		URL:          srv.URL,
+		AccessToken:  "old-access",
+		RefreshToken: "refresh-tok",
+		TokenExpiry:  time.Now().Add(1 * time.Second).Unix(),
+	})
+
+	// Step 1: credential helper rotates the token (simulating another process).
+	stdout, _, err := runGitCredential(t, []string{"get"}, "protocol=https\nhost="+host+"\n\n")
+	if err != nil {
+		t.Fatalf("credential helper: %v", err)
+	}
+	if !strings.Contains(stdout, "rotated-access") {
+		t.Fatalf("credential helper stdout = %q, want rotated-access", stdout)
+	}
+
+	// Step 2: a client created with ORIGINAL in-memory tokens (as
+	// PersistentPreRunE sets up at process start) tries an API call.
+	c := client.New(srv.URL, "old-access")
+	c.SetOAuth(time.Now().Add(1*time.Second), lockedRefresh(srv.URL))
+
+	// With the bug: ensureValidToken sends stale refresh-tok, server rejects it.
+	// After fix: re-reads config, finds rotated-access, skips HTTP refresh.
+	_, err = c.GetRaw(context.Background(), "/user")
+	if err != nil {
+		t.Fatalf("client API call failed (stale refresh token not handled): %v", err)
+	}
+
+	mu.Lock()
+	gotCalls := refreshCalls
+	mu.Unlock()
+	if gotCalls != 1 {
+		t.Fatalf("refresh calls = %d, want 1 (should reuse already-refreshed token)", gotCalls)
 	}
 }
 

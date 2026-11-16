@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/codebahn/codebahn-cli/client"
 	"github.com/codebahn/codebahn-cli/internal/config"
 	"github.com/codebahn/codebahn-cli/internal/oauth"
 )
@@ -71,9 +72,9 @@ func runGitCredentialGet(cmd *cobra.Command) error {
 			// hand git a stale credential.
 			return nil
 		}
-		refreshed, err := refreshTokenLocked(cmd.Context(), auth)
+		refreshed, _, err := lockedRefresh(auth.URL)(cmd.Context())
 		if err != nil {
-			return fmt.Errorf("refreshing access token: %w; run 'codebahn auth login' to re-authenticate", err)
+			return fmt.Errorf("refreshing access token: %w", err)
 		}
 		token = refreshed
 	}
@@ -88,43 +89,51 @@ func tokenExpiringSoon(expiry int64) bool {
 	return time.Unix(expiry, 0).Sub(time.Now()) < refreshWindow
 }
 
-// refreshTokenLocked refreshes the access token under the cross-process
-// config lock. After acquiring the lock it re-reads the config, since a
-// concurrent git-credential invocation may have already refreshed the
-// token; in that case it returns the already-refreshed token without
-// contacting the server.
-func refreshTokenLocked(ctx context.Context, auth config.Auth) (string, error) {
-	lock, err := config.LockConfig()
-	if err != nil {
-		return "", fmt.Errorf("locking config: %w", err)
-	}
-	defer config.UnlockConfig(lock)
+// lockedRefresh returns a DoRefreshFunc that refreshes the access token under
+// the cross-process config lock. After acquiring the lock it re-reads the
+// config, since a concurrent process (another credential helper or CLI
+// command) may have already refreshed the token; in that case it returns the
+// already-refreshed token without contacting the server.
+func lockedRefresh(instanceURL string) client.DoRefreshFunc {
+	return func(ctx context.Context) (string, time.Time, error) {
+		lock, err := config.LockConfig()
+		if err != nil {
+			return "", time.Time{}, fmt.Errorf("locking config: %w", err)
+		}
+		defer config.UnlockConfig(lock)
 
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		return "", fmt.Errorf("loading config: %w", err)
-	}
+		cfg, err := config.LoadConfig()
+		if err != nil {
+			return "", time.Time{}, fmt.Errorf("loading config: %w", err)
+		}
 
-	if cfg.AccessToken != "" && !tokenExpiringSoon(cfg.TokenExpiry) {
-		// A concurrent caller already refreshed the token.
-		return cfg.AccessToken, nil
-	}
+		expiry := time.Unix(cfg.TokenExpiry, 0)
+		if cfg.AccessToken != "" && !tokenExpiringSoon(cfg.TokenExpiry) {
+			return cfg.AccessToken, expiry, nil
+		}
 
-	tokenResp, err := oauth.Refresh(ctx, auth.URL, cfg.RefreshToken)
-	if err != nil {
-		return "", err
-	}
+		url := cfg.URL
+		if url == "" {
+			url = instanceURL
+		}
 
-	cfg.AccessToken = tokenResp.AccessToken
-	if tokenResp.RefreshToken != "" {
-		cfg.RefreshToken = tokenResp.RefreshToken
-	}
-	cfg.TokenExpiry = time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second).Unix()
-	if err := config.SaveConfig(cfg); err != nil {
-		return "", fmt.Errorf("saving refreshed token: %w", err)
-	}
+		tokenResp, err := oauth.Refresh(ctx, url, cfg.RefreshToken)
+		if err != nil {
+			return "", time.Time{}, fmt.Errorf("token refresh failed: %w; run 'codebahn auth login' to re-authenticate", err)
+		}
 
-	return cfg.AccessToken, nil
+		cfg.AccessToken = tokenResp.AccessToken
+		if tokenResp.RefreshToken != "" {
+			cfg.RefreshToken = tokenResp.RefreshToken
+		}
+		expiry = time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
+		cfg.TokenExpiry = expiry.Unix()
+		if err := config.SaveConfig(cfg); err != nil {
+			return "", time.Time{}, fmt.Errorf("saving refreshed token: %w", err)
+		}
+
+		return cfg.AccessToken, expiry, nil
+	}
 }
 
 // parseCredentialInput reads key=value lines (the git credential helper
