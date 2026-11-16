@@ -2,8 +2,12 @@ package main
 
 import (
 	"bytes"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/codebahn/codebahn-cli/internal/config"
 )
@@ -85,4 +89,69 @@ func TestGitCredentialGetNoMatch(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGitCredentialGetMatch(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Fatal("server contacted; token is not expiring, no refresh expected")
+	}))
+	defer srv.Close()
+
+	host := mustHost(t, srv.URL)
+	setupGitCredentialTest(t, config.Config{
+		URL:         srv.URL,
+		AccessToken: "valid-token",
+		TokenExpiry: time.Now().Add(time.Hour).Unix(),
+	})
+
+	stdout, _, err := runGitCredential(t, []string{"get"}, "protocol=https\nhost="+host+"\n\n")
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	want := "username=oauth2\npassword=valid-token\n"
+	if stdout != want {
+		t.Errorf("stdout = %q, want %q", stdout, want)
+	}
+}
+
+func TestGitCredentialStaticToken(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Fatal("server contacted; static token must not trigger a refresh")
+	}))
+	defer srv.Close()
+
+	host := mustHost(t, srv.URL)
+	setupGitCredentialTest(t, config.Config{URL: srv.URL})
+	t.Setenv("CODEBAHN_TOKEN", "static-tok")
+
+	stdout, _, err := runGitCredential(t, []string{"get"}, "protocol=https\nhost="+host+"\n\n")
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	want := "username=oauth2\npassword=static-tok\n"
+	if stdout != want {
+		t.Errorf("stdout = %q, want %q", stdout, want)
+	}
+}
+
+func TestGitCredentialStaticTokenForeignHost(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net"})
+	t.Setenv("CODEBAHN_TOKEN", "static-tok")
+
+	stdout, _, err := runGitCredential(t, []string{"get"}, "protocol=https\nhost=github.com\n\n")
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if stdout != "" {
+		t.Errorf("stdout = %q, want empty", stdout)
+	}
+}
+
+func mustHost(t *testing.T, rawURL string) string {
+	t.Helper()
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		t.Fatalf("url.Parse(%q) error = %v", rawURL, err)
+	}
+	return u.Host
 }
