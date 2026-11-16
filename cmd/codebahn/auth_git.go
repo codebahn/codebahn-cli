@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"net/url"
@@ -9,16 +10,25 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
+	"github.com/codebahn/codebahn-cli/internal/config"
+	"github.com/codebahn/codebahn-cli/internal/oauth"
 )
+
+// refreshWindow is how far ahead of expiry a git-credential get call
+// refreshes the access token, so git never receives a credential that
+// expires mid-request.
+const refreshWindow = 60 * time.Second
 
 // gitCredentialCmd implements the git credential helper protocol
 // (see git-credential(1)) so git can authenticate HTTPS requests to the
 // configured Codebahn host with the CLI's stored OAuth token.
 func gitCredentialCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "git-credential <get|store|erase>",
-		Short: "Git credential helper (see git-credential(1))",
-		Args:  cobra.ExactArgs(1),
+		Use:          "git-credential <get|store|erase>",
+		Short:        "Git credential helper (see git-credential(1))",
+		Args:         cobra.ExactArgs(1),
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			switch args[0] {
 			case "get":
@@ -51,16 +61,70 @@ func runGitCredentialGet(cmd *cobra.Command) error {
 	if auth.AccessToken == "" {
 		return nil
 	}
+
+	token := auth.AccessToken
 	// A zero TokenExpiry means the token doesn't expire (e.g. a static
-	// token from CODEBAHN_TOKEN or --token). A refresh for a token that is
-	// expired or expiring soon is handled separately; until then, fall
-	// through silently rather than hand git a stale credential.
-	if auth.TokenExpiry != 0 && auth.TokenExpiry <= time.Now().Unix() {
-		return nil
+	// token from CODEBAHN_TOKEN or --token).
+	if auth.TokenExpiry != 0 && tokenExpiringSoon(auth.TokenExpiry) {
+		if auth.RefreshToken == "" {
+			// Nothing to refresh with; fall through silently rather than
+			// hand git a stale credential.
+			return nil
+		}
+		refreshed, err := refreshTokenLocked(cmd.Context(), auth)
+		if err != nil {
+			return fmt.Errorf("refreshing access token: %w; run 'codebahn auth login' to re-authenticate", err)
+		}
+		token = refreshed
 	}
 
-	fmt.Fprintf(cmd.OutOrStdout(), "username=oauth2\npassword=%s\n", auth.AccessToken)
+	fmt.Fprintf(cmd.OutOrStdout(), "username=oauth2\npassword=%s\n", token)
 	return nil
+}
+
+// tokenExpiringSoon reports whether a token with the given expiry (unix
+// seconds) expires within refreshWindow.
+func tokenExpiringSoon(expiry int64) bool {
+	return time.Unix(expiry, 0).Sub(time.Now()) < refreshWindow
+}
+
+// refreshTokenLocked refreshes the access token under the cross-process
+// config lock. After acquiring the lock it re-reads the config, since a
+// concurrent git-credential invocation may have already refreshed the
+// token; in that case it returns the already-refreshed token without
+// contacting the server.
+func refreshTokenLocked(ctx context.Context, auth config.Auth) (string, error) {
+	lock, err := config.LockConfig()
+	if err != nil {
+		return "", fmt.Errorf("locking config: %w", err)
+	}
+	defer config.UnlockConfig(lock)
+
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return "", fmt.Errorf("loading config: %w", err)
+	}
+
+	if cfg.AccessToken != "" && !tokenExpiringSoon(cfg.TokenExpiry) {
+		// A concurrent caller already refreshed the token.
+		return cfg.AccessToken, nil
+	}
+
+	tokenResp, err := oauth.Refresh(ctx, auth.URL, cfg.RefreshToken)
+	if err != nil {
+		return "", err
+	}
+
+	cfg.AccessToken = tokenResp.AccessToken
+	if tokenResp.RefreshToken != "" {
+		cfg.RefreshToken = tokenResp.RefreshToken
+	}
+	cfg.TokenExpiry = time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second).Unix()
+	if err := config.SaveConfig(cfg); err != nil {
+		return "", fmt.Errorf("saving refreshed token: %w", err)
+	}
+
+	return cfg.AccessToken, nil
 }
 
 // parseCredentialInput reads key=value lines (the git credential helper
