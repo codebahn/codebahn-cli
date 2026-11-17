@@ -27,13 +27,7 @@ var (
 	noColor  bool
 )
 
-func main() {
-	if version == "dev" {
-		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
-			version = info.Main.Version
-		}
-	}
-
+func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     "codebahn",
 		Short:   "Codebahn CLI",
@@ -54,13 +48,7 @@ func main() {
 
 			c := client.New(auth.URL, auth.AccessToken)
 			if auth.RefreshToken != "" {
-				c.SetOAuth(auth.RefreshToken, oauth.ClientID, time.Unix(auth.TokenExpiry, 0), func(access, refresh string, expiry time.Time) {
-					cfg, _ := config.LoadConfig()
-					cfg.AccessToken = access
-					cfg.RefreshToken = refresh
-					cfg.TokenExpiry = expiry.Unix()
-					_ = config.SaveConfig(cfg)
-				})
+				c.SetOAuth(time.Unix(auth.TokenExpiry, 0), lockedRefresh(auth.URL))
 			}
 
 			cmd.SetContext(gen.WithClient(cmd.Context(), c))
@@ -85,6 +73,18 @@ func main() {
 	}
 	rootCmd.AddCommand(authCmd())
 	rootCmd.AddCommand(updateCmd())
+
+	return rootCmd
+}
+
+func main() {
+	if version == "dev" {
+		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+			version = info.Main.Version
+		}
+	}
+
+	rootCmd := newRootCmd()
 
 	notice := checkUpdateInBackground(rootCmd)
 
@@ -122,6 +122,8 @@ func authCmd() *cobra.Command {
 	cmd.AddCommand(authLoginCmd())
 	cmd.AddCommand(authLogoutCmd())
 	cmd.AddCommand(authStatusCmd())
+	cmd.AddCommand(gitCredentialCmd())
+	cmd.AddCommand(setupGitCmd())
 	return cmd
 }
 
