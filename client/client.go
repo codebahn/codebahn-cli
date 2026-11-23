@@ -40,8 +40,19 @@ type StatusCodeError struct {
 	Body string
 }
 
+// scopeRefusal is how the server words a 403 caused by the token's scope
+// ("token does not have at least one of required scope(s): [write:user]").
+// A login made on the consent page gets only the areas the user chose there,
+// so this is the refusal a narrowed connection meets.
+const (
+	scopeRefusal     = "required scope(s)"
+	scopeRefusalHint = "The login or token in use does not have that access. " +
+		"Change the connection under Settings > Applications on Codebahn, or use a token with that scope."
+)
+
 // Error reports the server's JSON "message" when the body has one, the raw
 // body otherwise, and a fixed phrase when the server gave no detail at all.
+// A scope refusal also says where to widen the access.
 func (e *StatusCodeError) Error() string {
 	detail := strings.TrimSpace(e.Body)
 	var payload struct {
@@ -52,6 +63,9 @@ func (e *StatusCodeError) Error() string {
 	}
 	if detail == "" {
 		detail = "no detail from server"
+	}
+	if e.Code == http.StatusForbidden && strings.Contains(detail, scopeRefusal) {
+		detail = strings.TrimSuffix(detail, ".") + ". " + scopeRefusalHint
 	}
 	return fmt.Sprintf("HTTP %d: %s", e.Code, detail)
 }
