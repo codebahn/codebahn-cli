@@ -1,9 +1,11 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -167,5 +169,98 @@ func TestResolveAuth_NotLoggedIn(t *testing.T) {
 	}
 	if want := (Auth{URL: DefaultURL}); got != want {
 		t.Errorf("ResolveAuth() = %+v, want %+v", got, want)
+	}
+}
+
+// corruptConfigs are config files that exist but cannot be parsed, as seen
+// in the field: broken JSON, and an RFC 3339 token_expiry where an epoch is
+// expected.
+var corruptConfigs = map[string]string{
+	"invalid json":      `{"url": "https://codebahn.net",`,
+	"wrong-typed field": `{"url": "https://codebahn.net", "access_token": "a", "token_expiry": "2026-11-24T17:00:00Z"}`,
+}
+
+// writeConfigFile isolates config and environment and writes content as the
+// config file verbatim.
+func writeConfigFile(t *testing.T, content string) {
+	t.Helper()
+	setupAuthTest(t, Config{})
+	if err := os.MkdirAll(ConfigDir(), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(ConfigPath(), []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// wantConfigError checks that err names the config file, the problem parsing
+// content, and the way out.
+func wantConfigError(t *testing.T, err error, content string) {
+	t.Helper()
+	if err == nil {
+		t.Fatal("error = nil, want a config parse error")
+	}
+	parseErr := json.Unmarshal([]byte(content), new(Config))
+	if parseErr == nil {
+		t.Fatalf("content %q parses; not a corrupt config", content)
+	}
+	for _, want := range []string{ConfigPath(), parseErr.Error(), "codebahn auth login"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("error = %q, want it to contain %q", err, want)
+		}
+	}
+}
+
+func TestLoadConfig_MissingFileIsEmpty(t *testing.T) {
+	setupAuthTest(t, Config{})
+
+	got, err := LoadConfig()
+	if err != nil {
+		t.Fatalf("LoadConfig() error = %v", err)
+	}
+	if got != (Config{}) {
+		t.Errorf("LoadConfig() = %+v, want an empty config", got)
+	}
+}
+
+func TestLoadConfig_CorruptFileNamesFileAndProblem(t *testing.T) {
+	for name, content := range corruptConfigs {
+		t.Run(name, func(t *testing.T) {
+			writeConfigFile(t, content)
+
+			_, err := LoadConfig()
+			wantConfigError(t, err, content)
+		})
+	}
+}
+
+func TestResolveAuth_CorruptConfigFails(t *testing.T) {
+	for name, content := range corruptConfigs {
+		t.Run(name, func(t *testing.T) {
+			writeConfigFile(t, content)
+
+			got, err := ResolveAuth("")
+			wantConfigError(t, err, content)
+			if got != (Auth{}) {
+				t.Errorf("ResolveAuth() = %+v, want no credentials", got)
+			}
+		})
+	}
+}
+
+func TestClearTokens_CorruptConfigFailsAndKeepsFile(t *testing.T) {
+	for name, content := range corruptConfigs {
+		t.Run(name, func(t *testing.T) {
+			writeConfigFile(t, content)
+
+			wantConfigError(t, ClearTokens(), content)
+			data, err := os.ReadFile(ConfigPath())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(data) != content {
+				t.Errorf("config file = %q, want it left as %q", data, content)
+			}
+		})
 	}
 }
