@@ -22,7 +22,6 @@ import (
 
 var (
 	version = "dev"
-	token   string
 	noColor bool
 
 	openBrowser = browser.Open
@@ -38,11 +37,11 @@ func newRootCmd() *cobra.Command {
 				output.SetNoColor(true)
 			}
 
-			if cmd.Name() == "login" || cmd.Name() == "logout" {
+			if cmd.Annotations[noClientAnnotation] != "" {
 				return nil
 			}
 
-			auth, err := resolveAuth()
+			auth, err := resolveAuth(cmd)
 			if err != nil {
 				return err
 			}
@@ -62,7 +61,7 @@ func newRootCmd() *cobra.Command {
 		SilenceErrors: true,
 	}
 
-	rootCmd.PersistentFlags().StringVar(&token, "token", "",
+	rootCmd.PersistentFlags().String("token", "",
 		"Personal access token (or set CODEBAHN_TOKEN); talks to CODEBAHN_URL, default "+config.DefaultURL)
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "Disable color output")
 	rootCmd.PersistentFlags().Bool("json", false, "Output raw JSON")
@@ -102,9 +101,19 @@ func main() {
 	}
 }
 
-// resolveAuth picks the credentials and server for a command: the --token
+// noClientAnnotation marks commands that need no API client from the root
+// pre-run: they use no credentials, or resolve them themselves.
+const noClientAnnotation = "codebahn/no-client"
+
+var noClient = map[string]string{noClientAnnotation: "true"}
+
+// resolveAuth picks the credentials and server for a command: its --token
 // flag if given, otherwise as config.ResolveAuth describes.
-func resolveAuth() (config.Auth, error) {
+func resolveAuth(cmd *cobra.Command) (config.Auth, error) {
+	token := ""
+	if f := cmd.Flag("token"); f != nil {
+		token = f.Value.String()
+	}
 	return config.ResolveAuth(token)
 }
 
@@ -133,8 +142,9 @@ names another server than the saved login, commands fail instead of guessing.`,
 func authLoginCmd() *cobra.Command {
 	var loginURL string
 	cmd := &cobra.Command{
-		Use:   "login",
-		Short: "Authenticate via browser (OAuth2 + PKCE)",
+		Use:         "login",
+		Annotations: noClient,
+		Short:       "Authenticate via browser (OAuth2 + PKCE)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			tokenResp, err := oauth.Login(cmd.Context(), loginURL, openBrowser)
 			if err != nil {
@@ -165,8 +175,9 @@ func authLoginCmd() *cobra.Command {
 
 func authLogoutCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "logout",
-		Short: "Clear saved tokens",
+		Use:         "logout",
+		Annotations: noClient,
+		Short:       "Clear saved tokens",
 		RunE: func(*cobra.Command, []string) error {
 			if err := config.ClearTokens(); err != nil {
 				return err

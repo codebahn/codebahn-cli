@@ -125,7 +125,8 @@ func TestGitCredentialStaticToken(t *testing.T) {
 	defer srv.Close()
 
 	host := mustHost(t, srv.URL)
-	setupGitCredentialTest(t, config.Config{URL: srv.URL})
+	setupGitCredentialTest(t, config.Config{})
+	t.Setenv("CODEBAHN_URL", srv.URL)
 	t.Setenv("CODEBAHN_TOKEN", "static-tok")
 
 	stdout, _, err := runGitCredential(t, []string{"get"}, "protocol=https\nhost="+host+"\n\n")

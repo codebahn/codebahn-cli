@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -29,6 +30,7 @@ func gitCredentialCmd() *cobra.Command {
 		Use:          "git-credential <get|store|erase>",
 		Short:        "Git credential helper (see git-credential(1))",
 		Args:         cobra.ExactArgs(1),
+		Annotations:  noClient,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			switch args[0] {
@@ -55,11 +57,22 @@ func runGitCredentialGet(cmd *cobra.Command) error {
 		return fmt.Errorf("reading credential input: %w", err)
 	}
 
-	auth, err := resolveAuth()
+	if fields["protocol"] != "https" {
+		return nil
+	}
+
+	auth, err := resolveAuth(cmd)
+	var mismatch *config.URLMismatchError
+	if errors.As(err, &mismatch) &&
+		!hostMatches(fields["host"], mismatch.EnvURL) && !hostMatches(fields["host"], mismatch.SavedURL) {
+		// Neither disagreeing server is being asked about, so there is
+		// nothing to guess between: this host isn't ours.
+		return nil
+	}
 	if err != nil {
 		return err
 	}
-	if fields["protocol"] != "https" || !hostMatches(fields["host"], auth.URL) {
+	if !hostMatches(fields["host"], auth.URL) {
 		return nil
 	}
 	if auth.AccessToken == "" {

@@ -12,8 +12,9 @@ func updateCmd() *cobra.Command {
 	var checkOnly bool
 
 	cmd := &cobra.Command{
-		Use:   "update",
-		Short: "Update codebahn to the latest version",
+		Use:         "update",
+		Annotations: noClient,
+		Short:       "Update codebahn to the latest version",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if version == "dev" {
 				return fmt.Errorf("cannot update a development build; install a release build first")

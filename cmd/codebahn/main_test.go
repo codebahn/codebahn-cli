@@ -15,12 +15,21 @@ import (
 // runRoot runs the full command tree with args and returns its error.
 func runRoot(t *testing.T, args ...string) error {
 	t.Helper()
+	_, err := runRootIO(t, "", args...)
+	return err
+}
+
+// runRootIO runs the full command tree with stdin and returns its stdout.
+func runRootIO(t *testing.T, stdin string, args ...string) (string, error) {
+	t.Helper()
 	cmd := newRootCmd()
 	var outBuf, errBuf bytes.Buffer
+	cmd.SetIn(strings.NewReader(stdin))
 	cmd.SetOut(&outBuf)
 	cmd.SetErr(&errBuf)
 	cmd.SetArgs(args)
-	return cmd.Execute()
+	err := cmd.Execute()
+	return outBuf.String(), err
 }
 
 // fakeOAuthServer answers the token exchange with a fixed token and records
@@ -139,5 +148,81 @@ func TestTokenFlagUsesEnvURL(t *testing.T) {
 	}
 	if gotAuth != "token pat" && gotAuth != "Bearer pat" {
 		t.Errorf("Authorization = %q, want the --token value", gotAuth)
+	}
+}
+
+// Commands that need no saved credentials still run when CODEBAHN_URL
+// disagrees with the saved login (R19: store and erase are no-ops, and a
+// foreign host gets nothing and exit 0).
+func TestURLMismatchDoesNotBlockCommandsWithoutAuth(t *testing.T) {
+	const mismatch = "but you are logged in to"
+	tests := []struct {
+		name  string
+		args  []string
+		stdin string
+	}{
+		{"store", []string{"auth", "git-credential", "store"}, "protocol=https\nhost=codebahn.net\n\n"},
+		{"erase", []string{"auth", "git-credential", "erase"}, "protocol=https\nhost=codebahn.net\n\n"},
+		{"get foreign host", []string{"auth", "git-credential", "get"}, "protocol=https\nhost=github.com\n\n"},
+		{"get http", []string{"auth", "git-credential", "get"}, "protocol=http\nhost=codebahn.net\n\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+			t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+			stdout, err := runRootIO(t, tt.stdin, tt.args...)
+			if err != nil {
+				t.Fatalf("error = %v, want nil", err)
+			}
+			if stdout != "" {
+				t.Errorf("stdout = %q, want empty", stdout)
+			}
+		})
+	}
+
+	t.Run("update", func(t *testing.T) {
+		setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+		t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+		err := runRoot(t, "update")
+		if err != nil && strings.Contains(err.Error(), mismatch) {
+			t.Errorf("error = %v, want update to ignore the saved login", err)
+		}
+	})
+}
+
+// For either of the two disagreeing servers, get still refuses to guess.
+func TestURLMismatchGetForEitherServerFails(t *testing.T) {
+	for _, host := range []string{"codebahn.net", "staging.codebahn.net"} {
+		t.Run(host, func(t *testing.T) {
+			setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+			t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+			stdout, err := runRootIO(t, "protocol=https\nhost="+host+"\n\n", "auth", "git-credential", "get")
+			if err == nil || !strings.Contains(err.Error(), "but you are logged in to") {
+				t.Errorf("error = %v, want the disagreement error", err)
+			}
+			if stdout != "" {
+				t.Errorf("stdout = %q, want empty", stdout)
+			}
+		})
+	}
+}
+
+// --token on one invocation must not leak into the next: the flag value
+// lives on the command, not in package state.
+func TestTokenFlagDoesNotLeakBetweenRuns(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net"})
+
+	if _, err := runRootIO(t, "protocol=https\nhost=codebahn.net\n\n", "--token", "pat", "auth", "git-credential", "get"); err != nil {
+		t.Fatalf("first run: %v", err)
+	}
+	stdout, _, err := runGitCredential(t, []string{"get"}, "protocol=https\nhost=codebahn.net\n\n")
+	if err != nil {
+		t.Fatalf("second run: %v", err)
+	}
+	if stdout != "" {
+		t.Errorf("stdout = %q, want empty: --token from the first run leaked", stdout)
 	}
 }

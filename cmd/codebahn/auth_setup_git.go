@@ -21,6 +21,7 @@ func setupGitCmd() *cobra.Command {
 		Use:          "setup-git",
 		Short:        "Configure git to use Codebahn's credential helper",
 		Args:         cobra.NoArgs,
+		Annotations:  noClient,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runSetupGit(cmd)
@@ -29,7 +30,7 @@ func setupGitCmd() *cobra.Command {
 }
 
 func runSetupGit(cmd *cobra.Command) error {
-	auth, err := resolveAuth()
+	auth, err := resolveAuth(cmd)
 	if err != nil {
 		return err
 	}
