@@ -21,10 +21,11 @@ import (
 )
 
 var (
-	version  = "dev"
-	instance string
-	token    string
-	noColor  bool
+	version = "dev"
+	token   string
+	noColor bool
+
+	openBrowser = browser.Open
 )
 
 func newRootCmd() *cobra.Command {
@@ -41,7 +42,10 @@ func newRootCmd() *cobra.Command {
 				return nil
 			}
 
-			auth := resolveAuth()
+			auth, err := resolveAuth()
+			if err != nil {
+				return err
+			}
 			if auth.AccessToken == "" {
 				return nil
 			}
@@ -58,8 +62,8 @@ func newRootCmd() *cobra.Command {
 		SilenceErrors: true,
 	}
 
-	rootCmd.PersistentFlags().StringVar(&instance, "instance", "https://codebahn.net", "Codebahn instance URL")
-	rootCmd.PersistentFlags().StringVar(&token, "token", "", "Personal access token")
+	rootCmd.PersistentFlags().StringVar(&token, "token", "",
+		"Personal access token (or set CODEBAHN_TOKEN); talks to CODEBAHN_URL, default "+config.DefaultURL)
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "Disable color output")
 	rootCmd.PersistentFlags().Bool("json", false, "Output raw JSON")
 
@@ -98,26 +102,25 @@ func main() {
 	}
 }
 
-func resolveAuth() config.Auth {
-	if token != "" {
-		url := instance
-		return config.Auth{
-			URL:         url,
-			AccessToken: token,
-		}
-	}
-
-	auth := config.ResolveAuth()
-	if auth.URL == "" {
-		auth.URL = instance
-	}
-	return auth
+// resolveAuth picks the credentials and server for a command: the --token
+// flag if given, otherwise as config.ResolveAuth describes.
+func resolveAuth() (config.Auth, error) {
+	return config.ResolveAuth(token)
 }
 
 func authCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "auth",
 		Short: "Manage authentication",
+		Long: `Manage authentication.
+
+Log in with 'codebahn auth login'; --url picks the server (default
+CODEBAHN_URL, else https://codebahn.net) and is saved with the login. Every
+other command uses the saved login's server.
+
+Without a saved login, pass --token or set CODEBAHN_TOKEN, and set
+CODEBAHN_URL to the server (default https://codebahn.net). If CODEBAHN_URL
+names another server than the saved login, commands fail instead of guessing.`,
 	}
 	cmd.AddCommand(authLoginCmd())
 	cmd.AddCommand(authLogoutCmd())
@@ -133,7 +136,7 @@ func authLoginCmd() *cobra.Command {
 		Use:   "login",
 		Short: "Authenticate via browser (OAuth2 + PKCE)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			tokenResp, err := oauth.Login(cmd.Context(), loginURL, browser.Open)
+			tokenResp, err := oauth.Login(cmd.Context(), loginURL, openBrowser)
 			if err != nil {
 				return err
 			}
@@ -148,11 +151,15 @@ func authLoginCmd() *cobra.Command {
 				return fmt.Errorf("saving config: %w", err)
 			}
 
-			fmt.Println("Logged in successfully.")
+			fmt.Printf("Logged in to %s.\n", loginURL)
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&loginURL, "url", "https://codebahn.net", "Codebahn instance URL")
+	defaultURL := os.Getenv("CODEBAHN_URL")
+	if defaultURL == "" {
+		defaultURL = config.DefaultURL
+	}
+	cmd.Flags().StringVar(&loginURL, "url", defaultURL, "Codebahn server to log in to; saved with the login and used by every other command")
 	return cmd
 }
 
@@ -196,8 +203,7 @@ func authStatusCmd() *cobra.Command {
 				return fmt.Errorf("parsing user info: %w", err)
 			}
 
-			auth := config.ResolveAuth()
-			fmt.Printf("Logged in to %s as %s", auth.URL, user.Login)
+			fmt.Printf("Logged in to %s as %s", c.BaseURL(), user.Login)
 			if user.FullName != "" {
 				fmt.Printf(" (%s)", user.FullName)
 			}

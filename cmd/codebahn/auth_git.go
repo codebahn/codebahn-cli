@@ -55,7 +55,10 @@ func runGitCredentialGet(cmd *cobra.Command) error {
 		return fmt.Errorf("reading credential input: %w", err)
 	}
 
-	auth := resolveAuth()
+	auth, err := resolveAuth()
+	if err != nil {
+		return err
+	}
 	if fields["protocol"] != "https" || !hostMatches(fields["host"], auth.URL) {
 		return nil
 	}

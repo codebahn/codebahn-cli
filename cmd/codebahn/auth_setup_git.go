@@ -29,7 +29,10 @@ func setupGitCmd() *cobra.Command {
 }
 
 func runSetupGit(cmd *cobra.Command) error {
-	auth := resolveAuth()
+	auth, err := resolveAuth()
+	if err != nil {
+		return err
+	}
 	host, err := authHost(auth.URL)
 	if err != nil {
 		return fmt.Errorf("determining Codebahn host: %w", err)

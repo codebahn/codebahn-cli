@@ -91,6 +91,11 @@ func New(baseURL, accessToken string) *Client {
 	}
 }
 
+// BaseURL returns the Codebahn server the client talks to.
+func (c *Client) BaseURL() string {
+	return c.baseURL
+}
+
 // SetOAuth configures OAuth token refresh. The doRefresh callback handles the
 // entire refresh cycle: locking, re-reading config, performing the HTTP
 // refresh only if still needed, and persisting. This keeps the client

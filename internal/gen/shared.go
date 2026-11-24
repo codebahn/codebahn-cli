@@ -100,8 +100,11 @@ func resolveRepoContext(cmd *cobra.Command, args any) error {
 		return fmt.Errorf("--repo also requires --owner; use both or neither to auto-detect from git remote")
 	}
 
-	instanceURL, _ := cmd.Flags().GetString("instance")
-	ctx, ok := context_detect.DetectRepo(instanceURL)
+	c := ClientFrom(cmd.Context())
+	if c == nil {
+		return fmt.Errorf("not logged in; run 'codebahn auth login' first")
+	}
+	ctx, ok := context_detect.DetectRepo(c.BaseURL())
 	if !ok {
 		return fmt.Errorf("could not detect repository from git remote; use --owner and --repo flags")
 	}

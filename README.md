@@ -78,7 +78,17 @@ codebahn auth login
 codebahn auth status
 ```
 
-For CI, set `CODEBAHN_TOKEN` instead.
+`auth login` signs in to `https://codebahn.net`. To use another server, pass
+`--url`; the server is saved with the login, and every other command uses it:
+
+```bash
+codebahn auth login --url https://staging.codebahn.net
+```
+
+For CI, set `CODEBAHN_TOKEN` (or pass `--token`) instead. A token talks to
+`CODEBAHN_URL`, which defaults to `https://codebahn.net`. If `CODEBAHN_URL`
+names a different server than your saved login, commands stop with an error
+instead of picking one.
 
 ## Commands
 

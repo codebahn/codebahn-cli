@@ -3,9 +3,11 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 type Config struct {
@@ -100,32 +102,55 @@ func ClearTokens() error {
 	return SaveConfig(cfg)
 }
 
-func ResolveAuth() Auth {
+// DefaultURL is the Codebahn server used when nothing names another.
+const DefaultURL = "https://codebahn.net"
+
+// ResolveAuth picks the credentials and server for a command.
+//
+// A token (the token argument, from --token, or else CODEBAHN_TOKEN) talks to
+// CODEBAHN_URL, else the saved login's server, else DefaultURL. Without a
+// token, the saved login is used with the server it was made on. If
+// CODEBAHN_URL names a different server, ResolveAuth fails rather than send
+// the saved credentials to one server while the user expects the other.
+func ResolveAuth(token string) (Auth, error) {
 	cfg, _ := LoadConfig()
-
 	envURL := os.Getenv("CODEBAHN_URL")
-	envToken := os.Getenv("CODEBAHN_TOKEN")
 
-	if envToken != "" {
-		url := envURL
-		if url == "" {
-			url = cfg.URL
-		}
-		return Auth{
-			URL:         url,
-			AccessToken: envToken,
-		}
+	if token == "" {
+		token = os.Getenv("CODEBAHN_TOKEN")
+	}
+	if token != "" {
+		return Auth{URL: firstNonEmpty(envURL, cfg.URL, DefaultURL), AccessToken: token}, nil
 	}
 
-	url := envURL
-	if url == "" {
-		url = cfg.URL
+	if cfg.AccessToken == "" {
+		return Auth{URL: firstNonEmpty(envURL, cfg.URL, DefaultURL)}, nil
 	}
 
+	savedURL := firstNonEmpty(cfg.URL, DefaultURL)
+	if envURL != "" && !sameURL(envURL, savedURL) {
+		return Auth{}, fmt.Errorf("CODEBAHN_URL is %s, but you are logged in to %s; "+
+			"unset CODEBAHN_URL, or run 'codebahn auth login --url %s'", envURL, savedURL, envURL)
+	}
 	return Auth{
-		URL:          url,
+		URL:          savedURL,
 		AccessToken:  cfg.AccessToken,
 		RefreshToken: cfg.RefreshToken,
 		TokenExpiry:  cfg.TokenExpiry,
+	}, nil
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
 	}
+	return ""
+}
+
+// sameURL compares two server URLs, ignoring a trailing slash and the case
+// of the scheme and host.
+func sameURL(a, b string) bool {
+	return strings.EqualFold(strings.TrimSuffix(a, "/"), strings.TrimSuffix(b, "/"))
 }
