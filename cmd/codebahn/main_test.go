@@ -226,3 +226,65 @@ func TestTokenFlagDoesNotLeakBetweenRuns(t *testing.T) {
 		t.Errorf("stdout = %q, want empty: --token from the first run leaked", stdout)
 	}
 }
+
+// Shell completion and help need no credentials, so a mismatch must not
+// break tab completion.
+func TestURLMismatchDoesNotBlockCompletionOrHelp(t *testing.T) {
+	for _, args := range [][]string{
+		{"__complete", "auth", ""},
+		{"completion", "bash"},
+		{"help", "auth"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+			t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+			if err := runRoot(t, args...); err != nil {
+				t.Errorf("error = %v, want nil", err)
+			}
+		})
+	}
+}
+
+// The mismatch error says to run 'codebahn auth login --url ...'; that must
+// work while CODEBAHN_URL still disagrees with the saved login.
+func TestAuthLoginRunsDespiteURLMismatch(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "old"})
+	var exchanged bool
+	srv := fakeOAuthServer(t, &exchanged)
+	t.Setenv("CODEBAHN_URL", srv.URL)
+	var opened string
+	stubBrowser(t, &opened)
+
+	if err := runRoot(t, "auth", "login", "--url", srv.URL); err != nil {
+		t.Fatalf("auth login: %v", err)
+	}
+	if cfg, _ := config.LoadConfig(); cfg.URL != srv.URL || cfg.AccessToken != "acc" {
+		t.Errorf("saved config = %+v, want URL %s with the new token", cfg, srv.URL)
+	}
+}
+
+func TestAuthLogoutRunsDespiteURLMismatch(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "old"})
+	t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+	if err := runRoot(t, "auth", "logout"); err != nil {
+		t.Fatalf("auth logout: %v", err)
+	}
+	if cfg, _ := config.LoadConfig(); cfg.AccessToken != "" {
+		t.Errorf("AccessToken = %q, want cleared", cfg.AccessToken)
+	}
+}
+
+// R19: --token on get returns that token for the Codebahn host.
+func TestGitCredentialGetTokenFlag(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{})
+
+	stdout, err := runRootIO(t, "protocol=https\nhost=codebahn.net\n\n", "--token", "pat", "auth", "git-credential", "get")
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	if want := "username=oauth2\npassword=pat\n"; stdout != want {
+		t.Errorf("stdout = %q, want %q", stdout, want)
+	}
+}

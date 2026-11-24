@@ -37,7 +37,7 @@ func newRootCmd() *cobra.Command {
 				output.SetNoColor(true)
 			}
 
-			if cmd.Annotations[noClientAnnotation] != "" {
+			if cmd.Annotations[noClientAnnotation] != "" || isCobraBuiltin(cmd) {
 				return nil
 			}
 
@@ -106,6 +106,22 @@ func main() {
 const noClientAnnotation = "codebahn/no-client"
 
 var noClient = map[string]string{noClientAnnotation: "true"}
+
+// isCobraBuiltin reports whether cmd is, or sits under, one of cobra's own
+// top-level commands (help, completion and the hidden shell-completion
+// requests). Cobra adds them at Execute time, so they cannot carry the
+// noClient annotation, and they need no credentials.
+func isCobraBuiltin(cmd *cobra.Command) bool {
+	top := cmd
+	for top.HasParent() && top.Parent().HasParent() {
+		top = top.Parent()
+	}
+	switch top.Name() {
+	case "help", "completion", cobra.ShellCompRequestCmd, cobra.ShellCompNoDescRequestCmd:
+		return true
+	}
+	return false
+}
 
 // resolveAuth picks the credentials and server for a command: its --token
 // flag if given, otherwise as config.ResolveAuth describes.
