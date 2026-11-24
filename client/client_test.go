@@ -230,6 +230,14 @@ func TestStatusCodeErrorMessage(t *testing.T) {
 		{"empty body", 502, "", "HTTP 502: no detail from server"},
 		{"plain text body", 404, "not found\n", "HTTP 404: not found"},
 		{"json without message", 400, `{"errors":["bad"]}`, `HTTP 400: {"errors":["bad"]}`},
+		{"scope refusal says where to widen access", 403, `{"message":"token does not have at least one of required scope(s): [write:user]","url":"https://codebahn.net/api/swagger"}`,
+			"HTTP 403: token does not have at least one of required scope(s): [write:user]. " +
+				"The login or token in use does not have that access. " +
+				"Change the connection under Settings > Applications on Codebahn, or use a token with that scope."},
+		{"other 403 keeps its message", 403, `{"message":"user should be an owner or a collaborator with admin write of a repository"}`,
+			"HTTP 403: user should be an owner or a collaborator with admin write of a repository"},
+		{"scope wording outside a 403 gets no hint", 500, `{"message":"required scope(s): [x]"}`,
+			"HTTP 500: required scope(s): [x]"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

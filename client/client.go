@@ -18,13 +18,18 @@ import (
 	"github.com/codebahn/codebahn-cli/tools"
 )
 
+// DoRefreshFunc performs a locked, config-aware token refresh and returns
+// the new access token and expiry. Implementations should acquire any
+// cross-process lock, re-read the latest token state (another process may
+// have already refreshed), perform the HTTP refresh only if still needed,
+// and persist the result.
+type DoRefreshFunc func(ctx context.Context) (accessToken string, expiry time.Time, err error)
+
 type Client struct {
 	baseURL      string
 	accessToken  string
-	refreshToken string
 	tokenExpiry  time.Time
-	onRefresh    func(accessToken, refreshToken string, expiry time.Time)
-	clientID     string
+	doRefresh    DoRefreshFunc
 	httpClient   *http.Client
 	streamClient *http.Client
 	mu           sync.Mutex
@@ -35,8 +40,19 @@ type StatusCodeError struct {
 	Body string
 }
 
+// scopeRefusal is how the server words a 403 caused by the token's scope
+// ("token does not have at least one of required scope(s): [write:user]").
+// A login made on the consent page gets only the areas the user chose there,
+// so this is the refusal a narrowed connection meets.
+const (
+	scopeRefusal     = "required scope(s)"
+	scopeRefusalHint = "The login or token in use does not have that access. " +
+		"Change the connection under Settings > Applications on Codebahn, or use a token with that scope."
+)
+
 // Error reports the server's JSON "message" when the body has one, the raw
 // body otherwise, and a fixed phrase when the server gave no detail at all.
+// A scope refusal also says where to widen the access.
 func (e *StatusCodeError) Error() string {
 	detail := strings.TrimSpace(e.Body)
 	var payload struct {
@@ -47,6 +63,9 @@ func (e *StatusCodeError) Error() string {
 	}
 	if detail == "" {
 		detail = "no detail from server"
+	}
+	if e.Code == http.StatusForbidden && strings.Contains(detail, scopeRefusal) {
+		detail = strings.TrimSuffix(detail, ".") + ". " + scopeRefusalHint
 	}
 	return fmt.Sprintf("HTTP %d: %s", e.Code, detail)
 }
@@ -72,18 +91,25 @@ func New(baseURL, accessToken string) *Client {
 	}
 }
 
-// SetOAuth configures OAuth token refresh.
-func (c *Client) SetOAuth(refreshToken, clientID string, expiry time.Time, onRefresh func(string, string, time.Time)) {
-	c.refreshToken = refreshToken
-	c.clientID = clientID
+// BaseURL returns the Codebahn server the client talks to.
+func (c *Client) BaseURL() string {
+	return c.baseURL
+}
+
+// SetOAuth configures OAuth token refresh. The doRefresh callback handles the
+// entire refresh cycle: locking, re-reading config, performing the HTTP
+// refresh only if still needed, and persisting. This keeps the client
+// decoupled from the config layer while letting the caller coordinate with
+// cross-process locks.
+func (c *Client) SetOAuth(expiry time.Time, doRefresh DoRefreshFunc) {
 	c.tokenExpiry = expiry
-	c.onRefresh = onRefresh
+	c.doRefresh = doRefresh
 }
 
 const refreshBuffer = 30 * time.Second
 
 func (c *Client) ensureValidToken(ctx context.Context) error {
-	if c.refreshToken == "" || c.tokenExpiry.IsZero() {
+	if c.doRefresh == nil || c.tokenExpiry.IsZero() {
 		return nil
 	}
 
@@ -94,60 +120,13 @@ func (c *Client) ensureValidToken(ctx context.Context) error {
 		return nil
 	}
 
-	params := url.Values{
-		"grant_type":    {"refresh_token"},
-		"client_id":     {c.clientID},
-		"refresh_token": {c.refreshToken},
-	}
-
-	endpoint := c.baseURL + "/login/oauth/access_token"
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(params.Encode()))
+	access, expiry, err := c.doRefresh(ctx)
 	if err != nil {
-		return fmt.Errorf("building refresh request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("refresh request: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if err != nil {
-		return fmt.Errorf("reading refresh response: %w", err)
+		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		var errResp struct {
-			ErrorDescription string `json:"error_description"`
-		}
-		if json.Unmarshal(body, &errResp) == nil && errResp.ErrorDescription != "" {
-			return fmt.Errorf("token refresh failed: %s; run 'codebahn auth login' to re-authenticate", errResp.ErrorDescription)
-		}
-		return fmt.Errorf("token refresh failed (HTTP %d); run 'codebahn auth login' to re-authenticate", resp.StatusCode)
-	}
-
-	var tokenResp struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		ExpiresIn    int64  `json:"expires_in"`
-	}
-	if err := json.Unmarshal(body, &tokenResp); err != nil {
-		return fmt.Errorf("decoding refresh response: %w", err)
-	}
-
-	c.accessToken = tokenResp.AccessToken
-	if tokenResp.RefreshToken != "" {
-		c.refreshToken = tokenResp.RefreshToken
-	}
-	c.tokenExpiry = time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
-
-	if c.onRefresh != nil {
-		c.onRefresh(c.accessToken, c.refreshToken, c.tokenExpiry)
-	}
-
+	c.accessToken = access
+	c.tokenExpiry = expiry
 	return nil
 }
 
