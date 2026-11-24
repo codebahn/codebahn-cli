@@ -142,8 +142,13 @@ claude mcp add --transport http codebahn https://codebahn.net/mcp
 
 ### Codex
 
+Codex signs in over OAuth only through dynamic client registration, which
+Codebahn does not offer. Create a repo-specific personal access token, put it
+in an environment variable, and point Codex at that variable:
+
 ```bash
-codex mcp add codebahn --url https://codebahn.net/mcp
+export CODEBAHN_MCP_TOKEN=<your token>
+codex mcp add codebahn --url https://codebahn.net/mcp --bearer-token-env-var CODEBAHN_MCP_TOKEN
 ```
 
 ### VS Code (Copilot)
