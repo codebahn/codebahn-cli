@@ -363,3 +363,18 @@ func TestUpdateCheckSkippedWhenConfigCorrupt(t *testing.T) {
 		t.Error("wantUpdateCheck() = true with a corrupt config, want false")
 	}
 }
+
+// CODEBAHN_URL with an explicit default port names the same server as git's
+// port-less host, so get still reports the disagreement for it.
+func TestURLMismatchGetForEnvServerWithDefaultPortFails(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+	t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net:443")
+
+	stdout, err := runRootIO(t, "protocol=https\nhost=staging.codebahn.net\n\n", "auth", "git-credential", "get")
+	if err == nil || !strings.Contains(err.Error(), "but you are logged in to") {
+		t.Errorf("error = %v, want the disagreement error", err)
+	}
+	if stdout != "" {
+		t.Errorf("stdout = %q, want empty", stdout)
+	}
+}

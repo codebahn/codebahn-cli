@@ -72,11 +72,17 @@ func runGitCredentialGet(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	if !hostMatches(fields["host"], auth.URL) {
-		return nil
-	}
-	if auth.AccessToken == "" {
-		return nil
+	if !hostMatches(fields["host"], auth.URL) || auth.AccessToken == "" {
+		// A token from --token or CODEBAHN_TOKEN belongs to another server;
+		// the saved login may still be for the host git asks about.
+		saved, err := config.SavedAuth()
+		if err != nil {
+			return err
+		}
+		if !hostMatches(fields["host"], saved.URL) || saved.AccessToken == "" {
+			return nil
+		}
+		auth = saved
 	}
 
 	token := auth.AccessToken
@@ -171,8 +177,9 @@ func parseCredentialInput(r io.Reader) (map[string]string, error) {
 	return fields, scanner.Err()
 }
 
-// hostMatches reports whether host (as sent by git, e.g. "codebahn.net")
-// matches the host of the configured instance URL.
+// hostMatches reports whether host (as sent by git for an https request,
+// e.g. "codebahn.net") matches the host of the configured instance URL. An
+// explicit default port on either side is ignored.
 func hostMatches(host, configuredURL string) bool {
 	if host == "" || configuredURL == "" {
 		return false
@@ -181,11 +188,11 @@ func hostMatches(host, configuredURL string) bool {
 	if err != nil {
 		return false
 	}
-	return strings.EqualFold(configuredHost, host)
+	return strings.EqualFold(configuredHost, strings.TrimSuffix(host, ":443"))
 }
 
 // authHost extracts the host (e.g. "codebahn.net") from a Codebahn instance
-// URL.
+// URL, without the port when it is the scheme's default.
 func authHost(rawURL string) (string, error) {
 	u, err := url.Parse(rawURL)
 	if err != nil {
@@ -193,6 +200,9 @@ func authHost(rawURL string) (string, error) {
 	}
 	if u.Host == "" {
 		return "", fmt.Errorf("instance URL %q has no host", rawURL)
+	}
+	if port := u.Port(); (u.Scheme == "https" && port == "443") || (u.Scheme == "http" && port == "80") {
+		return strings.TrimSuffix(u.Host, ":"+port), nil
 	}
 	return u.Host, nil
 }

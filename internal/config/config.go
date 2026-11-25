@@ -136,16 +136,31 @@ func ResolveAuth(token string) (Auth, error) {
 		return Auth{URL: firstNonEmpty(envURL, cfg.URL, DefaultURL)}, nil
 	}
 
-	savedURL := firstNonEmpty(cfg.URL, DefaultURL)
-	if envURL != "" && !sameURL(envURL, savedURL) {
-		return Auth{}, &URLMismatchError{EnvURL: envURL, SavedURL: savedURL}
+	saved := savedAuth(cfg)
+	if envURL != "" && !sameURL(envURL, saved.URL) {
+		return Auth{}, &URLMismatchError{EnvURL: envURL, SavedURL: saved.URL}
 	}
+	return saved, nil
+}
+
+// SavedAuth returns the saved login with the server it was made on, ignoring
+// any token or CODEBAHN_URL in the environment. AccessToken is empty when
+// nobody is logged in.
+func SavedAuth() (Auth, error) {
+	cfg, err := LoadConfig()
+	if err != nil {
+		return Auth{}, err
+	}
+	return savedAuth(cfg), nil
+}
+
+func savedAuth(cfg Config) Auth {
 	return Auth{
-		URL:          savedURL,
+		URL:          firstNonEmpty(cfg.URL, DefaultURL),
 		AccessToken:  cfg.AccessToken,
 		RefreshToken: cfg.RefreshToken,
 		TokenExpiry:  cfg.TokenExpiry,
-	}, nil
+	}
 }
 
 func firstNonEmpty(values ...string) string {

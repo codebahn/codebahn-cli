@@ -515,3 +515,53 @@ func mustHost(t *testing.T, rawURL string) string {
 	}
 	return u.Host
 }
+
+func TestHostMatchesIgnoresDefaultPort(t *testing.T) {
+	tests := []struct {
+		host, url string
+		want      bool
+	}{
+		{"codebahn.net", "https://codebahn.net:443", true},
+		{"codebahn.net:443", "https://codebahn.net", true},
+		{"codebahn.net:8443", "https://codebahn.net", false},
+		{"[::1]", "https://[::1]:443", true},
+	}
+	for _, tt := range tests {
+		if got := hostMatches(tt.host, tt.url); got != tt.want {
+			t.Errorf("hostMatches(%q, %q) = %v, want %v", tt.host, tt.url, got, tt.want)
+		}
+	}
+}
+
+// A token in the environment talks to its own server; git asking for the
+// saved login's server still gets the saved login.
+func TestGitCredentialEnvTokenDoesNotHideSavedLogin(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Fatal("server contacted; token is not expiring, no refresh expected")
+	}))
+	defer srv.Close()
+
+	setupGitCredentialTest(t, config.Config{
+		URL:         srv.URL,
+		AccessToken: "saved-token",
+		TokenExpiry: time.Now().Add(time.Hour).Unix(),
+	})
+	t.Setenv("CODEBAHN_TOKEN", "prod-pat")
+
+	stdout, _, err := runGitCredential(t, []string{"get"}, "protocol=https\nhost="+mustHost(t, srv.URL)+"\n\n")
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if want := "username=oauth2\npassword=saved-token\n"; stdout != want {
+		t.Errorf("stdout = %q, want %q", stdout, want)
+	}
+
+	// The token's own server still gets the token.
+	stdout, _, err = runGitCredential(t, []string{"get"}, "protocol=https\nhost=codebahn.net\n\n")
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if want := "username=oauth2\npassword=prod-pat\n"; stdout != want {
+		t.Errorf("stdout = %q, want %q", stdout, want)
+	}
+}
