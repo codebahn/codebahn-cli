@@ -95,6 +95,17 @@ func TestGitCredentialGetNoMatch(t *testing.T) {
 	}
 }
 
+// A corrupt config is an error on stderr, not a silent "no credential".
+func TestGitCredentialGetCorruptConfig(t *testing.T) {
+	writeCorruptConfig(t)
+
+	stdout, _, err := runGitCredential(t, []string{"get"}, "protocol=https\nhost=codebahn.net\n\n")
+	wantConfigParseError(t, err)
+	if stdout != "" {
+		t.Errorf("stdout = %q, want empty", stdout)
+	}
+}
+
 func TestGitCredentialGetMatch(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 		t.Fatal("server contacted; token is not expiring, no refresh expected")

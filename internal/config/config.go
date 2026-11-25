@@ -52,7 +52,8 @@ func LoadConfig() (Config, error) {
 	}
 	var cfg Config
 	if err := json.Unmarshal(data, &cfg); err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("config file %s is invalid: %w; "+
+			"fix or delete it, or run 'codebahn auth login' to rewrite it", ConfigPath(), err)
 	}
 	return cfg, nil
 }
@@ -96,7 +97,10 @@ func SaveConfig(cfg Config) error {
 }
 
 func ClearTokens() error {
-	cfg, _ := LoadConfig()
+	cfg, err := LoadConfig()
+	if err != nil {
+		return err
+	}
 	cfg.AccessToken = ""
 	cfg.RefreshToken = ""
 	cfg.TokenExpiry = 0
@@ -115,7 +119,10 @@ const DefaultURL = "https://codebahn.net"
 // server, ResolveAuth returns a *URLMismatchError rather than send the saved
 // credentials to one server while the user expects the other.
 func ResolveAuth(token string) (Auth, error) {
-	cfg, _ := LoadConfig()
+	cfg, err := LoadConfig()
+	if err != nil {
+		return Auth{}, err
+	}
 	envURL := os.Getenv("CODEBAHN_URL")
 
 	if token == "" {

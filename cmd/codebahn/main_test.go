@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
@@ -286,5 +287,79 @@ func TestGitCredentialGetTokenFlag(t *testing.T) {
 	}
 	if want := "username=oauth2\npassword=pat\n"; stdout != want {
 		t.Errorf("stdout = %q, want %q", stdout, want)
+	}
+}
+
+// writeCorruptConfig isolates config and environment and writes a config
+// file that exists but does not parse: token_expiry as RFC 3339 instead of
+// an epoch, as seen in the field.
+func writeCorruptConfig(t *testing.T) {
+	t.Helper()
+	setupGitCredentialTest(t, config.Config{})
+	content := `{"url": "https://codebahn.net", "access_token": "acc", "token_expiry": "2026-11-24T17:00:00Z"}`
+	if err := os.WriteFile(config.ConfigPath(), []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// wantConfigParseError checks that err reports the corrupt config file, not
+// a missing login.
+func wantConfigParseError(t *testing.T, err error) {
+	t.Helper()
+	if err == nil {
+		t.Fatal("error = nil, want the config parse error")
+	}
+	if !strings.Contains(err.Error(), config.ConfigPath()) || !strings.Contains(err.Error(), "token_expiry") {
+		t.Errorf("error = %q, want it to name %s and the bad field", err, config.ConfigPath())
+	}
+}
+
+func TestCorruptConfigFailsCommands(t *testing.T) {
+	writeCorruptConfig(t)
+
+	wantConfigParseError(t, runRoot(t, "auth", "status"))
+}
+
+// Logging in is the way out of a corrupt config, so it must still work and
+// rewrite the file, with the update check wired in as in main.
+func TestAuthLoginRewritesCorruptConfig(t *testing.T) {
+	writeCorruptConfig(t)
+	var exchanged bool
+	srv := fakeOAuthServer(t, &exchanged)
+	var opened string
+	stubBrowser(t, &opened)
+
+	root := newRootCmd()
+	checkUpdateInBackground(root)
+	root.SetArgs([]string{"auth", "login", "--url", srv.URL})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("auth login: %v", err)
+	}
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		t.Fatalf("LoadConfig() error = %v", err)
+	}
+	if cfg.URL != srv.URL || cfg.AccessToken != "acc" {
+		t.Errorf("saved config = %+v, want URL %s with the new token", cfg, srv.URL)
+	}
+}
+
+// The update-check opt-out lives in the config; when the config cannot be
+// read, the opt-out is unknown, so no check is made.
+func TestUpdateCheckSkippedWhenConfigCorrupt(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net"})
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	t.Setenv("CODEBAHN_NO_UPDATE_CHECK", "")
+	orig := version
+	version = "v1.0.0"
+	t.Cleanup(func() { version = orig })
+
+	if !wantUpdateCheck() {
+		t.Fatal("wantUpdateCheck() = false with a valid config, want true")
+	}
+	writeCorruptConfig(t)
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	if wantUpdateCheck() {
+		t.Error("wantUpdateCheck() = true with a corrupt config, want false")
 	}
 }
