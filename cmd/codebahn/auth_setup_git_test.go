@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/codebahn/codebahn-cli/internal/config"
 )
 
 // setupSetupGitTest isolates git's global config and codebahn's own config
@@ -175,5 +177,25 @@ func TestSetupGitWithExistingHelper(t *testing.T) {
 	values := helperValues(t, host)
 	if len(values) != 2 || values[0] != "" || !strings.Contains(values[1], "auth git-credential") {
 		t.Fatalf("host-specific helper chain = %v, want [\"\", codebahn helper]", values)
+	}
+}
+
+// With a token in the environment and a saved login on another server, the
+// helper serves both, so setup-git configures it for both hosts.
+func TestSetupGitConfiguresTokenAndSavedLoginHosts(t *testing.T) {
+	setupSetupGitTest(t, "")
+	const prodHost = "codebahn.net"
+	if err := config.SaveConfig(config.Config{URL: "https://staging.codebahn.net", AccessToken: "acc"}); err != nil {
+		t.Fatalf("SaveConfig() error = %v", err)
+	}
+	t.Setenv("CODEBAHN_TOKEN", "prod-pat")
+
+	if _, err := runSetupGitCmd(t); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	for _, host := range []string{prodHost, "staging.codebahn.net"} {
+		if values := helperValues(t, host); len(values) != 2 {
+			t.Errorf("helper values for %s = %v, want 2 entries", host, values)
+		}
 	}
 }

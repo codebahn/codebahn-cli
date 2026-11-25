@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -148,14 +149,16 @@ func TestResolveAuth_TokenIgnoresSavedLoginOnOtherServer(t *testing.T) {
 	}
 }
 
-func TestResolveAuth_TokenWithoutEnvURLUsesSavedServer(t *testing.T) {
+// A token never goes to a saved login's server by default: a production PAT
+// must not reach staging because a staging login happens to be saved.
+func TestResolveAuth_TokenWithoutEnvURLIgnoresSavedServer(t *testing.T) {
 	setupAuthTest(t, Config{URL: staging})
 
 	got, err := ResolveAuth("pat")
 	if err != nil {
 		t.Fatalf("ResolveAuth() error = %v", err)
 	}
-	if want := (Auth{URL: staging, AccessToken: "pat"}); got != want {
+	if want := (Auth{URL: DefaultURL, AccessToken: "pat"}); got != want {
 		t.Errorf("ResolveAuth() = %+v, want %+v", got, want)
 	}
 }
@@ -169,6 +172,39 @@ func TestResolveAuth_NotLoggedIn(t *testing.T) {
 	}
 	if want := (Auth{URL: DefaultURL}); got != want {
 		t.Errorf("ResolveAuth() = %+v, want %+v", got, want)
+	}
+}
+
+// CODEBAHN_URL spelled differently (case, default port, trailing slash)
+// still names the saved login's server.
+func TestResolveAuth_SavedLoginAgreesWithEquivalentEnvURL(t *testing.T) {
+	for _, env := range []string{"https://codebahn.net:443", "HTTPS://CodeBahn.net/", "https://codebahn.net:443/"} {
+		t.Run(env, func(t *testing.T) {
+			setupAuthTest(t, Config{URL: DefaultURL, AccessToken: "a"})
+			t.Setenv("CODEBAHN_URL", env)
+
+			got, err := ResolveAuth("")
+			if err != nil {
+				t.Fatalf("ResolveAuth() error = %v", err)
+			}
+			if got.URL != DefaultURL || got.AccessToken != "a" {
+				t.Errorf("ResolveAuth() = %+v, want the saved login", got)
+			}
+		})
+	}
+}
+
+func TestResolveAuth_MismatchIsURLMismatchError(t *testing.T) {
+	setupAuthTest(t, Config{URL: DefaultURL, AccessToken: "a"})
+	t.Setenv("CODEBAHN_URL", staging)
+
+	_, err := ResolveAuth("")
+	var mismatch *URLMismatchError
+	if !errors.As(err, &mismatch) {
+		t.Fatalf("ResolveAuth() error = %v, want *URLMismatchError", err)
+	}
+	if mismatch.EnvURL != staging || mismatch.SavedURL != DefaultURL {
+		t.Errorf("mismatch = %+v, want env %s, saved %s", mismatch, staging, DefaultURL)
 	}
 }
 

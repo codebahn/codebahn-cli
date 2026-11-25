@@ -16,12 +16,21 @@ import (
 // runRoot runs the full command tree with args and returns its error.
 func runRoot(t *testing.T, args ...string) error {
 	t.Helper()
+	_, err := runRootIO(t, "", args...)
+	return err
+}
+
+// runRootIO runs the full command tree with stdin and returns its stdout.
+func runRootIO(t *testing.T, stdin string, args ...string) (string, error) {
+	t.Helper()
 	cmd := newRootCmd()
 	var outBuf, errBuf bytes.Buffer
+	cmd.SetIn(strings.NewReader(stdin))
 	cmd.SetOut(&outBuf)
 	cmd.SetErr(&errBuf)
 	cmd.SetArgs(args)
-	return cmd.Execute()
+	err := cmd.Execute()
+	return outBuf.String(), err
 }
 
 // fakeOAuthServer answers the token exchange with a fixed token and records
@@ -143,6 +152,144 @@ func TestTokenFlagUsesEnvURL(t *testing.T) {
 	}
 }
 
+// Commands that need no saved credentials still run when CODEBAHN_URL
+// disagrees with the saved login (R19: store and erase are no-ops, and a
+// foreign host gets nothing and exit 0).
+func TestURLMismatchDoesNotBlockCommandsWithoutAuth(t *testing.T) {
+	const mismatch = "but you are logged in to"
+	tests := []struct {
+		name  string
+		args  []string
+		stdin string
+	}{
+		{"store", []string{"auth", "git-credential", "store"}, "protocol=https\nhost=codebahn.net\n\n"},
+		{"erase", []string{"auth", "git-credential", "erase"}, "protocol=https\nhost=codebahn.net\n\n"},
+		{"get foreign host", []string{"auth", "git-credential", "get"}, "protocol=https\nhost=github.com\n\n"},
+		{"get http", []string{"auth", "git-credential", "get"}, "protocol=http\nhost=codebahn.net\n\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+			t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+			stdout, err := runRootIO(t, tt.stdin, tt.args...)
+			if err != nil {
+				t.Fatalf("error = %v, want nil", err)
+			}
+			if stdout != "" {
+				t.Errorf("stdout = %q, want empty", stdout)
+			}
+		})
+	}
+
+	t.Run("update", func(t *testing.T) {
+		setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+		t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+		err := runRoot(t, "update")
+		if err != nil && strings.Contains(err.Error(), mismatch) {
+			t.Errorf("error = %v, want update to ignore the saved login", err)
+		}
+	})
+}
+
+// For either of the two disagreeing servers, get still refuses to guess.
+func TestURLMismatchGetForEitherServerFails(t *testing.T) {
+	for _, host := range []string{"codebahn.net", "staging.codebahn.net"} {
+		t.Run(host, func(t *testing.T) {
+			setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+			t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+			stdout, err := runRootIO(t, "protocol=https\nhost="+host+"\n\n", "auth", "git-credential", "get")
+			if err == nil || !strings.Contains(err.Error(), "but you are logged in to") {
+				t.Errorf("error = %v, want the disagreement error", err)
+			}
+			if stdout != "" {
+				t.Errorf("stdout = %q, want empty", stdout)
+			}
+		})
+	}
+}
+
+// --token on one invocation must not leak into the next: the flag value
+// lives on the command, not in package state.
+func TestTokenFlagDoesNotLeakBetweenRuns(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net"})
+
+	if _, err := runRootIO(t, "protocol=https\nhost=codebahn.net\n\n", "--token", "pat", "auth", "git-credential", "get"); err != nil {
+		t.Fatalf("first run: %v", err)
+	}
+	stdout, _, err := runGitCredential(t, []string{"get"}, "protocol=https\nhost=codebahn.net\n\n")
+	if err != nil {
+		t.Fatalf("second run: %v", err)
+	}
+	if stdout != "" {
+		t.Errorf("stdout = %q, want empty: --token from the first run leaked", stdout)
+	}
+}
+
+// Shell completion and help need no credentials, so a mismatch must not
+// break tab completion.
+func TestURLMismatchDoesNotBlockCompletionOrHelp(t *testing.T) {
+	for _, args := range [][]string{
+		{"__complete", "auth", ""},
+		{"completion", "bash"},
+		{"help", "auth"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+			t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+			if err := runRoot(t, args...); err != nil {
+				t.Errorf("error = %v, want nil", err)
+			}
+		})
+	}
+}
+
+// The mismatch error says to run 'codebahn auth login --url ...'; that must
+// work while CODEBAHN_URL still disagrees with the saved login.
+func TestAuthLoginRunsDespiteURLMismatch(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "old"})
+	var exchanged bool
+	srv := fakeOAuthServer(t, &exchanged)
+	t.Setenv("CODEBAHN_URL", srv.URL)
+	var opened string
+	stubBrowser(t, &opened)
+
+	if err := runRoot(t, "auth", "login", "--url", srv.URL); err != nil {
+		t.Fatalf("auth login: %v", err)
+	}
+	if cfg, _ := config.LoadConfig(); cfg.URL != srv.URL || cfg.AccessToken != "acc" {
+		t.Errorf("saved config = %+v, want URL %s with the new token", cfg, srv.URL)
+	}
+}
+
+func TestAuthLogoutRunsDespiteURLMismatch(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "old"})
+	t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net")
+
+	if err := runRoot(t, "auth", "logout"); err != nil {
+		t.Fatalf("auth logout: %v", err)
+	}
+	if cfg, _ := config.LoadConfig(); cfg.AccessToken != "" {
+		t.Errorf("AccessToken = %q, want cleared", cfg.AccessToken)
+	}
+}
+
+// R19: --token on get returns that token for the Codebahn host.
+func TestGitCredentialGetTokenFlag(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{})
+
+	stdout, err := runRootIO(t, "protocol=https\nhost=codebahn.net\n\n", "--token", "pat", "auth", "git-credential", "get")
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	if want := "username=oauth2\npassword=pat\n"; stdout != want {
+		t.Errorf("stdout = %q, want %q", stdout, want)
+	}
+}
+
 // writeCorruptConfig isolates config and environment and writes a config
 // file that exists but does not parse: token_expiry as RFC 3339 instead of
 // an epoch, as seen in the field.
@@ -214,5 +361,20 @@ func TestUpdateCheckSkippedWhenConfigCorrupt(t *testing.T) {
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
 	if wantUpdateCheck() {
 		t.Error("wantUpdateCheck() = true with a corrupt config, want false")
+	}
+}
+
+// CODEBAHN_URL with an explicit default port names the same server as git's
+// port-less host, so get still reports the disagreement for it.
+func TestURLMismatchGetForEnvServerWithDefaultPortFails(t *testing.T) {
+	setupGitCredentialTest(t, config.Config{URL: "https://codebahn.net", AccessToken: "acc"})
+	t.Setenv("CODEBAHN_URL", "https://staging.codebahn.net:443")
+
+	stdout, err := runRootIO(t, "protocol=https\nhost=staging.codebahn.net\n\n", "auth", "git-credential", "get")
+	if err == nil || !strings.Contains(err.Error(), "but you are logged in to") {
+		t.Errorf("error = %v, want the disagreement error", err)
+	}
+	if stdout != "" {
+		t.Errorf("stdout = %q, want empty", stdout)
 	}
 }

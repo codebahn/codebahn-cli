@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -112,10 +113,11 @@ const DefaultURL = "https://codebahn.net"
 // ResolveAuth picks the credentials and server for a command.
 //
 // A token (the token argument, from --token, or else CODEBAHN_TOKEN) talks to
-// CODEBAHN_URL, else the saved login's server, else DefaultURL. Without a
-// token, the saved login is used with the server it was made on. If
-// CODEBAHN_URL names a different server, ResolveAuth fails rather than send
-// the saved credentials to one server while the user expects the other.
+// CODEBAHN_URL, else DefaultURL; never to a saved login's server, so a token
+// for one server is not sent to another. Without a token, the saved login is
+// used with the server it was made on. If CODEBAHN_URL names a different
+// server, ResolveAuth returns a *URLMismatchError rather than send the saved
+// credentials to one server while the user expects the other.
 func ResolveAuth(token string) (Auth, error) {
 	cfg, err := LoadConfig()
 	if err != nil {
@@ -127,24 +129,38 @@ func ResolveAuth(token string) (Auth, error) {
 		token = os.Getenv("CODEBAHN_TOKEN")
 	}
 	if token != "" {
-		return Auth{URL: firstNonEmpty(envURL, cfg.URL, DefaultURL), AccessToken: token}, nil
+		return Auth{URL: firstNonEmpty(envURL, DefaultURL), AccessToken: token}, nil
 	}
 
 	if cfg.AccessToken == "" {
 		return Auth{URL: firstNonEmpty(envURL, cfg.URL, DefaultURL)}, nil
 	}
 
-	savedURL := firstNonEmpty(cfg.URL, DefaultURL)
-	if envURL != "" && !sameURL(envURL, savedURL) {
-		return Auth{}, fmt.Errorf("CODEBAHN_URL is %s, but you are logged in to %s; "+
-			"unset CODEBAHN_URL, or run 'codebahn auth login --url %s'", envURL, savedURL, envURL)
+	saved := savedAuth(cfg)
+	if envURL != "" && !sameURL(envURL, saved.URL) {
+		return Auth{}, &URLMismatchError{EnvURL: envURL, SavedURL: saved.URL}
 	}
+	return saved, nil
+}
+
+// SavedAuth returns the saved login with the server it was made on, ignoring
+// any token or CODEBAHN_URL in the environment. AccessToken is empty when
+// nobody is logged in.
+func SavedAuth() (Auth, error) {
+	cfg, err := LoadConfig()
+	if err != nil {
+		return Auth{}, err
+	}
+	return savedAuth(cfg), nil
+}
+
+func savedAuth(cfg Config) Auth {
 	return Auth{
-		URL:          savedURL,
+		URL:          firstNonEmpty(cfg.URL, DefaultURL),
 		AccessToken:  cfg.AccessToken,
 		RefreshToken: cfg.RefreshToken,
 		TokenExpiry:  cfg.TokenExpiry,
-	}, nil
+	}
 }
 
 func firstNonEmpty(values ...string) string {
@@ -156,8 +172,34 @@ func firstNonEmpty(values ...string) string {
 	return ""
 }
 
-// sameURL compares two server URLs, ignoring a trailing slash and the case
-// of the scheme and host.
+// URLMismatchError reports that CODEBAHN_URL names another server than the
+// saved login.
+type URLMismatchError struct {
+	EnvURL   string
+	SavedURL string
+}
+
+func (e *URLMismatchError) Error() string {
+	return fmt.Sprintf("CODEBAHN_URL is %s, but you are logged in to %s; "+
+		"unset CODEBAHN_URL, or run 'codebahn auth login --url %s'", e.EnvURL, e.SavedURL, e.EnvURL)
+}
+
+// sameURL reports whether two server URLs name the same server, ignoring a
+// trailing slash, the case of the scheme and host, and an explicit default
+// port.
 func sameURL(a, b string) bool {
-	return strings.EqualFold(strings.TrimSuffix(a, "/"), strings.TrimSuffix(b, "/"))
+	return normalizeURL(a) == normalizeURL(b)
+}
+
+func normalizeURL(raw string) string {
+	u, err := url.Parse(strings.TrimSuffix(raw, "/"))
+	if err != nil {
+		return raw
+	}
+	u.Scheme = strings.ToLower(u.Scheme)
+	u.Host = strings.ToLower(u.Host)
+	if (u.Scheme == "https" && u.Port() == "443") || (u.Scheme == "http" && u.Port() == "80") {
+		u.Host = u.Hostname()
+	}
+	return u.String()
 }
