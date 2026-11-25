@@ -213,6 +213,18 @@ func authStatusCmd() *cobra.Command {
 	}
 }
 
+// wantUpdateCheck reports whether to look for a newer release. The opt-out
+// lives in the config, so an unreadable config means no check. The error is
+// not dropped: every command but login (which rewrites the file) reports it
+// through resolveAuth or config.ClearTokens.
+func wantUpdateCheck() bool {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return false
+	}
+	return update.ShouldCheck(version, cfg.CheckUpdates)
+}
+
 func checkUpdateInBackground(rootCmd *cobra.Command) func() string {
 	ch := make(chan string, 1)
 
@@ -226,8 +238,7 @@ func checkUpdateInBackground(rootCmd *cobra.Command) func() string {
 			return nil
 		}
 
-		cfg, _ := config.LoadConfig()
-		if !update.ShouldCheck(version, cfg.CheckUpdates) {
+		if !wantUpdateCheck() {
 			return nil
 		}
 
