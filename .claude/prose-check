@@ -54,13 +54,21 @@ else
     done <<<"$files"
   fi
 
-  if [ "$total" -gt "$budget" ]; then
-    echo "prose-check: prose budget exceeded: $total lines tracked, budget is $budget"
-    fail=1
-  elif [ "$total" -lt "$budget" ]; then
-    echo "prose-check: prose budget has slack: $total lines tracked, budget is $budget (lower .claude/context-budget to $total)"
-    fail=1
-  fi
+  case "$budget" in
+    ''|*[!0-9]*)
+      echo "prose-check: .claude/context-budget is not an integer: '$budget'"
+      fail=1
+      ;;
+    *)
+      if [ "$total" -gt "$budget" ]; then
+        echo "prose-check: context budget exceeded: $total > $budget"
+        fail=1
+      elif [ "$total" -lt "$budget" ]; then
+        echo "prose-check: context budget slack: lower .claude/context-budget to $total"
+        fail=1
+      fi
+      ;;
+  esac
 fi
 
 exit "$fail"
