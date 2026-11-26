@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Guards the agent-instruction prose budget and the audit-trail/log ban.
+#
+# Budget: CLAUDE.md, AGENTS.md, .claude/CLAUDE.md and .claude/rules/**/*.md
+# (whichever of those are tracked by git) must sum to exactly the line count
+# recorded in .claude/context-budget. This is a two-sided ratchet: growing
+# past the budget fails (prose crept in uncontrolled), and shrinking below it
+# without lowering the budget fails too (the budget must always reflect
+# reality, so trimming prose is never free -- it has to be recorded).
+#
+# Ban: no file tracked by git may live under .plans/, nor be named run.log
+# or *.run.log anywhere in the tree. Those are scratch/audit-trail output,
+# never committed content.
+#
+# Output lines all start with "prose-check: ".
+#
+# Usage: scripts/repo-guards/prose-check [root]
+#   root   repo root to check (default: current directory)
+set -euo pipefail
+
+root="${1:-.}"
+cd "$root"
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "prose-check: not a git repository: $root" >&2
+  exit 1
+fi
+
+fail=0
+
+banned="$(git ls-files | grep -E '^\.plans/|(^|/)run\.log$|(^|/)[^/]*\.run\.log$' || true)"
+if [ -n "$banned" ]; then
+  echo "prose-check: tracked files must not live under .plans/ or be run.log/*.run.log:"
+  while IFS= read -r f; do
+    echo "prose-check:   $f"
+  done <<<"$banned"
+  fail=1
+fi
+
+budget_file=".claude/context-budget"
+if [ ! -f "$budget_file" ]; then
+  echo "prose-check: missing $budget_file"
+  fail=1
+else
+  budget="$(tr -d '[:space:]' <"$budget_file")"
+
+  files="$(git ls-files -- 'CLAUDE.md' 'AGENTS.md' '.claude/CLAUDE.md' '.claude/rules/*.md' '.claude/rules/**/*.md' | sort -u)"
+
+  total=0
+  if [ -n "$files" ]; then
+    while IFS= read -r f; do
+      n="$(wc -l <"$f")"
+      total=$((total + n))
+    done <<<"$files"
+  fi
+
+  if [ "$total" -gt "$budget" ]; then
+    echo "prose-check: prose budget exceeded: $total lines tracked, budget is $budget"
+    fail=1
+  elif [ "$total" -lt "$budget" ]; then
+    echo "prose-check: prose budget has slack: $total lines tracked, budget is $budget (lower .claude/context-budget to $total)"
+    fail=1
+  fi
+fi
+
+exit "$fail"

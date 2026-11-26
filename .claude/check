@@ -3,7 +3,8 @@
 #
 # Mirrors the `build` job of .github/workflows/ci.yml step for step: build, race tests, vet,
 # the generated-files check (`go run ./cmd/gen` must leave the tree unchanged), and tests
-# and vet of the separate tools/ module.
+# and vet of the separate tools/ module. Also runs the local-only prose-check guard (context
+# budget ratchet and .plans/run.log ban), which is not part of CI.
 #
 # Not reproduced: CI runs on a clean ubuntu-latest checkout with Go from go.mod. On a clean
 # working tree the generated-files check is exact; with uncommitted changes it compares the
@@ -35,3 +36,5 @@ if [ "$(tree_state)" != "$before" ]; then
 fi
 step "Test tools module (cd tools && go test -race ./... && go vet ./...)"
 (cd tools && go test -race ./... && go vet ./...)
+step "Prose check (.claude/prose-check)"
+.claude/prose-check
